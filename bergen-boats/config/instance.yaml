@@ -1,0 +1,97 @@
+# Instancia base — Sistema de barcos a demanda en Bergen (tesis NHH)
+#
+# Única fuente de verdad para los parámetros de la instancia de juguete (v1).
+# Todo lo que cambie con el tiempo (nodos, velocidad, flota, demanda, garantía)
+# vive aquí, nunca hardcodeado en el código.
+
+# ---------------------------------------------------------------------------
+# Nodos de demanda: las paradas reales donde la gente sube y baja del barco.
+# Coordenadas en grados decimales (WGS84).
+# ---------------------------------------------------------------------------
+nodos_demanda:
+  - id: kleppesto
+    nombre: "Kleppestø (Askøy)"
+    lat: 60.4065
+    lon: 5.2275
+    rol: "Punto de isla. Terminal actual de Askøybåten. Conexión larga."
+
+  - id: laksevag
+    nombre: "Laksevåg (Gravdal)"
+    lat: 60.390886
+    lon: 5.259586
+    rol: "Oeste, en Gravdal, cruzando el Puddefjorden. Coordenada confirmada (antes era una aproximación distinta, más cerca de Bryggen)."
+
+  - id: bryggen
+    nombre: "Bryggen / Sentrum"
+    lat: 60.3951
+    lon: 5.3223
+    rol: "Hub central (Strandkaiterminalen). Máxima demanda laboral."
+
+  - id: sandviken
+    nombre: "Sandviken (BSI Padling)"
+    lat: 60.421149
+    lon: 5.300502
+    rol: "Norte, en BSI Padling (club de piragüismo), camino a NHH/Åsane. Coordenada confirmada (antes era una aproximación más al sur/este)."
+
+# ---------------------------------------------------------------------------
+# Waypoints: puntos de referencia para el ruteo que NO son nodos de demanda.
+# Nadie sube ni baja ahí; no entran en la matriz de demanda. Se guardan por
+# si hace falta refinar la geometría de una ruta (p.ej. bordear la costa).
+# ---------------------------------------------------------------------------
+waypoints:
+  - id: hegreneset
+    nombre: "Hegreneset"
+    lat: 60.4185
+    lon: 5.3125
+    rol: "Punto intermedio entre Sandviken y Bryggen. Punta al norte de Sandviken. [coord. aproximada, confirmar] NO es parada."
+
+# ---------------------------------------------------------------------------
+# Velocidad de la flota.
+#
+# Se intentó calibrar con un dato real (ruta 490 Askøybåten, Kleppestø-Bryggen:
+# 5.36 km en línea recta / 5.75 km navegable, 14 min reales -> ~23-24.65 km/h).
+# Decisión del equipo: en vez de heredar la velocidad de un ferry existente,
+# la flota de barcos pequeños a demanda usa una **velocidad de diseño fija de
+# 30 km/h (~16.2 nudos)** para toda la instancia. `referencia_desde/hasta` y
+# `tiempo_referencia_min` quedan solo como referencia histórica de cómo se
+# llegó a los valores calibrados anteriores; ya no se usan para calcular nada
+# mientras `velocidad_forzada_kmh` tenga un valor.
+# ---------------------------------------------------------------------------
+calibracion:
+  referencia_desde: kleppesto
+  referencia_hasta: bryggen
+  tiempo_referencia_min: 14.0
+  # Si es null, el código calibra la velocidad a partir de la distancia
+  # Haversine real entre referencia_desde y referencia_hasta y el tiempo de
+  # referencia de arriba. Con un número aquí, se fuerza esa velocidad para
+  # toda la instancia (decisión de diseño, no calibración).
+  velocidad_forzada_kmh: 30.0
+
+# ---------------------------------------------------------------------------
+# Flota (se usa en pasos posteriores, se deja aquí desde ya)
+# ---------------------------------------------------------------------------
+flota:
+  num_barcos: 5
+  num_barcos_barrido: [3, 4, 5, 6, 7, 8]
+  capacidad_pasajeros: 20
+  nodo_inicial: bryggen
+  tiempo_atraque_min: 1.5
+
+# ---------------------------------------------------------------------------
+# Tiempo y decisión (se usa en pasos posteriores)
+# ---------------------------------------------------------------------------
+operacion:
+  hora_inicio: "06:00"
+  hora_fin: "24:00"
+  epoca_decision_min: 3
+  horizonte_anticipacion_min: [15, 30]
+
+# ---------------------------------------------------------------------------
+# Garantía de servicio (se usa en pasos posteriores)
+# ---------------------------------------------------------------------------
+garantia:
+  espera_maxima_min: 15
+  conexiones_fuertes:
+    - [bryggen, sandviken]
+    - [bryggen, laksevag]
+    - [bryggen, kleppesto]

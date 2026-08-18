@@ -1,0 +1,11 @@
+# Entornos / caches Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Datos crudos pesados (>40 MB): se documentan en los README con su fuente y
+# se pueden volver a descargar; no se versionan para no inflar el repo de git.
+# Los intermedios livianos derivados de estos SÍ se versionan (demand/data/processed/).
+demand/data/*.geojson

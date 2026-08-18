@@ -1,0 +1,23 @@
+# Sistema de barcos a demanda en Bergen (tesis NHH)
+# Instalar con: pip install -r requirements.txt
+
+numpy>=2.4
+pandas>=3.0
+matplotlib>=3.10
+PyYAML>=6.0
+scipy>=1.17             # grafo disperso + Dijkstra (src/water_routing.py)
+
+# Geografía / mapas
+geopandas>=1.1
+shapely>=2.1
+contextily>=1.7        # basemaps de OpenStreetMap/CartoDB (requiere internet)
+pillow>=12.0            # decodificar los tiles del basemap (dependencia de contextily)
+
+# Notebooks
+jupyter>=1.1
+ipykernel>=7.2
+nbformat>=5.10
+nbconvert>=7.17
+
+# Optimización (se usa a partir del paso de despacho)
+# gurobipy            # requiere licencia académica de NHH; descomentar cuando se instale
