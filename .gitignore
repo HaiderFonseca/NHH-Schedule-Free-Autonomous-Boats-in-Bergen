@@ -9,3 +9,4 @@ venv/
 # se pueden volver a descargar; no se versionan para no inflar el repo de git.
 # Los intermedios livianos derivados de estos SÍ se versionan (demand/data/processed/).
 demand/data/*.geojson
+demand/data/processed/grunnkretser_norge.parquet

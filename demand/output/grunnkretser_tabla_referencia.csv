@@ -1,0 +1,159 @@
+grunnkretsnummer,grunnkretsnavn,kommunenummer,nodo_mas_cercano,distancia_nodo_mas_cercano_m
+46010115,Strandkaien,4601,bryggen,44.0
+46010106,Klosteret,4601,bryggen,238.0
+46010116,Torget,4601,bryggen,281.0
+46010147,Kalmaren,4601,bryggen,291.0
+46010117,Vetrlidsallmenningen,4601,bryggen,296.0
+46010118,Bryggen,4601,bryggen,306.0
+46010129,Torgalmenningen,4601,bryggen,314.0
+46010114,Engen,4601,bryggen,380.0
+46010109,Jonsvollen,4601,bryggen,392.0
+46010634,Dreggen,4601,bryggen,392.0
+46010107,Knøsesmauet,4601,bryggen,409.0
+46010119,Steinkjelleren,4601,bryggen,448.0
+46010130,Vaskerelven,4601,bryggen,482.0
+46010108,Nøstet,4601,bryggen,492.0
+46010105,Nykirken,4601,bryggen,497.0
+46010120,Wesselengen,4601,bryggen,543.0
+46010633,Stølen,4601,bryggen,549.0
+46010128,Marken,4601,bryggen,562.0
+46010113,Rosenbergsgaten,4601,bryggen,583.0
+46010122,Skansen,4601,bryggen,608.0
+46010635,Bergenhus,4601,bryggen,628.0
+46010131,Vestre Torvgate,4601,bryggen,665.0
+46010631,Baglergaten,4601,bryggen,686.0
+46010121,Skanselien,4601,bryggen,694.0
+46010136,Grieghallen,4601,bryggen,706.0
+46010103,Tollbuen,4601,bryggen,714.0
+46010126,Dankert Krohn,4601,bryggen,734.0
+46010112,Sydneshaugen,4601,bryggen,748.0
+46010630,Ladegården,4601,bryggen,764.0
+46010629,Krohnengen,4601,bryggen,799.0
+46010125,Domkirken,4601,bryggen,802.0
+46010132,Museet,4601,bryggen,838.0
+46010626,Absalon Beyers gate,4601,bryggen,860.0
+46010625,Rotthaugen,4601,bryggen,941.0
+46010102,Sliberget,4601,bryggen,955.0
+46010138,Nygårdstangen,4601,bryggen,965.0
+46010627,Mathismarken,4601,bryggen,969.0
+46010123,Skansemyren,4601,bryggen,973.0
+46010124,Endregården,4601,bryggen,987.0
+46010139,Jonas Reins gate,4601,bryggen,1019.0
+46010134,Tullinsgate,4601,bryggen,1024.0
+46010140,Fredrik Meltzers gate,4601,bryggen,1035.0
+46010135,Nygårdshøyden,4601,bryggen,1041.0
+46010624,Sandvikskirken,4601,bryggen,1060.0
+46010628,Breistølen,4601,bryggen,1110.0
+46010110,Sydnes,4601,bryggen,1121.0
+46010127,Betanien,4601,bryggen,1132.0
+46010142,Stormsgate,4601,bryggen,1145.0
+46010623,Mulen,4601,bryggen,1148.0
+46010632,Skuteviken,4601,bryggen,1162.0
+46010111,Dokken,4601,bryggen,1193.0
+46010133,Møhlenpris,4601,bryggen,1224.0
+46010137,Jernbanen,4601,bryggen,1226.0
+46010146,Fløyfjellet,4601,bryggen,1290.0
+46010144,Johannes Bruns gate,4601,bryggen,1327.0
+46010141,Nygårdsparken,4601,bryggen,1345.0
+46010622,Kirkegaten,4601,bryggen,1361.0
+46010636,Skoltegrunnskaien,4601,bryggen,1374.0
+46012004,Frydenbø,4601,bryggen,1433.0
+46010502,Kalfarlien,4601,bryggen,1444.0
+46010201,Gyldenpris,4601,bryggen,1460.0
+46010104,Fredriksberg,4601,bryggen,1468.0
+46010620,Christinegården,4601,bryggen,1472.0
+46010621,Rosegrenden,4601,bryggen,1479.0
+46010145,Florida,4601,bryggen,1503.0
+46010202,Stranden,4601,bryggen,1545.0
+46010101,Nordnes,4601,bryggen,1548.0
+46012006,Laksevåg sentrum,4601,bryggen,1606.0
+46010143,Marineholmen,4601,bryggen,1638.0
+46010501,Starefossen,4601,bryggen,1639.0
+46010503,Seiersbjerget,4601,bryggen,1740.0
+46010203,Strandlien,4601,bryggen,1788.0
+46010204,St Markus,4601,bryggen,1813.0
+46010505,Ole Irgens vei,4601,bryggen,1830.0
+46012003,Øvre Damsgård,4601,bryggen,1852.0
+46012007,Lille Damsgård,4601,bryggen,1926.0
+46010208,Jørgen Moes gate,4601,bryggen,1955.0
+46012005,Store Damsgård,4601,bryggen,1980.0
+46010205,Krohnviken,4601,bryggen,2003.0
+46010504,Bellevue,4601,bryggen,2031.0
+46010206,Bøhmergaten,4601,bryggen,2099.0
+46010209,Grønneviken,4601,bryggen,2150.0
+46010207,Solheimsviken,4601,bryggen,2159.0
+46010508,Fløen,4601,bryggen,2172.0
+46010506,Nystuen,4601,bryggen,2269.0
+46010212,Krohnsminde,4601,bryggen,2358.0
+46010511,Møllendal,4601,bryggen,2445.0
+46010507,Kalvedalen,4601,bryggen,2515.0
+46010509,Årstadvollen,4601,bryggen,2535.0
+46012002,Solhaugveien,4601,bryggen,2568.0
+46012001,Melkeplassen,4601,bryggen,2601.0
+46010512,Alrek,4601,bryggen,2699.0
+46010510,Statsarkivet,4601,bryggen,2767.0
+46010513,Haraldsplass,4601,bryggen,2882.0
+46010515,Svartediket,4601,bryggen,3472.0
+46010229,Løvstakksiden,4601,bryggen,3481.0
+46270402,Kleppestø,4627,kleppesto,271.0
+46270401,Strand-Solhola,4627,kleppesto,408.0
+46270403,Myrane-øvre Kleppe,4627,kleppesto,1059.0
+46270302,Florvåg,4627,kleppesto,1388.0
+46270501,Skarholmen-Strusshamn,4627,kleppesto,1547.0
+46011902,Kjøkkelvik,4601,kleppesto,1730.0
+46270404,Øvre Kleppe-Svingen,4627,kleppesto,1914.0
+46270303,Florvågøy,4627,kleppesto,2006.0
+46270502,Strusshamn,4627,kleppesto,2169.0
+46011903,Festeråsen,4601,kleppesto,2227.0
+46270405,Nedre Kleppe,4627,kleppesto,2464.0
+46011904,Olsvikfjellet,4601,kleppesto,2545.0
+46270301,Bakarvågen,4627,kleppesto,2759.0
+46011909,Leirvik,4601,kleppesto,3046.0
+46270203,Søndre Erdal,4627,kleppesto,3459.0
+46270406,Juvik-Horsøy,4627,kleppesto,3828.0
+46011917,Drotningsvik,4601,kleppesto,4384.0
+46012012,Gravdal,4601,laksevag,263.0
+46012010,Nygårdsvik,4601,laksevag,865.0
+46012009,Kringsjå,4601,laksevag,1176.0
+46012011,Nygårdslien,4601,laksevag,1265.0
+46011901,Lyderhorn,4601,laksevag,1416.0
+46012008,Laksevågneset,4601,laksevag,1559.0
+46012013,Lyngbø,4601,laksevag,1812.0
+46012014,Damsgårdsfjellet,4601,laksevag,1956.0
+46011908,Krabbedalen,4601,laksevag,2262.0
+46011907,Olsvikåsen,4601,laksevag,2497.0
+46011905,Olsvikmarka,4601,laksevag,2563.0
+46011906,Fredheim,4601,laksevag,2654.0
+46011910,Brønndalen,4601,laksevag,2870.0
+46011801,Øvre Fyllingen,4601,laksevag,2908.0
+46011911,Loddefjorddalen,4601,laksevag,2937.0
+46011924,Bjørndal,4601,laksevag,3358.0
+46011912,Klasatjørna,4601,laksevag,3381.0
+46011913,Peneset,4601,laksevag,4056.0
+46011918,Alvøy,4601,laksevag,5271.0
+46010612,Handelshøyskolen,4601,sandviken,217.0
+46010611,Hatleberget,4601,sandviken,440.0
+46010614,Nyhavn,4601,sandviken,484.0
+46010609,Stemmemyren,4601,sandviken,563.0
+46010610,Sølvberget,4601,sandviken,676.0
+46010608,Biskopshavn,4601,sandviken,717.0
+46010615,Neevengården,4601,sandviken,814.0
+46010606,Solbakken,4601,sandviken,816.0
+46010607,Øyjorden,4601,sandviken,828.0
+46010613,Hegreneset,4601,sandviken,834.0
+46010616,Munkebotn,4601,sandviken,976.0
+46010617,Måseskjæret,4601,sandviken,1095.0
+46010605,Eikeviken,4601,sandviken,1114.0
+46010604,Øyjordsåsen,4601,sandviken,1199.0
+46010618,Wilhelmineborg,4601,sandviken,1429.0
+46010603,Hellefjellet,4601,sandviken,1448.0
+46010619,Sandvikstorget,4601,sandviken,1459.0
+46010704,Tømmervågen,4601,sandviken,1669.0
+46010602,Helleneset,4601,sandviken,1742.0
+46010703,Eidsvågskogen,4601,sandviken,1910.0
+46010705,Eidsvåg,4601,sandviken,2127.0
+46010601,Lønborg,4601,sandviken,2306.0
+46010637,Sandviksfjellet,4601,sandviken,2326.0
+46010708,Ervik,4601,sandviken,3232.0
+46010707,Selvik,4601,sandviken,3540.0
+46010706,Jordalen,4601,sandviken,3617.0

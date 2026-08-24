@@ -1,0 +1,5 @@
+id,nombre,area_zona_km2,n_celdas_poblacion,poblacion_total,poblacion_min_celda,poblacion_max_celda,poblacion_media_celda,poblacion_mediana_celda,n_celdas_bedrifter,establecimientos_total,empleo_total,empleo_min_celda,empleo_max_celda,empleo_media_celda,empleo_mediana_celda
+kleppesto,Kleppestø (Askøy),80.59,468,25153,1,317,53.75,33.5,369,1884,7550,0,444,20.46,1.0
+laksevag,Laksevåg (Gravdal),14.85,84,15986,1,804,190.31,142.5,83,1447,7760,0,1480,93.49,27.0
+bryggen,Bryggen / Sentrum,20.21,75,27695,1,1348,369.27,288.0,85,7101,52213,0,4151,614.27,248.0
+sandviken,Sandviken (BSI Padling),14.61,72,11109,1,635,154.29,135.5,65,879,4106,0,955,63.17,7.0

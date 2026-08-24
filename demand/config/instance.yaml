@@ -1,0 +1,162 @@
+# Instancia de demanda — Sistema de barcos a demanda en Bergen (tesis NHH)
+#
+# Única fuente de verdad para los parámetros de generación de demanda.
+# Todo lo que pueda cambiar (radios, franjas, factores, escala, semilla) vive
+# aquí, nunca hardcodeado en el código.
+
+# ---------------------------------------------------------------------------
+# Fuentes externas: no se duplican coordenadas ni matrices de tiempo, se leen
+# directo de lo que ya se construyó en bergen-boats/.
+# ---------------------------------------------------------------------------
+fuentes_externas:
+  nodos_config: "../bergen-boats/config/instance.yaml"
+  matriz_tiempos_min: "../bergen-boats/02_ruteo_navegable/output/matriz_tiempos_min.csv"
+
+# ---------------------------------------------------------------------------
+# Datos SSB (grillas de 250m, EPSG:32633). Ver demand/README.md para el
+# detalle completo de columnas/CRS/cobertura verificados.
+# ---------------------------------------------------------------------------
+datos_ssb:
+  poblacion_geojson: "data/2026-08-18-befolkning_250m_2026.geojson"
+  poblacion_columna: "pop_tot"
+  bedrifter_geojson: "data/2026-08-18-bedrifter_250m_2026.geojson"
+  empleo_columna: "emp_tot"
+  establecimientos_columna: "est_tot"   # referencia comparativa, no se usa como masa principal
+  crs_grilla: "EPSG:32633"
+  resolucion_celda_m: 250
+  # [A CONFIRMAR CON EL USUARIO] URL/dataset exacto de descarga, para citar en el README.
+  fuente_poblacion_cita: "PENDIENTE: confirmar URL/nombre exacto del dataset SSB de origen"
+  fuente_bedrifter_cita: "PENDIENTE: confirmar URL/nombre exacto del dataset SSB de origen"
+
+# ---------------------------------------------------------------------------
+# Recorte geográfico (Tarea 0): bbox amplio Bergen + Askøy alrededor de los
+# 4 nodos, con margen para no cortar el radio de captación de ningún nodo.
+# ---------------------------------------------------------------------------
+recorte:
+  margen_bbox_m: 8000   # margen sobre el bounding box de los 4 nodos, en metros (EPSG:32633)
+
+# ---------------------------------------------------------------------------
+# Radio de captación por nodo (Tarea 1): la gente camina hasta el muelle.
+# ---------------------------------------------------------------------------
+captacion:
+  radio_m: 1000
+
+# ---------------------------------------------------------------------------
+# Masas por nodo (Tareas 1-2) y normalización antes de combinarlas (Tarea 3).
+# ---------------------------------------------------------------------------
+masas:
+  # Población y empleo tienen escalas muy distintas (cientos vs. miles). Antes
+  # de multiplicarlas en el patrón O-D, cada una se normaliza dividiendo por el
+  # máximo entre los 4 nodos, para que ambas queden en (0, 1].
+  normalizacion: "max"
+
+  factor_universitario:
+    # Fijado a mano por el equipo (no una fuente de datos de matrícula real,
+    # que sigue sin conseguirse): pondera la masa de destino (empleo) de cada
+    # nodo. Bergen es ciudad universitaria (NHH, UiB, HVL) y `emp_tot` no
+    # captura estudiantes; Bryggen y Sandviken (esta última junto a
+    # NHH/Kronstad/HVL) quedan en 1.0, Kleppestø y Laksevåg se reducen fuerte
+    # por decisión del equipo. Declarado explícitamente como supuesto de
+    # diseño, no un dato medido -- ver demand/README.md, sección de supuestos.
+    kleppesto: 0.7
+    laksevag: 0.85
+    bryggen: 1.0
+    sandviken: 1.0
+
+# ---------------------------------------------------------------------------
+# Franjas horarias (Tarea 3): factor de volumen relativo + qué masa juega de
+# origen/destino en cada franja. "poblacion"/"empleo" fuerzan esa masa;
+# "mixta" usa el promedio de población y empleo normalizados (viajes sin
+# propósito casa-trabajo claro: mandados, ocio, fuera de horario pico).
+# ---------------------------------------------------------------------------
+franjas_horarias:
+  - id: manana
+    horas: [6, 9]
+    factor_volumen: 1.0
+    rol_origen: poblacion
+    rol_destino: empleo
+  - id: valle
+    horas: [9, 15]
+    factor_volumen: 0.4
+    rol_origen: mixta
+    rol_destino: mixta
+  - id: tarde
+    horas: [15, 18]
+    factor_volumen: 1.0
+    rol_origen: empleo
+    rol_destino: poblacion
+  - id: noche
+    horas: [18, 24]
+    factor_volumen: 0.15
+    rol_origen: mixta
+    rol_destino: mixta
+
+factor_dia_semana:
+  entre_semana: 1.0
+  fin_de_semana: 0.4
+
+# ---------------------------------------------------------------------------
+# Factor de distancia (Tarea 3, aporte propio, no está en Braathen et al. §4.1):
+# decae exponencialmente con el tiempo de viaje navegable (bergen-boats paso 02).
+# factor = exp(-tiempo_min / tau_min)
+# ---------------------------------------------------------------------------
+factor_distancia:
+  tau_min: 15
+
+# ---------------------------------------------------------------------------
+# Generación de llegadas (Tarea 4).
+# ---------------------------------------------------------------------------
+demanda:
+  # Escala como PORCENTAJE de la población real de las 4 zonas (Tarea 1 v2),
+  # no un número inventado. Ninguno de los dos papers de referencia da un
+  # porcentaje de participación modal explícito, así que se infiere cruzando
+  # sus escalas de demanda contra población:
+  #   - Gu & Wallace (2021), el paper original de water-taxis en Bergen, usa
+  #     estos MISMOS 4 nodos y asume 300 "demandas"/día (76+74+74+76, su
+  #     Tabla 2). Con el tamaño de grupo medio de Braathen (8.6 pax/grupo):
+  #     300 x 8.6 = 2580 pax/día -> 2580 / 79 943 hab. (poblacion_total de
+  #     las 4 zonas) = 3.2% de la población de las zonas.
+  #   - Braathen, Goez & Guajardo (2024), su instancia grande: 85 920 pax/semana
+  #     = 12 274 pax/día, para una red de 6 paradas que cubre toda la ciudad.
+  #     12 274 / ~285 900 hab. de Bergen = 4.3% de la población total.
+  #   Ambas convergen en un rango de 3-4%. El equipo fijo el valor en 10%,
+  #   deliberadamente por encima de ese rango (escenario de mayor adopción,
+  #   no una lectura directa de las referencias) -- declarado explicitamente
+  #   como decision propia del equipo en demand/README.md, seccion de
+  #   supuestos, no como una cifra que salga de la literatura.
+  porcentaje_poblacion_dia: 0.1
+
+  tamano_grupo:
+    # Braathen et al. (2024) reporta media 8.6 pax/grupo, desviación 2.6, moda 9
+    # (su Fig. 1-2) pero NO dice qué distribución usar -- en el paper el tamaño
+    # es determinístico (función lineal del puntaje de popularidad), no viene
+    # de una distribución. Se pidió una distribución configurable y discreta
+    # (son personas, no una cantidad continua). Normal(8.6, 2.6) redondeada
+    # (versión anterior) no es apropiada: es continua, simétrica, y no acotada
+    # en 0 de forma natural. Se usa Binomial(n, p), que sí es discreta y no
+    # negativa por construcción, calibrada por método de momentos para
+    # igualar exactamente la media y casi exactamente la desviación de
+    # Braathen: media = n*p, varianza = n*p*(1-p).
+    #   var/media objetivo = 2.6^2 / 8.6 = 0.786 -> p = 1 - 0.786 = 0.214
+    #   n = 8.6 / 0.214 = 40.2 -> n=40, p=8.6/40=0.215
+    #   Binomial(40, 0.215): media=8.60, desviación=2.598 (objetivo: 8.6/2.6)
+    #   P(grupo de 0 personas) = 0.006% -- prácticamente nunca trunca en el mínimo.
+    distribucion: binomial
+    n: 40
+    p: 0.215
+    minimo: 1
+  espera_maxima_min:
+    # Reusa las conexiones fuertes ya definidas en bergen-boats/config/instance.yaml
+    # (garantia.conexiones_fuertes): Bryggen<->Kleppestø/Laksevåg/Sandviken = 15 min.
+    conexiones_fuertes_min: 15
+    resto_min: 30
+    jitter_min: 5   # ruido +/- por grupo, para no dejar el valor idéntico en todos
+
+# ---------------------------------------------------------------------------
+# Reproducibilidad (Tarea 4): misma semilla -> mismo resultado exacto.
+# Para una semana, se derivan 7 semillas hijas de esta con
+# numpy.random.SeedSequence, una por día (mismo patrón de fondo, llegadas
+# concretas distintas y reproducibles).
+# ---------------------------------------------------------------------------
+reproducibilidad:
+  semilla: 42
