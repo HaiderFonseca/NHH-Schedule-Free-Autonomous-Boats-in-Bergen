@@ -1,0 +1,26 @@
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Braathen et~al.(2024)Braathen, Goez, and Guajardo]{Braathen2024}
+Caroline Braathen, Julio~C. Goez, and Mario Guajardo.
+\newblock Autonomous ferries in light of labor regulations -- a passenger perspective.
+\newblock \emph{Maritime Transport Research}, 7:\penalty0 100115, 2024.
+\newblock \doi{10.1016/j.martra.2024.100115}.
+
+\bibitem[Gu and Wallace(2021)]{Gu2021}
+Yong Gu and Stein~W. Wallace.
+\newblock Operational benefits of autonomous vessels in logistics -- a case of autonomous water-taxis in {Bergen}.
+\newblock \emph{Transportation Research Part E: Logistics and Transportation Review}, 154:\penalty0 102456, 2021.
+\newblock \doi{10.1016/j.tre.2021.102456}.
+
+\bibitem[S{\'a}nchez-Mart{\'i}nez et~al.(2017)S{\'a}nchez-Mart{\'i}nez, Wilson, and Koutsopoulos]{SanchezMartinez2017}
+Gabriel~E. S{\'a}nchez-Mart{\'i}nez, Nigel H.~M. Wilson, and Haris~N. Koutsopoulos.
+\newblock Schedule-free high-frequency transit operations.
+\newblock \emph{Public Transport}, 9:\penalty0 285--305, 2017.
+\newblock \doi{10.1007/s12469-016-0129-8}.
+
+\end{thebibliography}

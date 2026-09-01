@@ -1,0 +1,89 @@
+# Instancia de simulación — Entorno Gymnasium de despacho de barcos (tesis NHH)
+#
+# Única fuente de verdad de los parámetros del simulador. Ver
+# docs/especificacion_simulador_rl.md para el diseño (secciones §1-§12) y
+# simulacion/README.md para las decisiones de implementación mapeadas a esa
+# especificación.
+
+# ---------------------------------------------------------------------------
+# Fuentes externas: nada se recalcula ni se redefine aquí. Nodos, capacidad,
+# conexiones fuertes y tiempos de viaje vienen de bergen-boats/; el patrón de
+# llegadas (gravedad + SSB + Poisson) viene de demand/.
+# ---------------------------------------------------------------------------
+fuentes_externas:
+  # OJO: la capacidad del barco (flota.capacidad_pasajeros, hoy 20) y el nodo
+  # inicial (flota.nodo_inicial) NO estan en este archivo -- se leen de aqui,
+  # en bergen-boats/config/instance.yaml -> flota. Igual patron que ya usaba
+  # demand/: cada carpeta es dueña de sus propios parametros, las demas los
+  # leen, nunca los copian. Ver simulacion/README.md, seccion "De donde sale
+  # cada parametro".
+  nodos_config: "../bergen-boats/config/instance.yaml"
+  matriz_tiempos_min: "../bergen-boats/02_ruteo_navegable/output/matriz_tiempos_min.csv"
+  rutas_navegables_geojson: "../bergen-boats/02_ruteo_navegable/output/rutas_navegables.geojson"
+  demand_config: "../demand/config/instance.yaml"
+  demand_masas: "../demand/output/masas_por_nodo.csv"
+  demand_intensidad_od: "../demand/output/matriz_intensidad_od.csv"
+
+# ---------------------------------------------------------------------------
+# Unidad de demanda (ajuste del usuario sobre la especificación original):
+# "personas" (por defecto) explota cada grupo generado por demand/src en N
+# unidades-persona (mismo origen/destino/minuto_llegada/paciencia del grupo,
+# tamano=1 cada una). "grupos" usa el grupo tal cual (tamano=tamano_grupo).
+# La regla de embarque es la misma función para ambos casos: con tamano=1
+# colapsa exactamente a "sube de a uno hasta llenar capacidad".
+# ---------------------------------------------------------------------------
+unidad_demanda: "personas"   # "personas" | "grupos"
+
+# ---------------------------------------------------------------------------
+# Escala de demanda para verificación (NUNCA se toca demand/config/instance.yaml,
+# que sigue siendo el oficial al 10%). Aquí se define una escala reducida propia
+# de este paso, para que el escalón 1 tenga ~20-30 filas de grupos en la franja
+# mañana (fácil de seguir a ojo) y el escalón 2 sea un día completo más denso.
+# ---------------------------------------------------------------------------
+escalones:
+  escalon_1:
+    descripcion: "Franja mañana (~3h), pocos barcos, pocos grupos -- primera verificación a ojo"
+    horas: [6, 9]
+    # Calibrado por barrido directo contra demand/output/ (semilla 42): 0.008
+    # da 23 grupos / 202 personas en la franja mañana -- dentro del ~20-30
+    # grupos pedido para la primera verificación.
+    porcentaje_poblacion_dia: 0.008
+    num_barcos: 2
+  escalon_2:
+    descripcion: "Dia completo, mas barcos, mas demanda -- metricas agregadas"
+    horas: [6, 24]
+    # Calibrado igual: 0.012 da 133 grupos / 1106 personas en el dia completo.
+    porcentaje_poblacion_dia: 0.012
+    num_barcos: 3
+
+escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
+
+# ---------------------------------------------------------------------------
+# Tiempo del simulador (§3 de la especificación): paso fijo de 2 min.
+# ---------------------------------------------------------------------------
+paso_tiempo_min: 2
+
+# ---------------------------------------------------------------------------
+# Recompensa (§7 de la especificación). Todos los pesos aqui, nada hardcodeado
+# en recompensa.py. Ver docs/especificacion_simulador_rl.md y
+# simulacion/README.md ("bug detectado") para la justificacion del clip en
+# sobrante_max.
+# ---------------------------------------------------------------------------
+recompensa:
+  tolerancia_incomodidad_min: 12    # ruta directa mas larga (Kleppestø-Bryggen navegable, ~11.5 min a 30 km/h)
+  peso_perdido: 1.3                 # penalizacion fija por unidad (persona o grupo) perdida en el intervalo
+  peso_movimiento: 0.1              # penalizacion por barco navegando en el paso
+  sobrante_max_minimo: 1.0          # EPS: evita division por cero/negativo si paciencia jitter cae bajo la tolerancia
+
+# ---------------------------------------------------------------------------
+# Para la fase siguiente (agente, fuera de este paso) -- se deja declarado
+# aqui porque la especificacion lo pide en la seccion de parametros (§10),
+# aunque el entorno de este paso no lo usa todavia.
+# ---------------------------------------------------------------------------
+agente:
+  gamma: 0.99
+
+# ---------------------------------------------------------------------------
+# Reproducibilidad: misma semilla -> misma corrida exacta.
+# ---------------------------------------------------------------------------
+semilla: 42
