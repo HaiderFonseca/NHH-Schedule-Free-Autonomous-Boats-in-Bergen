@@ -2,71 +2,55 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\citation{SanchezMartinez2017}
-\citation{Gu2021}
 \citation{Gu2021}
 \citation{Braathen2024}
 \citation{SanchezMartinez2017}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction and Motivation}{2}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scope of this report.}{2}{section*.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Navigable Routing}{3}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Water/land classification.}{3}{section*.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Graph and shortest paths.}{3}{section*.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Design speed and resulting matrix.}{3}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Navigable Routing}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Water/land classification.}{2}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Graph and shortest paths.}{3}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Design speed and resulting matrix.}{3}{section*.5}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Navigable travel-time matrix (minutes), 30 km/h design speed.}}{3}{table.1}\protected@file@percent }
 \newlabel{tab:matriz-tiempos}{{1}{3}{Navigable travel-time matrix (minutes), 30 km/h design speed}{table.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Straight-line vs. navigable travel times, all six stop pairs.}}{4}{table.2}\protected@file@percent }
-\newlabel{tab:comparacion-rutas}{{2}{4}{Straight-line vs. navigable travel times, all six stop pairs}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Straight-line vs. navigable travel times, all six stop pairs.}}{3}{table.2}\protected@file@percent }
+\newlabel{tab:comparacion-rutas}{{2}{3}{Straight-line vs. navigable travel times, all six stop pairs}{table.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The six navigable routes between the four demand stops, computed by Dijkstra search over the water-classified pixel graph.}}{4}{figure.1}\protected@file@percent }
 \newlabel{fig:mapa-rutas}{{1}{4}{The six navigable routes between the four demand stops, computed by Dijkstra search over the water-classified pixel graph}{figure.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Demand Model}{4}{section.4}\protected@file@percent }
 \newlabel{sec:demand}{{4}{4}{Demand Model}{section.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Catchment areas and masses.}{4}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Catchment areas and masses}{4}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Catchment area, population, and employment by node (SSB grids, 2026).}}{4}{table.3}\protected@file@percent }
+\newlabel{tab:masas}{{3}{4}{Catchment area, population, and employment by node (SSB grids, 2026)}{table.3}{}}
 \citation{Braathen2024}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The four hand-drawn catchment areas (dashed outline) and the grunnkretser assigned to each node (filled).}}{5}{figure.2}\protected@file@percent }
+\newlabel{fig:mapa-grunnkretser}{{2}{5}{The four hand-drawn catchment areas (dashed outline) and the grunnkretser assigned to each node (filled)}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}From population and employment to origin-destination intensity}{5}{subsection.4.2}\protected@file@percent }
 \citation{Braathen2024}
+\newlabel{eq:intensidad}{{4}{6}{From population and employment to origin-destination intensity}{equation.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Time bands, relative demand volume, and origin/destination roles.}}{6}{table.4}\protected@file@percent }
+\newlabel{tab:franjas}{{4}{6}{Time bands, relative demand volume, and origin/destination roles}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}From intensity to Poisson arrival rates}{6}{subsection.4.3}\protected@file@percent }
+\newlabel{eq:escala}{{6}{6}{From intensity to Poisson arrival rates}{equation.6}{}}
 \citation{Gu2021}
 \citation{Braathen2024}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Population and employment mass by node (SSB grids, 2026).}}{5}{table.3}\protected@file@percent }
-\newlabel{tab:masas}{{3}{5}{Population and employment mass by node (SSB grids, 2026)}{table.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Origin-destination pattern.}{5}{section*.6}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Time bands and relative demand volume.}}{5}{table.4}\protected@file@percent }
-\newlabel{tab:franjas}{{4}{5}{Time bands and relative demand volume}{table.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Arrivals and group sizes.}{5}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Demand scale.}{5}{section*.8}\protected@file@percent }
-\citation{Braathen2024}
-\@writefile{toc}{\contentsline {paragraph}{Persons vs.\ groups.}{6}{section*.9}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Origin-destination intensity heatmaps by time band. Morning traffic concentrates toward Bryggen; afternoon reverses the pattern.}}{6}{figure.2}\protected@file@percent }
-\newlabel{fig:heatmaps-od}{{2}{6}{Origin-destination intensity heatmaps by time band. Morning traffic concentrates toward Bryggen; afternoon reverses the pattern}{figure.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Observed group-size distribution over a simulated week, against the target Binomial(40, 0.215).}}{7}{figure.3}\protected@file@percent }
-\newlabel{fig:histograma-grupo}{{3}{7}{Observed group-size distribution over a simulated week, against the target Binomial(40, 0.215)}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Simulation Environment as a Markov Decision Process}{7}{section.5}\protected@file@percent }
-\newlabel{sec:mdp}{{5}{7}{Simulation Environment as a Markov Decision Process}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}State}{7}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Actions}{7}{subsection.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Transition}{8}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Reward}{8}{subsection.5.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Reference Dispatch Policy}{8}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Metrics and Results of an Example Run}{9}{section.7}\protected@file@percent }
-\newlabel{sec:results}{{7}{9}{Metrics and Results of an Example Run}{section.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Conservation check.}{9}{section*.10}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Global metrics, example run (Escalón 1).}}{9}{table.5}\protected@file@percent }
-\newlabel{tab:metricas-globales}{{5}{9}{Global metrics, example run (Escalón 1)}{table.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Compliance rate (served / generated) by origin-destination pair.}}{10}{figure.4}\protected@file@percent }
-\newlabel{fig:heatmap-cumplimiento}{{4}{10}{Compliance rate (served / generated) by origin-destination pair}{figure.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Waiting queue length (top) and fleet occupancy (bottom) over the simulated morning.}}{10}{figure.5}\protected@file@percent }
-\newlabel{fig:perfil-ocupacion}{{5}{10}{Waiting queue length (top) and fleet occupancy (bottom) over the simulated morning}{figure.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Reward breakdown by term over the simulated morning.}}{11}{figure.6}\protected@file@percent }
-\newlabel{fig:desglose-recompensa}{{6}{11}{Reward breakdown by term over the simulated morning}{figure.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Inspecting a single minute.}{11}{section*.11}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces State inspector, minute 400 of the example run.}}{11}{figure.7}\protected@file@percent }
-\newlabel{fig:inspeccion}{{7}{11}{State inspector, minute 400 of the example run}{figure.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Assumptions and Limitations}{11}{section.8}\protected@file@percent }
-\citation{Braathen2024}
-\citation{Gu2021}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Arrivals and group sizes}{7}{subsection.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Origin-destination intensity $I_b(o,d)$ by time band. Morning traffic concentrates toward Bryggen; the afternoon band reverses the pattern.}}{7}{figure.3}\protected@file@percent }
+\newlabel{fig:heatmaps-od}{{3}{7}{Origin-destination intensity $I_b(o,d)$ by time band. Morning traffic concentrates toward Bryggen; the afternoon band reverses the pattern}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Observed group-size distribution over a simulated week, against the target Binomial(40, 0.215).}}{8}{figure.4}\protected@file@percent }
+\newlabel{fig:histograma-grupo}{{4}{8}{Observed group-size distribution over a simulated week, against the target Binomial(40, 0.215)}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Persons vs.\ groups}{8}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Simulation Environment}{8}{section.5}\protected@file@percent }
+\newlabel{sec:mdp}{{5}{8}{Simulation Environment}{section.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{This is a first, simple iteration.}{8}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}State}{8}{subsection.5.1}\protected@file@percent }
 \bibstyle{plainnat}
 \bibdata{referencias}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Actions}{9}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Transition}{9}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Reward}{9}{subsection.5.4}\protected@file@percent }
 \bibcite{Braathen2024}{{1}{2024}{{Braathen et~al.}}{{Braathen, Goez, and Guajardo}}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Progress Summary and Next Steps}{12}{section.9}\protected@file@percent }
 \bibcite{Gu2021}{{2}{2021}{{Gu and Wallace}}{{}}}
-\bibcite{SanchezMartinez2017}{{3}{2017}{{S{\'a}nchez-Mart{\'i}nez et~al.}}{{S{\'a}nchez-Mart{\'i}nez, Wilson, and Koutsopoulos}}}
-\gdef \@abspage@last{13}
+\bibcite{SanchezMartinez2017}{{3}{2016}{{S{\'a}nchez-Mart{\'i}nez et~al.}}{{S{\'a}nchez-Mart{\'i}nez, Wilson, and Koutsopoulos}}}
+\gdef \@abspage@last{10}

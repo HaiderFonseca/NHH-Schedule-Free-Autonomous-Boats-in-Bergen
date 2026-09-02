@@ -25,6 +25,12 @@ libre.
 La demanda directa (tipo 1) tiene prioridad estricta sobre el
 reposicionamiento (tipo 2): solo se considera reposicionarse si no hay
 absolutamente nadie esperando para salir de A.
+
+**Sin paciencia (cambio de diseño, ver `unidades.py`/`env.py`):** el
+simulador ya no tiene ningún concepto de "paciencia" ni de gente que se
+pierde por esperar de más -- nadie se va nunca, espera hasta ser atendido.
+Por eso el reposicionamiento ya no filtra por "¿alcanzo a llegar a tiempo?"
+-- cualquier nodo con demanda esperando es un destino válido.
 """
 from __future__ import annotations
 
@@ -60,18 +66,18 @@ def politica_base(
         return candidatos_directos[0][1]
 
     # 2) Nada que hacer en A: considerar reposicionarse vacío hacia el nodo
-    #    X con la demanda más urgente en cualquier otro par (X, *), siempre
-    #    que el barco alcance a llegar antes de que esa unidad se pierda.
+    #    X con la demanda más urgente en cualquier otro par (X, *). Ya no hay
+    #    filtro de "alcanza a tiempo" -- el simulador no tiene paciencia, así
+    #    que cualquier nodo con gente esperando es un destino valido, sin
+    #    importar el tiempo de viaje (nadie se pierde por llegar tarde).
     candidatos_reposicion = []
     for (o, d), cola in estado.colas.items():
         if o == A or not cola:
             continue
         mas_antigua = cola[0]
         tiempo_esperando = estado.t_actual_min - mas_antigua.minuto_llegada
-        paciencia_restante = mas_antigua.paciencia_min - tiempo_esperando
         tiempo_viaje = float(matriz_tiempos.loc[A, o])
-        if tiempo_viaje <= paciencia_restante:
-            candidatos_reposicion.append((tiempo_esperando, tiempo_viaje, o))
+        candidatos_reposicion.append((tiempo_esperando, tiempo_viaje, o))
 
     if not candidatos_reposicion:
         return None

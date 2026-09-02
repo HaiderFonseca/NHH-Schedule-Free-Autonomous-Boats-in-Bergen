@@ -1,23 +1,19 @@
 \contentsline {section}{\numberline {1}Introduction and Motivation}{2}{section.1}%
+\contentsline {paragraph}{Scope of this report.}{2}{section*.2}%
 \contentsline {section}{\numberline {2}Related Work}{2}{section.2}%
-\contentsline {section}{\numberline {3}Navigable Routing}{3}{section.3}%
-\contentsline {paragraph}{Water/land classification.}{3}{section*.2}%
-\contentsline {paragraph}{Graph and shortest paths.}{3}{section*.3}%
-\contentsline {paragraph}{Design speed and resulting matrix.}{3}{section*.4}%
+\contentsline {section}{\numberline {3}Navigable Routing}{2}{section.3}%
+\contentsline {paragraph}{Water/land classification.}{2}{section*.3}%
+\contentsline {paragraph}{Graph and shortest paths.}{3}{section*.4}%
+\contentsline {paragraph}{Design speed and resulting matrix.}{3}{section*.5}%
 \contentsline {section}{\numberline {4}Demand Model}{4}{section.4}%
-\contentsline {paragraph}{Catchment areas and masses.}{4}{section*.5}%
-\contentsline {paragraph}{Origin-destination pattern.}{5}{section*.6}%
-\contentsline {paragraph}{Arrivals and group sizes.}{5}{section*.7}%
-\contentsline {paragraph}{Demand scale.}{5}{section*.8}%
-\contentsline {paragraph}{Persons vs.\ groups.}{6}{section*.9}%
-\contentsline {section}{\numberline {5}Simulation Environment as a Markov Decision Process}{7}{section.5}%
-\contentsline {subsection}{\numberline {5.1}State}{7}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Actions}{7}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Transition}{8}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Reward}{8}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Reference Dispatch Policy}{8}{section.6}%
-\contentsline {section}{\numberline {7}Metrics and Results of an Example Run}{9}{section.7}%
-\contentsline {paragraph}{Conservation check.}{9}{section*.10}%
-\contentsline {paragraph}{Inspecting a single minute.}{11}{section*.11}%
-\contentsline {section}{\numberline {8}Assumptions and Limitations}{11}{section.8}%
-\contentsline {section}{\numberline {9}Progress Summary and Next Steps}{12}{section.9}%
+\contentsline {subsection}{\numberline {4.1}Catchment areas and masses}{4}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}From population and employment to origin-destination intensity}{5}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}From intensity to Poisson arrival rates}{6}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Arrivals and group sizes}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Persons vs.\ groups}{8}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Simulation Environment}{8}{section.5}%
+\contentsline {paragraph}{This is a first, simple iteration.}{8}{section*.6}%
+\contentsline {subsection}{\numberline {5.1}State}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Actions}{9}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Transition}{9}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Reward}{9}{subsection.5.4}%

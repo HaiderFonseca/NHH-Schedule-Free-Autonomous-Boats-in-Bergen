@@ -166,14 +166,18 @@ def dibujar_frame(ax, frame: dict, gdf_nodos: gpd.GeoDataFrame, gdf_rutas: gpd.G
     ax.set_title(f"Despacho de barcos -- {hh:02d}:{mm:02d}", fontsize=13)
 
 
-def animar_corrida(historial: list[dict], gdf_nodos, gdf_rutas, matriz_tiempos, capacidad_barco: int, out_path, fps: int = 6):
+def animar_corrida(historial: list[dict], gdf_nodos, gdf_rutas, matriz_tiempos, capacidad_barco: int, out_path, fps: int = 6, fondo=None):
     """Guarda un GIF (`PillowWriter`, siempre disponible, no depende de
     ffmpeg) con un frame por paso del historial. El mapa de fondo se
     descarga UNA vez (`descargar_fondo_mapa`) y se reusa en los ~90 frames
     -- pedirlo de nuevo en cada frame sería 90 llamadas de red por
-    animación, lento e innecesariamente frágil.
+    animación, lento e innecesariamente frágil. Si el notebook ya descargó
+    un `fondo` para otra celda (inspector, reproductor), pásalo aquí para
+    no volver a pedirlo -- el servidor de tiles a veces tarda, y no hay
+    razón para pedir el mismo mapa de fondo más de una vez por notebook.
     """
-    fondo = descargar_fondo_mapa(gdf_nodos)
+    if fondo is None:
+        fondo = descargar_fondo_mapa(gdf_nodos)
     fig, ax = plt.subplots(figsize=(7, 7))
     fig.subplots_adjust(left=0.01, right=0.99, top=0.94, bottom=0.01)
 
@@ -219,15 +223,16 @@ def graficar_ocupacion_flota(env, ax=None):
 
 
 def graficar_heatmap_cumplimiento(env, ax=None):
-    """Heatmap 4x4 de % de cumplimiento (atendidas/generadas) por par
-    origen-destino -- de `metricas.metricas_por_par`.
+    """Heatmap 4x4 de % atendidas (atendidas/generadas, dentro de la
+    ventana de la corrida) por par origen-destino -- de
+    `metricas.metricas_por_par`.
     """
     df = met.metricas_por_par(env)
     nodos = env.nodos
     matriz = pd.DataFrame(np.nan, index=nodos, columns=nodos)
     for _, r in df.iterrows():
         o, d = r["par"].split("->")
-        matriz.loc[o, d] = r["pct_cumplimiento"]
+        matriz.loc[o, d] = r["pct_atendidas"]
 
     ax = ax or plt.subplots(figsize=(5.5, 5))[1]
     im = ax.imshow(matriz.values, cmap="RdYlGn", vmin=0, vmax=100)
@@ -237,7 +242,7 @@ def graficar_heatmap_cumplimiento(env, ax=None):
     ax.set_yticklabels([CODIGO_CORTO[n] for n in nodos])
     ax.set_xlabel("Destino")
     ax.set_ylabel("Origen")
-    ax.set_title("% cumplimiento por par (atendidas / generadas)")
+    ax.set_title("% atendidas por par (dentro de la ventana de la corrida)")
     for i in range(len(nodos)):
         for j in range(len(nodos)):
             v = matriz.values[i, j]
@@ -248,15 +253,15 @@ def graficar_heatmap_cumplimiento(env, ax=None):
 
 
 def graficar_desglose_recompensa(env, ax=None):
-    """Desglose de recompensa (incomodidad, pérdida, movimiento) en el
-    tiempo -- de `env.log_recompensa`.
+    """Desglose de recompensa (incomodidad, movimiento) en el tiempo -- de
+    `env.log_recompensa`. Ya no hay término de pérdida (ver recompensa.py).
     """
     df = met.desglose_recompensa(env)
     ax = ax or plt.subplots(figsize=(8, 4))[1]
     ax.stackplot(
-        df["minuto"], df["incomodidad"], df["perdida"], df["movimiento"],
-        labels=["incomodidad", "pérdida", "movimiento"],
-        colors=["#3498db", "#c0392b", "#7f8c8d"], alpha=0.85,
+        df["minuto"], df["incomodidad"], df["movimiento"],
+        labels=["incomodidad", "movimiento"],
+        colors=["#3498db", "#7f8c8d"], alpha=0.85,
     )
     ax.set_xlabel("Minuto del día")
     ax.set_ylabel("Penalización del paso (positiva = magnitud)")
@@ -265,17 +270,22 @@ def graficar_desglose_recompensa(env, ax=None):
     return ax
 
 
-def graficar_perdidas_por_nodo(env, ax=None):
-    """Barras de pérdidas por par -- de `metricas.perdidas_por_nodo`."""
-    df = met.perdidas_por_nodo(env)
+def graficar_sin_atender_al_final(env, ax=None):
+    """Barras del backlog al final de la corrida (gente todavía esperando o
+    a bordo cuando terminó la corrida), por par -- de
+    `metricas.sin_atender_al_final_por_par`. No son "pérdidas" (el
+    simulador ya no pierde a nadie, ver `env.py`): es gente que se habría
+    atendido si la corrida hubiera seguido un poco más.
+    """
+    df = met.sin_atender_al_final_por_par(env)
     ax = ax or plt.subplots(figsize=(7, 4))[1]
     if df.empty:
-        ax.text(0.5, 0.5, "Sin pérdidas en esta corrida", ha="center", va="center", transform=ax.transAxes)
+        ax.text(0.5, 0.5, "Todos atendidos al terminar la corrida", ha="center", va="center", transform=ax.transAxes)
     else:
-        ax.bar(df["par"], df["perdidas"], color="#c0392b")
+        ax.bar(df["par"], df["sin_atender"], color="#e67e22")
         ax.tick_params(axis="x", rotation=45)
-    ax.set_ylabel("Personas perdidas")
-    ax.set_title("Dónde se pierde la gente (por par origen-destino)")
+    ax.set_ylabel("Personas sin atender")
+    ax.set_title("Backlog al final de la corrida (por par origen-destino)")
     return ax
 
 
@@ -285,6 +295,42 @@ def _frame_mas_cercano(env, minuto: float) -> dict:
     return min(env.historial_estados, key=lambda f: abs(f["tiempo"]["minuto_del_dia"] - minuto))
 
 
+def _texto_estado(env, frame: dict) -> str:
+    """Arma el texto organizado de un paso: barcos (posición/ocupación/qué
+    decidió cada uno), las 12 colas con gente esperando, y la recompensa
+    con su desglose -- usado tanto por `inspeccionar` (imprime directo)
+    como por `reproductor_interactivo` (lo muestra en el panel de texto).
+    """
+    t = frame["tiempo"]["minuto_del_dia"]
+    decisiones = [e for e in env.log_eventos if e["tipo"] == "decision" and abs(e["minuto"] - t) < 1e-6]
+    recompensa = next((r for r in env.log_recompensa if abs(r["minuto"] - t) < 1e-6), None)
+
+    lineas = [f"=== Minuto {t:.0f} ===", "", "Barcos:"]
+    for i, b in enumerate(frame["barcos"]):
+        dec = next((d["decision"] for d in decisiones if d["barco_id"] == f"barco_{i}"), None)
+        estado_txt = "libre" if b["libre"] else f"{b['origen']}->{b['destino']} ({b['min_para_llegar']:.0f} min)"
+        dec_txt = f", decidió: {dec}" if dec is not None else ""
+        lineas.append(f"  barco_{i}: {estado_txt}, ocupación={b['ocupacion']}{dec_txt}")
+
+    lineas.append("")
+    lineas.append("Colas (pares con gente esperando):")
+    hay_cola = False
+    for clave, v in frame["demanda"].items():
+        if v["personas"] > 0:
+            hay_cola = True
+            lineas.append(f"  {clave}: {v['personas']} personas, la más antigua lleva {v['espera_max']:.1f} min")
+    if not hay_cola:
+        lineas.append("  (ninguna)")
+
+    lineas.append("")
+    if recompensa:
+        lineas.append(f"Recompensa del paso: {recompensa['total']:.3f}")
+        lineas.append(f"  incomodidad = {recompensa['incomodidad']:.3f}")
+        lineas.append(f"  movimiento  = {recompensa['movimiento']:.3f}")
+
+    return "\n".join(lineas)
+
+
 def inspeccionar(minuto: float, env, gdf_nodos, gdf_rutas, matriz_tiempos, fondo=None):
     """Pausa en el minuto pedido (usa el paso más cercano de
     `env.historial_estados`) y muestra el estado completo: barcos, las 12
@@ -292,56 +338,79 @@ def inspeccionar(minuto: float, env, gdf_nodos, gdf_rutas, matriz_tiempos, fondo
     desglose. Imprime texto y devuelve la figura dibujada.
 
     Funciona siempre (no requiere un kernel de Jupyter vivo) -- para un
-    control deslizante real, ver `inspeccionar_interactivo`.
+    reproductor con play/pausa y barra de tiempo real, ver
+    `reproductor_interactivo`.
     """
     frame = _frame_mas_cercano(env, minuto)
-    t = frame["tiempo"]["minuto_del_dia"]
-
-    decisiones = [e for e in env.log_eventos if e["tipo"] == "decision" and abs(e["minuto"] - t) < 1e-6]
-    recompensa = next((r for r in env.log_recompensa if abs(r["minuto"] - t) < 1e-6), None)
-
-    print(f"=== Minuto {t:.0f} ===")
-    print("Barcos:")
-    for i, b in enumerate(frame["barcos"]):
-        dec = next((d["decision"] for d in decisiones if d["barco_id"] == f"barco_{i}"), None)
-        estado_txt = "libre" if b["libre"] else f"{b['origen']}->{b['destino']} ({b['min_para_llegar']:.0f} min)"
-        dec_txt = f", decidió: {dec}" if dec is not None else ""
-        print(f"  barco_{i}: {estado_txt}, ocupación={b['ocupacion']}{dec_txt}")
-
-    print("Colas (pares con gente esperando):")
-    for clave, v in frame["demanda"].items():
-        if v["personas"] > 0:
-            print(f"  {clave}: {v['personas']} personas, la más antigua lleva {v['espera_max']:.1f} min")
-
-    if recompensa:
-        print(f"Recompensa del paso: {recompensa['total']:.3f} "
-              f"(incomodidad={recompensa['incomodidad']:.3f}, perdida={recompensa['perdida']:.3f}, "
-              f"movimiento={recompensa['movimiento']:.3f})")
-
+    print(_texto_estado(env, frame))
     fig, ax = plt.subplots(figsize=(7, 7))
     dibujar_frame(ax, frame, gdf_nodos, gdf_rutas, matriz_tiempos, env.capacidad_barco, fondo=fondo)
     return fig
 
 
-def inspeccionar_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos):
-    """Envuelve `inspeccionar` con un control deslizante de `ipywidgets`.
+def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int = 4, fondo=None):
+    """Reproductor tipo video de la corrida completa: botón de
+    reproducir/pausar, barra de tiempo para saltar a cualquier paso (hacia
+    adelante o atrás), mapa animado, y un panel de texto con el estado
+    completo de ese paso (barcos, colas, decisión de cada barco, y
+    recompensa con su desglose) -- todo de `env.historial_estados`,
+    `env.log_eventos` y `env.log_recompensa`, sin volver a correr nada.
 
-    IMPORTANTE: el slider solo aparece y funciona si este notebook se abre
-    con un kernel de Jupyter VIVO (VS Code / Jupyter Lab) -- un notebook ya
-    ejecutado y guardado (como los que se generan con `nbconvert`) no tiene
-    kernel corriendo, así que el slider no se puede mover ahí. Para
-    cualquier otro uso (scripts, notebooks ejecutados), usar `inspeccionar`
-    directo con un número.
+    IMPORTANTE: como cualquier control interactivo de `ipywidgets`, esto
+    SOLO funciona si el notebook se abre con un kernel de Jupyter VIVO (VS
+    Code / Jupyter Lab, con "Run All" hecho por ti) -- un notebook ya
+    ejecutado y guardado (como los que genera `nbconvert`, que es como se
+    corrieron y guardaron los notebooks de este proyecto) no tiene kernel
+    corriendo, así que los botones no van a responder ahí ni yo te lo
+    puedo mostrar funcionando. Para inspeccionar un paso puntual sin
+    depender de un kernel vivo, usar `inspeccionar(minuto, ...)`.
     """
     import ipywidgets as widgets
-    from IPython.display import display
+    from IPython.display import clear_output, display
 
-    minutos = [f["tiempo"]["minuto_del_dia"] for f in env.historial_estados]
-    fondo = descargar_fondo_mapa(gdf_nodos)
-    slider = widgets.IntSlider(min=int(min(minutos)), max=int(max(minutos)), step=1, description="Minuto")
+    historial = env.historial_estados
+    n_pasos = len(historial)
+    if fondo is None:
+        fondo = descargar_fondo_mapa(gdf_nodos)
 
-    def _actualizar(minuto):
-        inspeccionar(minuto, env, gdf_nodos, gdf_rutas, matriz_tiempos, fondo=fondo)
-        plt.show()
+    fig, ax = plt.subplots(figsize=(6.5, 6.5))
+    plt.close(fig)  # se muestra a mano dentro del Output, no como celda aparte
 
-    return widgets.interact(_actualizar, minuto=slider)
+    out_mapa = widgets.Output()
+    out_texto = widgets.Output(layout=widgets.Layout(width="380px", border="1px solid #ccc", padding="8px"))
+
+    slider = widgets.IntSlider(min=0, max=n_pasos - 1, step=1, description="Paso", continuous_update=True)
+    play = widgets.Play(min=0, max=n_pasos - 1, step=1, interval=int(1000 / fps), description="Reproducir")
+    widgets.jslink((play, "value"), (slider, "value"))
+
+    boton_atras = widgets.Button(description="◀ Paso anterior", layout=widgets.Layout(width="140px"))
+    boton_adelante = widgets.Button(description="Paso siguiente ▶", layout=widgets.Layout(width="140px"))
+
+    def _actualizar(change):
+        i = slider.value
+        frame = historial[i]
+        with out_mapa:
+            clear_output(wait=True)
+            dibujar_frame(ax, frame, gdf_nodos, gdf_rutas, matriz_tiempos, env.capacidad_barco, fondo=fondo)
+            display(fig)
+        with out_texto:
+            clear_output(wait=True)
+            print(_texto_estado(env, frame))
+
+    def _paso_adelante(b):
+        slider.value = min(slider.value + 1, n_pasos - 1)
+
+    def _paso_atras(b):
+        slider.value = max(slider.value - 1, 0)
+
+    boton_adelante.on_click(_paso_adelante)
+    boton_atras.on_click(_paso_atras)
+
+    slider.observe(_actualizar, names="value")
+    _actualizar(None)  # dibuja el primer paso antes de que el usuario mueva nada
+
+    controles = widgets.HBox([boton_atras, boton_adelante, play, slider])
+    panel = widgets.HBox([out_mapa, out_texto])
+    ui = widgets.VBox([controles, panel])
+    display(ui)
+    return ui

@@ -2,9 +2,19 @@
 
 Todas las funciones aquí son de ANÁLISIS -- consumen lo que el `env` ya
 registró durante la corrida (`log_eventos`, `log_recompensa`,
-`historial_estados`, `atendidas_historico`, `perdidas_historico`), nunca al
-revés: el agente/política no ve nada de este módulo, solo el vector
-aplanado de `estado.aplanar_estado`.
+`historial_estados`, `atendidas_historico`), nunca al revés: el
+agente/política no ve nada de este módulo, solo el vector aplanado de
+`estado.aplanar_estado`.
+
+**Sin "perdidas" (ver `env.py`/`unidades.py`):** el simulador ya no retira
+a nadie por paciencia -- toda persona generada termina "atendida" (subió a
+un barco y llegó a destino) o, si la corrida se corta antes de que le
+tocara, "sin atender al final" (todavía esperando en una cola, o a bordo
+de un barco que no había llegado). Por eso las métricas de este módulo ya
+no tienen una columna de "perdidas"; en cambio, los percentiles de espera
+de `metricas_por_usuario` son la pieza clave para definir una garantía de
+tiempo -- son datos REALES, sin censurar (nadie se "borró" antes de que se
+supiera cuánto iba a esperar).
 
 `reporte_completo(env)` es el punto de entrada único para los notebooks --
 junta todo lo demás, incluida `verificar_conservacion`.
@@ -21,20 +31,18 @@ from estado import pares_od
 
 def verificar_conservacion(env) -> dict:
     """Toda persona/grupo generado debe terminar en un estado contable:
-    atendida, perdida, o todavía esperando/a bordo si la corrida se truncó
-    a mitad de camino. Si `cuadra` es False es un bug real que hay que
-    exponer, no esconder -- se reporta explícito, no se silencia.
+    atendida, o todavía esperando/a bordo si la corrida se truncó a mitad
+    de camino (nadie se pierde -- ver docstring del módulo). Si `cuadra` es
+    False es un bug real que hay que exponer, no esconder.
     """
     generadas = env.total_unidades_generadas
     atendidas = len(env.atendidas_historico)
-    perdidas = len(env.perdidas_historico)
     esperando = sum(len(cola) for cola in env.colas.values())
     a_bordo = sum(len(b.a_bordo) for b in env.barcos)
-    suma = atendidas + perdidas + esperando + a_bordo
+    suma = atendidas + esperando + a_bordo
     return {
         "generadas": generadas,
         "atendidas": atendidas,
-        "perdidas": perdidas,
         "esperando_al_final": esperando,
         "a_bordo_al_final": a_bordo,
         "suma": suma,
@@ -51,23 +59,19 @@ def _tiempos_viaje_por_unidad(env) -> dict[str, float]:
 
 
 def _tiempos_sistema(env) -> dict[str, float]:
-    """unidad_id -> tiempo total en el sistema (espera + viaje si fue
-    atendida; solo espera si se perdió -- nunca llegó a viajar).
+    """unidad_id -> tiempo total en el sistema (espera + viaje), solo para
+    las unidades atendidas -- las que aún no fueron atendidas al final de
+    la corrida no tienen un tiempo en sistema "cerrado" todavía.
     """
     viajes = _tiempos_viaje_por_unidad(env)
-    resultado = {}
-    for u in env.atendidas_historico:
-        espera = u.tiempo_espera_min or 0.0
-        resultado[u.id] = espera + viajes.get(u.id, 0.0)
-    for u in env.perdidas_historico:
-        resultado[u.id] = u.tiempo_espera_min or 0.0
-    return resultado
+    return {u.id: (u.tiempo_espera_min or 0.0) + viajes.get(u.id, 0.0) for u in env.atendidas_historico}
 
 
 def metricas_por_par(env) -> pd.DataFrame:
-    """generadas, atendidas, perdidas, % cumplimiento, espera media/máxima,
-    tiempo de viaje medio, tiempo en sistema medio/máximo -- por cada uno de
-    los 12 pares origen-destino.
+    """generadas, atendidas, sin atender al final, % atendidas, espera
+    media/máxima, tiempo de viaje medio, tiempo en sistema medio/máximo --
+    por cada uno de los 12 pares origen-destino. La espera aquí es REAL,
+    sin censurar por paciencia (ver docstring del módulo).
     """
     viajes = _tiempos_viaje_por_unidad(env)
     sistema = _tiempos_sistema(env)
@@ -75,18 +79,20 @@ def metricas_por_par(env) -> pd.DataFrame:
     filas = []
     for par in pares_od(env.nodos):
         atendidas = [u for u in env.atendidas_historico if (u.origen, u.destino) == par]
-        perdidas = [u for u in env.perdidas_historico if (u.origen, u.destino) == par]
-        generadas = len(atendidas) + len(perdidas)
-        esperas = [u.tiempo_espera_min for u in atendidas + perdidas if u.tiempo_espera_min is not None]
+        sin_atender = [u for cola_par, cola in env.colas.items() for u in cola if cola_par == par]
+        sin_atender += [u for b in env.barcos for u in b.a_bordo if (u.origen, u.destino) == par]
+        generadas = len(atendidas) + len(sin_atender)
+
+        esperas = [u.tiempo_espera_min for u in atendidas if u.tiempo_espera_min is not None]
         viajes_par = [viajes[u.id] for u in atendidas if u.id in viajes]
-        sistema_par = [sistema[u.id] for u in atendidas + perdidas if u.id in sistema]
+        sistema_par = [sistema[u.id] for u in atendidas if u.id in sistema]
 
         filas.append({
             "par": f"{par[0]}->{par[1]}",
             "generadas": generadas,
             "atendidas": len(atendidas),
-            "perdidas": len(perdidas),
-            "pct_cumplimiento": 100.0 * len(atendidas) / generadas if generadas else float("nan"),
+            "sin_atender_al_final": len(sin_atender),
+            "pct_atendidas": 100.0 * len(atendidas) / generadas if generadas else float("nan"),
             "espera_media_min": float(np.mean(esperas)) if esperas else float("nan"),
             "espera_maxima_min": float(np.max(esperas)) if esperas else float("nan"),
             "viaje_medio_min": float(np.mean(viajes_par)) if viajes_par else float("nan"),
@@ -99,14 +105,13 @@ def metricas_por_par(env) -> pd.DataFrame:
 def metricas_globales(env) -> dict:
     generadas = env.total_unidades_generadas
     atendidas = len(env.atendidas_historico)
-    perdidas = len(env.perdidas_historico)
-    esperas = [u.tiempo_espera_min for u in env.atendidas_historico + env.perdidas_historico if u.tiempo_espera_min is not None]
+    esperas = [u.tiempo_espera_min for u in env.atendidas_historico if u.tiempo_espera_min is not None]
     sistema = list(_tiempos_sistema(env).values())
     return {
         "unidades_generadas": generadas,
         "unidades_atendidas": atendidas,
-        "unidades_perdidas": perdidas,
-        "pct_cumplimiento_global": 100.0 * atendidas / generadas if generadas else float("nan"),
+        "unidades_sin_atender_al_final": generadas - atendidas,
+        "pct_atendidas": 100.0 * atendidas / generadas if generadas else float("nan"),
         "espera_media_min": float(np.mean(esperas)) if esperas else float("nan"),
         "sistema_medio_min": float(np.mean(sistema)) if sistema else float("nan"),
         "sistema_maximo_min": float(np.max(sistema)) if sistema else float("nan"),
@@ -144,9 +149,13 @@ def metricas_por_barco(env) -> pd.DataFrame:
 
 def metricas_por_usuario(env) -> dict:
     """Distribución (percentiles) de espera, tiempo de viaje, y tiempo en
-    sistema, sobre todas las unidades resueltas (atendidas + perdidas).
+    sistema, sobre las unidades ATENDIDAS -- datos reales, sin censurar por
+    ninguna paciencia artificial. Esta es la pieza clave para definir una
+    garantía de tiempo con fundamento: por ejemplo, si p95 de espera es 22
+    min, "servir al 95% de la gente en 22 min" es una garantía medida, no
+    supuesta.
     """
-    esperas = [u.tiempo_espera_min for u in env.atendidas_historico + env.perdidas_historico if u.tiempo_espera_min is not None]
+    esperas = [u.tiempo_espera_min for u in env.atendidas_historico if u.tiempo_espera_min is not None]
     viajes = list(_tiempos_viaje_por_unidad(env).values())
     sistema = list(_tiempos_sistema(env).values())
 
@@ -160,19 +169,30 @@ def metricas_por_usuario(env) -> dict:
     return {"espera_min": percentiles(esperas), "viaje_min": percentiles(viajes), "sistema_min": percentiles(sistema)}
 
 
-def perdidas_por_nodo(env) -> pd.DataFrame:
-    """Dónde se pierde la gente: conteo por par completo (origen->destino)."""
-    filas = [{"par": f"{e['par'][0]}->{e['par'][1]}"} for e in env.log_eventos if e["tipo"] == "perdida"]
-    if not filas:
-        return pd.DataFrame(columns=["par", "perdidas"])
-    df = pd.DataFrame(filas)
-    return df.groupby("par").size().reset_index(name="perdidas").sort_values("perdidas", ascending=False)
+def sin_atender_al_final_por_par(env) -> pd.DataFrame:
+    """Dónde queda gente sin atender cuando termina la corrida (todavía en
+    cola, o a bordo de un barco que no había llegado) -- backlog por par,
+    no "pérdidas": es gente que se habría atendido si la corrida siguiera.
+    """
+    conteos: dict[tuple[str, str], int] = {}
+    for par, cola in env.colas.items():
+        if cola:
+            conteos[par] = conteos.get(par, 0) + len(cola)
+    for b in env.barcos:
+        for u in b.a_bordo:
+            par = (u.origen, u.destino)
+            conteos[par] = conteos.get(par, 0) + 1
+
+    if not conteos:
+        return pd.DataFrame(columns=["par", "sin_atender"])
+    filas = [{"par": f"{par[0]}->{par[1]}", "sin_atender": n} for par, n in conteos.items()]
+    return pd.DataFrame(filas).sort_values("sin_atender", ascending=False).reset_index(drop=True)
 
 
 def desglose_recompensa(env) -> pd.DataFrame:
-    """Serie de tiempo del desglose de recompensa (incomodidad, pérdida,
-    movimiento, total) por paso -- ya se calculaba en cada `step()`, esta
-    función solo la devuelve como tabla para graficar/sumar.
+    """Serie de tiempo del desglose de recompensa (incomodidad, movimiento,
+    total) por paso -- ya se calculaba en cada `step()`, esta función solo
+    la devuelve como tabla para graficar/sumar.
     """
     return pd.DataFrame(env.log_recompensa)
 
@@ -193,6 +213,6 @@ def reporte_completo(env) -> dict:
         "por_par": metricas_por_par(env),
         "por_barco": metricas_por_barco(env),
         "por_usuario": metricas_por_usuario(env),
-        "perdidas_por_nodo": perdidas_por_nodo(env),
+        "sin_atender_al_final": sin_atender_al_final_por_par(env),
         "desglose_recompensa": desglose_recompensa(env),
     }

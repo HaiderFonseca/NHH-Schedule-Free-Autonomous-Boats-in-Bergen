@@ -87,8 +87,7 @@ class EstadoSimulacion:
     dia_semana: int              # 0 (lunes) .. 6 (domingo)
     barcos: list[Barco]
     colas: dict[tuple[str, str], list[Unidad]]   # (origen,destino) -> unidades esperando, orden FIFO
-    perdidas_historico: list[Unidad] = field(default_factory=list)   # para métricas al final de la corrida
-    atendidas_historico: list[Unidad] = field(default_factory=list)  # idem
+    atendidas_historico: list[Unidad] = field(default_factory=list)  # para métricas al final de la corrida
 
     def to_dict(self, nodos: list[str] = NODOS_DEFAULT) -> dict:
         """Reproduce el formato de ejemplo de la especificación (§4) --
@@ -132,7 +131,7 @@ def aplanar_estado(
     nodos: list[str],
     capacidad_barco: int,
     min_para_llegar_norm: float,
-    paciencia_norm: float = 35.0,
+    espera_norm: float = 35.0,
 ) -> np.ndarray:
     """Convierte `EstadoSimulacion` en un vector numérico de tamaño fijo
     (`dimension_vector(len(estado.barcos), len(nodos))`).
@@ -148,7 +147,10 @@ def aplanar_estado(
     - `ocupación`: dividida por `capacidad_barco` -> fracción de barco lleno.
     - Demanda por par O-D: personas dividido por `capacidad_barco` (≈
       "cuántos barcos llenos están esperando ahí"), espera del más antiguo
-      dividida por `paciencia_norm` (paciencia máxima plausible, 30+jitter).
+      dividida por `espera_norm` (una escala de referencia, no un límite --
+      el simulador ya no tiene ningún concepto de paciencia/pérdida, ver
+      `unidades.py`; esto es solo para que el número quede en un rango
+      razonable para la red, no en cientos).
     - Tiempo: minuto-del-día y día-de-semana como seno/coseno (2 valores
       cada uno) en vez de los enteros crudos -- un entero le haría creer a
       la red que el minuto 1439 y el minuto 0 están lejos, cuando en
@@ -169,7 +171,7 @@ def aplanar_estado(
         personas = sum(u.tamano for u in cola_od)
         espera_max = (estado.t_actual_min - min(u.minuto_llegada for u in cola_od)) if cola_od else 0.0
         partes.append(personas / capacidad_barco)
-        partes.append(espera_max / paciencia_norm)
+        partes.append(espera_max / espera_norm)
 
     minuto = estado.t_actual_min % 1440
     partes.append(math.sin(2 * math.pi * minuto / 1440))

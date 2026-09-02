@@ -1,39 +1,43 @@
-"""Recompensa del simulador (docs/especificacion_simulador_rl.md §7).
+"""Recompensa del simulador (docs/especificacion_simulador_rl.md §7, muy
+simplificada -- ver también `unidades.py` y `env.py` para el cambio de
+diseño más grande: ya no existe el concepto de "paciencia"/"pérdida").
 
-Función aislada y pura: recibe el estado ya transicionado y qué unidades se
-perdieron en este paso, devuelve un escalar (negativo) y el desglose por
-término. Todos los pesos vienen de `cfg["recompensa"]`, nada hardcodeado --
-así se puede sustituir/ajustar sin tocar el simulador (`env.py`).
+Función aislada y pura: recibe el estado ya transicionado, devuelve un
+escalar (negativo) y el desglose por término. Todos los pesos vienen de
+`cfg["recompensa"]`, nada hardcodeado -- así se puede sustituir/ajustar sin
+tocar el simulador (`env.py`).
 
-r = -[ Σ_unidades_activas (sobrante/sobrante_max)²
-       + peso_perdido * (unidades perdidas este paso)
+r = -[ Σ_unidades_activas min(techo, (sobrante / sobrante_normalizador)²)
        + peso_movimiento * (barcos en movimiento) ]
 
-Notas de diseño:
-- La penalización de incomodidad se pondera por `unidad.tamano` (así lo pide
-  la especificación: "se suma sobre todos los PASAJEROS en el sistema") --
-  en modo "personas" tamano=1 y no cambia nada; en modo "grupos" un grupo de
-  8 personas pesa 8x, no 1x.
-- La penalización de pérdida, en cambio, es POR UNIDAD (`len(...)`, no
-  `sum(tamano)`) -- así colapsa exactamente a "por persona" en modo
-  "personas" y a "por grupo" (como dice la especificación original, ≈1.3
-  por grupo, sin escalar por tamaño) en modo "grupos", sin ninguna rama
-  especial para cada caso.
-- "Unidades activas" incluye las que van A BORDO de un barco en ruta, no
-  solo las que esperan en la parada -- la especificación dice literalmente
-  "cada pasajero que aún no llega a su destino". Por eso una `Unidad` no
-  cambia su `minuto_llegada` al embarcar: el tiempo en el sistema sigue
-  contando hasta la entrega real.
+**Historia de los cambios sobre la especificación original** (por si hace
+falta reconstruir el razonamiento):
 
-Bug detectado en la especificación (documentado también en
-simulacion/README.md): `paciencia_min` en conexiones fuertes es 15 min con
-jitter +-5 (`demand/config/instance.yaml`), así que puede caer hasta 10 min
--- por debajo de la tolerancia de 12 min. La fórmula literal
-`sobrante_max = paciencia - tolerancia` daría un número negativo o cero para
-esos casos (división inválida). Se corrige con un piso configurable
-(`recompensa.sobrante_max_minimo`, default 1.0): para esos casos raros la
-penalización satura en ~1.0 casi de inmediato, que es razonable (alguien a
-punto de perderse). El generador de demanda y su jitter no se tocan.
+1. Se quitó el término de pérdida (`peso_perdido * unidades_perdidas`) --
+   se sentía redundante con la incomodidad, que ya llega a su techo justo
+   antes de que alguien se perdiera.
+2. `sobrante_max` pasó de calcularse por unidad (`paciencia - tolerancia`,
+   que podía dar negativo con paciencia corta + jitter) a una constante
+   fija (`sobrante_normalizador_min`) -- sin casos especiales.
+3. **Se quitó la paciencia por completo, en todo el simulador (no solo
+   aquí).** Antes, alguien que esperaba más de su paciencia se retiraba de
+   la cola ("se pierde") y dejaba de aparecer en la recompensa y en las
+   métricas -- eso escondía justo el dato que hace falta para definir una
+   garantía de tiempo con fundamento (cuánto se tarda REALMENTE en
+   atender a alguien, sin censurar los casos malos). Ahora nadie se va
+   nunca: espera hasta ser atendido, o hasta que termina la corrida
+   (`env.py` ya no tiene `_purgar_perdidas`, `unidades.py` ya no tiene un
+   campo de paciencia).
+4. Consecuencia de (3): sin paciencia, `sobrante` puede crecer sin límite
+   para alguien que espera muchísimo, y `(sobrante/normalizador)²` también
+   -- una sola persona muy retrasada podría dominar toda la recompensa del
+   paso. Se le puso un **techo por persona** (`penalizacion_maxima_persona`,
+   default 1.0): la penalización de una persona nunca pasa de ese valor,
+   así que sigue presionando (mientras más tiempo pasa sin atenderla, más
+   cerca del techo) pero no puede explotar sin límite. El techo por defecto
+   (1.0) es el mismo valor que antes marcaba "a punto de perderse" -- la
+   escala de la recompensa no cambió, solo se dejó de borrar a la gente al
+   llegar ahí.
 """
 from __future__ import annotations
 
@@ -42,41 +46,39 @@ from unidades import Unidad
 
 
 def _unidades_activas(estado: EstadoSimulacion) -> list[Unidad]:
+    """Todas las unidades que aún no llegaron a destino: esperando en
+    cualquiera de las 12 colas, o a bordo de un barco en ruta (su tiempo en
+    el sistema sigue contando hasta la entrega real, no se congela al
+    embarcar).
+    """
     activas = [u for cola in estado.colas.values() for u in cola]
     for b in estado.barcos:
         activas.extend(b.a_bordo)
     return activas
 
 
-def calcular_recompensa(
-    estado: EstadoSimulacion,
-    unidades_perdidas_este_paso: list[Unidad],
-    cfg_recompensa: dict,
-) -> tuple[float, dict]:
+def calcular_recompensa(estado: EstadoSimulacion, cfg_recompensa: dict) -> tuple[float, dict]:
     """Recompensa del paso (negativa) + desglose por término, para poder
     loguear/graficar cada componente por separado durante la verificación.
     """
     tolerancia = cfg_recompensa["tolerancia_incomodidad_min"]
-    eps = cfg_recompensa["sobrante_max_minimo"]
-    peso_perdido = cfg_recompensa["peso_perdido"]
+    sobrante_normalizador = cfg_recompensa["sobrante_normalizador_min"]
+    techo_persona = cfg_recompensa["penalizacion_maxima_persona"]
     peso_movimiento = cfg_recompensa["peso_movimiento"]
 
     penalizacion_incomodidad = 0.0
     for u in _unidades_activas(estado):
         tiempo_en_sistema = estado.t_actual_min - u.minuto_llegada
         sobrante = max(0.0, tiempo_en_sistema - tolerancia)
-        sobrante_max = max(eps, u.paciencia_min - tolerancia)
-        penalizacion_incomodidad += u.tamano * (sobrante / sobrante_max) ** 2
-
-    penalizacion_perdida = peso_perdido * len(unidades_perdidas_este_paso)
+        penalizacion_unidad = min(techo_persona, (sobrante / sobrante_normalizador) ** 2)
+        penalizacion_incomodidad += u.tamano * penalizacion_unidad
 
     barcos_en_movimiento = sum(1 for b in estado.barcos if b.nodo_origen != b.nodo_destino)
     penalizacion_movimiento = peso_movimiento * barcos_en_movimiento
 
     desglose = {
         "incomodidad": penalizacion_incomodidad,
-        "perdida": penalizacion_perdida,
         "movimiento": penalizacion_movimiento,
     }
-    r = -(penalizacion_incomodidad + penalizacion_perdida + penalizacion_movimiento)
+    r = -(penalizacion_incomodidad + penalizacion_movimiento)
     return r, desglose

@@ -1,4 +1,5 @@
-"""Entorno Gymnasium del simulador (docs/especificacion_simulador_rl.md §3-§8).
+"""Entorno Gymnasium del simulador (docs/especificacion_simulador_rl.md §3-§8,
+con un cambio de diseño deliberado: sin paciencia/pérdida, ver más abajo).
 
 `SimuladorBarcosBergen` es la TRANSICIÓN del MDP: recibe una acción por
 barco, avanza el mundo `paso_tiempo_min` (2 min por defecto) y devuelve el
@@ -16,14 +17,28 @@ más honesto que una versión anterior que permitía embarcar de cualquier
 destino y solo bajar a los que coincidían con la parada: esa lógica asumía
 rutas con paradas intermedias que este proyecto no modela todavía.
 
+**Sin paciencia ni pérdidas (cambio de diseño sobre la especificación
+original).** La especificación original retiraba de la cola, como
+"perdido", a quien esperara más que su paciencia (15/30 min +- jitter).
+Se quitó por completo: nadie se va nunca, espera hasta ser atendido (o
+hasta que termina la corrida, quedando "esperando al final" -- una
+categoría que la verificación de conservación ya contempla). Motivo:
+retirar a alguien de la cola borraba justo el dato que hace falta para
+definir una garantía de tiempo con fundamento -- cuánto se tarda REALMENTE
+en atender a alguien en el peor caso, sin censurar los casos malos con un
+límite artificial. La recompensa (`recompensa.py`) sigue penalizando la
+espera larga (con un techo por persona, para que no crezca sin límite),
+pero ya no hay un evento de "pérdida" aparte ni un campo de paciencia en
+`unidades.Unidad`.
+
 Nada se recalcula aquí: los tiempos de viaje vienen de la matriz náutica de
 `bergen-boats/02_ruteo_navegable`, y las unidades de demanda vienen de
 `demand/src/llegadas.py` (vía `unidades.grupos_a_unidades`, ya generadas
 antes de construir el entorno -- ver `notebooks/00_preparar_demanda_escalones.ipynb`).
 
 **Registros para análisis (no los ve el agente):** `log_eventos` (una fila
-por cada sube/baja/perdida/decision/movimiento), `log_recompensa` (desglose
-por paso) y `historial_estados` (snapshot `estado.to_dict()` por paso) --
+por cada sube/baja/decision/movimiento), `log_recompensa` (desglose por
+paso) y `historial_estados` (snapshot `estado.to_dict()` por paso) --
 consumidos por `metricas.py` y `visualizacion.py`, nunca por la política ni
 por el vector aplanado que ve el agente.
 """
@@ -118,7 +133,6 @@ class SimuladorBarcosBergen(gym.Env):
             Barco(id=f"barco_{i}", nodo_origen=self.nodo_inicial, nodo_destino=self.nodo_inicial, min_para_llegar=0.0)
             for i in range(self.num_barcos)
         ]
-        self.perdidas_historico: list[Unidad] = []
         self.atendidas_historico: list[Unidad] = []
         self.log_eventos: list[dict] = []
         self.log_recompensa: list[dict] = []
@@ -179,12 +193,10 @@ class SimuladorBarcosBergen(gym.Env):
         #    en el paso 1, orden exacto de la especificacion §6)
         self._incorporar_unidades_hasta(self.t_actual_min)
 
-        # 4) purgar perdidas
-        unidades_perdidas_este_paso = self._purgar_perdidas()
-
-        # 5) recompensa + nuevo estado
+        # 4) recompensa + nuevo estado (ya no hay paso de "purgar perdidas" --
+        #    nadie se va nunca, ver docstring del modulo)
         estado = self._construir_estado()
-        r, desglose = calcular_recompensa(estado, unidades_perdidas_este_paso, self.cfg_recompensa)
+        r, desglose = calcular_recompensa(estado, self.cfg_recompensa)
         self.log_recompensa.append({"minuto": self.t_actual_min, **desglose, "total": r})
 
         terminated = False   # no hay estado terminal natural en despacho continuo
@@ -197,7 +209,6 @@ class SimuladorBarcosBergen(gym.Env):
             "estado_dict": estado_dict,
             "_estado_obj": estado,
             "recompensa_desglose": desglose,
-            "unidades_perdidas_este_paso": len(unidades_perdidas_este_paso),
             "movimientos_iniciados": movimientos_iniciados,
         }
         return obs, r, terminated, truncated, info
@@ -259,29 +270,11 @@ class SimuladorBarcosBergen(gym.Env):
         self.atendidas_historico.extend(barco.a_bordo)
         barco.a_bordo = []
 
-    def _purgar_perdidas(self) -> list[Unidad]:
-        perdidas: list[Unidad] = []
-        for par, cola in self.colas.items():
-            restantes, idas = [], []
-            for u in cola:
-                (idas if (self.t_actual_min - u.minuto_llegada) > u.paciencia_min else restantes).append(u)
-            for u in idas:
-                u.tiempo_espera_min = self.t_actual_min - u.minuto_llegada
-                self.log_eventos.append({
-                    "tipo": "perdida", "minuto": self.t_actual_min,
-                    "unidad_id": u.id, "par": par, "tiempo_espera": u.tiempo_espera_min,
-                })
-            self.colas[par] = restantes
-            perdidas.extend(idas)
-        self.perdidas_historico.extend(perdidas)
-        return perdidas
-
     def _construir_estado(self) -> EstadoSimulacion:
         return EstadoSimulacion(
             t_actual_min=self.t_actual_min,
             dia_semana=self.dia_semana,
             barcos=self.barcos,
             colas=self.colas,
-            perdidas_historico=self.perdidas_historico,
             atendidas_historico=self.atendidas_historico,
         )

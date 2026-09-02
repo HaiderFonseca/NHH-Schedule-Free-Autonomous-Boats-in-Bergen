@@ -64,16 +64,21 @@ escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
 paso_tiempo_min: 2
 
 # ---------------------------------------------------------------------------
-# Recompensa (§7 de la especificación). Todos los pesos aqui, nada hardcodeado
-# en recompensa.py. Ver docs/especificacion_simulador_rl.md y
-# simulacion/README.md ("bug detectado") para la justificacion del clip en
-# sobrante_max.
+# Recompensa (§7 de la especificacion, SIMPLIFICADA -- ver recompensa.py para
+# la justificacion completa). Dos terminos: incomodidad (tiempo en el
+# sistema, con techo por persona) y movimiento.
+#
+# Cambio de diseño importante: el simulador YA NO TIENE paciencia ni gente
+# que se pierde (ver unidades.py/env.py) -- nadie se va nunca, espera hasta
+# ser atendido. Por eso `penalizacion_maxima_persona` existe: sin paciencia,
+# el sobrante de alguien muy retrasado podria crecer sin limite y dominar la
+# recompensa; el techo evita eso sin volver a borrar a nadie de la cola.
 # ---------------------------------------------------------------------------
 recompensa:
-  tolerancia_incomodidad_min: 12    # ruta directa mas larga (Kleppestø-Bryggen navegable, ~11.5 min a 30 km/h)
-  peso_perdido: 1.3                 # penalizacion fija por unidad (persona o grupo) perdida en el intervalo
-  peso_movimiento: 0.1              # penalizacion por barco navegando en el paso
-  sobrante_max_minimo: 1.0          # EPS: evita division por cero/negativo si paciencia jitter cae bajo la tolerancia
+  tolerancia_incomodidad_min: 12       # ruta directa mas larga (Kleppestø-Bryggen navegable, ~11.5 min a 30 km/h)
+  sobrante_normalizador_min: 18        # ancho de la curva -- constante fija para todos (antes: paciencia - tolerancia, por unidad)
+  penalizacion_maxima_persona: 1.0     # techo de (sobrante/normalizador)^2 por persona -- evita que alguien muy retrasado domine la recompensa
+  peso_movimiento: 0.1                 # penalizacion por barco navegando en el paso
 
 # ---------------------------------------------------------------------------
 # Para la fase siguiente (agente, fuera de este paso) -- se deja declarado

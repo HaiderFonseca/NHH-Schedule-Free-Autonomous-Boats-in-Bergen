@@ -1,3 +1,0 @@
-barco_id,movimientos,tiempo_navegado_min,ocupacion_media,ocupacion_maxima,pct_ocioso,ruta_mas_frecuente
-barco_0,13,102,4.461538461538462,20,43.956043956043956,bryggen->kleppesto (3x)
-barco_1,14,106,3.3736263736263736,18,41.75824175824175,bryggen->laksevag (3x)

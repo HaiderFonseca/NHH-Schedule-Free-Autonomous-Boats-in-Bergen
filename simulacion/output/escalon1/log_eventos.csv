@@ -1,0 +1,487 @@
+tipo,minuto,barco_id,decision,desde,hasta,ocupacion,unidad_id,par,tiempo_espera,tiempo_viaje
+decision,360.0,barco_0,esperar,,,,,,,
+decision,360.0,barco_1,esperar,,,,,,,
+decision,362.0,barco_0,esperar,,,,,,,
+decision,362.0,barco_1,esperar,,,,,,,
+decision,364.0,barco_0,esperar,,,,,,,
+decision,364.0,barco_1,esperar,,,,,,,
+decision,366.0,barco_0,esperar,,,,,,,
+decision,366.0,barco_1,esperar,,,,,,,
+decision,368.0,barco_0,laksevag,,,,,,,
+movimiento,368.0,barco_0,,bryggen,laksevag,0.0,,,,
+decision,368.0,barco_1,laksevag,,,,,,,
+movimiento,368.0,barco_1,,bryggen,laksevag,0.0,,,,
+decision,378.0,barco_0,bryggen,,,,,,,
+sube,378.0,barco_0,,,,,escalon_1_00013_p0,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p1,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p2,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p3,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p4,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p5,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p6,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p7,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p8,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00013_p9,"('laksevag', 'bryggen')",11.129999999999995,
+sube,378.0,barco_0,,,,,escalon_1_00012_p0,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p1,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p2,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p3,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p4,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p5,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p6,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p7,"('laksevag', 'bryggen')",9.610000000000014,
+sube,378.0,barco_0,,,,,escalon_1_00012_p8,"('laksevag', 'bryggen')",9.610000000000014,
+movimiento,378.0,barco_0,,laksevag,bryggen,19.0,,,,
+decision,378.0,barco_1,esperar,,,,,,,
+decision,380.0,barco_1,sandviken,,,,,,,
+movimiento,380.0,barco_1,,laksevag,sandviken,0.0,,,,
+baja,388.0,barco_0,,,,,escalon_1_00013_p0,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p1,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p2,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p3,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p4,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p5,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p6,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p7,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p8,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00013_p9,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p0,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p1,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p2,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p3,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p4,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p5,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p6,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p7,"('laksevag', 'bryggen')",,10.0
+baja,388.0,barco_0,,,,,escalon_1_00012_p8,"('laksevag', 'bryggen')",,10.0
+decision,388.0,barco_0,sandviken,,,,,,,
+movimiento,388.0,barco_0,,bryggen,sandviken,0.0,,,,
+decision,390.0,barco_1,bryggen,,,,,,,
+sube,390.0,barco_1,,,,,escalon_1_00020_p0,"('sandviken', 'bryggen')",11.639999999999986,
+sube,390.0,barco_1,,,,,escalon_1_00020_p1,"('sandviken', 'bryggen')",11.639999999999986,
+sube,390.0,barco_1,,,,,escalon_1_00020_p2,"('sandviken', 'bryggen')",11.639999999999986,
+sube,390.0,barco_1,,,,,escalon_1_00020_p3,"('sandviken', 'bryggen')",11.639999999999986,
+sube,390.0,barco_1,,,,,escalon_1_00020_p4,"('sandviken', 'bryggen')",11.639999999999986,
+sube,390.0,barco_1,,,,,escalon_1_00020_p5,"('sandviken', 'bryggen')",11.639999999999986,
+movimiento,390.0,barco_1,,sandviken,bryggen,6.0,,,,
+decision,396.0,barco_0,bryggen,,,,,,,
+sube,396.0,barco_0,,,,,escalon_1_00021_p0,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p1,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p2,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p3,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p4,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p5,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p6,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p7,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p8,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p9,"('sandviken', 'bryggen')",1.25,
+sube,396.0,barco_0,,,,,escalon_1_00021_p10,"('sandviken', 'bryggen')",1.25,
+movimiento,396.0,barco_0,,sandviken,bryggen,11.0,,,,
+baja,398.0,barco_1,,,,,escalon_1_00020_p0,"('sandviken', 'bryggen')",,8.0
+baja,398.0,barco_1,,,,,escalon_1_00020_p1,"('sandviken', 'bryggen')",,8.0
+baja,398.0,barco_1,,,,,escalon_1_00020_p2,"('sandviken', 'bryggen')",,8.0
+baja,398.0,barco_1,,,,,escalon_1_00020_p3,"('sandviken', 'bryggen')",,8.0
+baja,398.0,barco_1,,,,,escalon_1_00020_p4,"('sandviken', 'bryggen')",,8.0
+baja,398.0,barco_1,,,,,escalon_1_00020_p5,"('sandviken', 'bryggen')",,8.0
+decision,398.0,barco_1,laksevag,,,,,,,
+movimiento,398.0,barco_1,,bryggen,laksevag,0.0,,,,
+baja,404.0,barco_0,,,,,escalon_1_00021_p0,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p1,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p2,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p3,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p4,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p5,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p6,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p7,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p8,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p9,"('sandviken', 'bryggen')",,8.0
+baja,404.0,barco_0,,,,,escalon_1_00021_p10,"('sandviken', 'bryggen')",,8.0
+decision,404.0,barco_0,laksevag,,,,,,,
+movimiento,404.0,barco_0,,bryggen,laksevag,0.0,,,,
+decision,408.0,barco_1,bryggen,,,,,,,
+sube,408.0,barco_1,,,,,escalon_1_00011_p0,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p1,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p2,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p3,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p4,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p5,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p6,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00011_p7,"('laksevag', 'bryggen')",13.879999999999995,
+sube,408.0,barco_1,,,,,escalon_1_00014_p0,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p1,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p2,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p3,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p4,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p5,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p6,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p7,"('laksevag', 'bryggen')",7.899999999999977,
+sube,408.0,barco_1,,,,,escalon_1_00014_p8,"('laksevag', 'bryggen')",7.899999999999977,
+movimiento,408.0,barco_1,,laksevag,bryggen,17.0,,,,
+decision,414.0,barco_0,kleppesto,,,,,,,
+movimiento,414.0,barco_0,,laksevag,kleppesto,0.0,,,,
+baja,418.0,barco_1,,,,,escalon_1_00011_p0,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p1,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p2,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p3,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p4,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p5,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p6,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00011_p7,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p0,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p1,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p2,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p3,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p4,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p5,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p6,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p7,"('laksevag', 'bryggen')",,10.0
+baja,418.0,barco_1,,,,,escalon_1_00014_p8,"('laksevag', 'bryggen')",,10.0
+decision,418.0,barco_1,kleppesto,,,,,,,
+movimiento,418.0,barco_1,,bryggen,kleppesto,0.0,,,,
+decision,420.0,barco_0,bryggen,,,,,,,
+sube,420.0,barco_0,,,,,escalon_1_00005_p0,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p1,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p2,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p3,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p4,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p5,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p6,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00005_p7,"('kleppesto', 'bryggen')",22.100000000000023,
+sube,420.0,barco_0,,,,,escalon_1_00004_p0,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p1,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p2,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p3,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p4,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p5,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p6,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p7,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p8,"('kleppesto', 'bryggen')",10.339999999999975,
+sube,420.0,barco_0,,,,,escalon_1_00004_p9,"('kleppesto', 'bryggen')",10.339999999999975,
+movimiento,420.0,barco_0,,kleppesto,bryggen,18.0,,,,
+decision,430.0,barco_1,laksevag,,,,,,,
+sube,430.0,barco_1,,,,,escalon_1_00001_p0,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p1,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p2,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p3,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p4,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p5,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p6,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p7,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p8,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00001_p9,"('kleppesto', 'laksevag')",18.480000000000018,
+sube,430.0,barco_1,,,,,escalon_1_00002_p0,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p1,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p2,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p3,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p4,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p5,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p6,"('kleppesto', 'laksevag')",2.3100000000000023,
+sube,430.0,barco_1,,,,,escalon_1_00002_p7,"('kleppesto', 'laksevag')",2.3100000000000023,
+movimiento,430.0,barco_1,,kleppesto,laksevag,18.0,,,,
+baja,432.0,barco_0,,,,,escalon_1_00005_p0,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p1,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p2,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p3,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p4,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p5,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p6,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00005_p7,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p0,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p1,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p2,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p3,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p4,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p5,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p6,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p7,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p8,"('kleppesto', 'bryggen')",,12.0
+baja,432.0,barco_0,,,,,escalon_1_00004_p9,"('kleppesto', 'bryggen')",,12.0
+decision,432.0,barco_0,laksevag,,,,,,,
+sube,432.0,barco_0,,,,,escalon_1_00017_p0,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p1,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p2,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p3,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p4,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p5,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p6,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p7,"('bryggen', 'laksevag')",2.319999999999993,
+sube,432.0,barco_0,,,,,escalon_1_00017_p8,"('bryggen', 'laksevag')",2.319999999999993,
+movimiento,432.0,barco_0,,bryggen,laksevag,9.0,,,,
+baja,436.0,barco_1,,,,,escalon_1_00001_p0,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p1,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p2,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p3,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p4,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p5,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p6,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p7,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p8,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00001_p9,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p0,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p1,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p2,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p3,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p4,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p5,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p6,"('kleppesto', 'laksevag')",,6.0
+baja,436.0,barco_1,,,,,escalon_1_00002_p7,"('kleppesto', 'laksevag')",,6.0
+decision,436.0,barco_1,sandviken,,,,,,,
+movimiento,436.0,barco_1,,laksevag,sandviken,0.0,,,,
+baja,442.0,barco_0,,,,,escalon_1_00017_p0,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p1,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p2,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p3,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p4,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p5,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p6,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p7,"('bryggen', 'laksevag')",,10.0
+baja,442.0,barco_0,,,,,escalon_1_00017_p8,"('bryggen', 'laksevag')",,10.0
+decision,442.0,barco_0,sandviken,,,,,,,
+movimiento,442.0,barco_0,,laksevag,sandviken,0.0,,,,
+decision,446.0,barco_1,kleppesto,,,,,,,
+sube,446.0,barco_1,,,,,escalon_1_00019_p0,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p1,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p2,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p3,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p4,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p5,"('sandviken', 'kleppesto')",44.01999999999998,
+sube,446.0,barco_1,,,,,escalon_1_00019_p6,"('sandviken', 'kleppesto')",44.01999999999998,
+movimiento,446.0,barco_1,,sandviken,kleppesto,7.0,,,,
+decision,452.0,barco_0,bryggen,,,,,,,
+sube,452.0,barco_0,,,,,escalon_1_00023_p0,"('sandviken', 'bryggen')",26.930000000000007,
+sube,452.0,barco_0,,,,,escalon_1_00023_p1,"('sandviken', 'bryggen')",26.930000000000007,
+sube,452.0,barco_0,,,,,escalon_1_00023_p2,"('sandviken', 'bryggen')",26.930000000000007,
+sube,452.0,barco_0,,,,,escalon_1_00023_p3,"('sandviken', 'bryggen')",26.930000000000007,
+movimiento,452.0,barco_0,,sandviken,bryggen,4.0,,,,
+baja,456.0,barco_1,,,,,escalon_1_00019_p0,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p1,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p2,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p3,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p4,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p5,"('sandviken', 'kleppesto')",,10.0
+baja,456.0,barco_1,,,,,escalon_1_00019_p6,"('sandviken', 'kleppesto')",,10.0
+decision,456.0,barco_1,bryggen,,,,,,,
+sube,456.0,barco_1,,,,,escalon_1_00006_p0,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p1,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p2,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p3,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p4,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p5,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p6,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p7,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p8,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00006_p9,"('kleppesto', 'bryggen')",33.370000000000005,
+sube,456.0,barco_1,,,,,escalon_1_00007_p0,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p1,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p2,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p3,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p4,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p5,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p6,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p7,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p8,"('kleppesto', 'bryggen')",26.74000000000001,
+sube,456.0,barco_1,,,,,escalon_1_00007_p9,"('kleppesto', 'bryggen')",26.74000000000001,
+movimiento,456.0,barco_1,,kleppesto,bryggen,20.0,,,,
+baja,460.0,barco_0,,,,,escalon_1_00023_p0,"('sandviken', 'bryggen')",,8.0
+baja,460.0,barco_0,,,,,escalon_1_00023_p1,"('sandviken', 'bryggen')",,8.0
+baja,460.0,barco_0,,,,,escalon_1_00023_p2,"('sandviken', 'bryggen')",,8.0
+baja,460.0,barco_0,,,,,escalon_1_00023_p3,"('sandviken', 'bryggen')",,8.0
+decision,460.0,barco_0,kleppesto,,,,,,,
+sube,460.0,barco_0,,,,,escalon_1_00016_p0,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p1,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p2,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p3,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p4,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p5,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p6,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p7,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p8,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p9,"('bryggen', 'kleppesto')",15.620000000000005,
+sube,460.0,barco_0,,,,,escalon_1_00016_p10,"('bryggen', 'kleppesto')",15.620000000000005,
+movimiento,460.0,barco_0,,bryggen,kleppesto,11.0,,,,
+baja,468.0,barco_1,,,,,escalon_1_00006_p0,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p1,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p2,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p3,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p4,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p5,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p6,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p7,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p8,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00006_p9,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p0,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p1,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p2,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p3,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p4,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p5,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p6,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p7,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p8,"('kleppesto', 'bryggen')",,12.0
+baja,468.0,barco_1,,,,,escalon_1_00007_p9,"('kleppesto', 'bryggen')",,12.0
+decision,468.0,barco_1,laksevag,,,,,,,
+movimiento,468.0,barco_1,,bryggen,laksevag,0.0,,,,
+baja,472.0,barco_0,,,,,escalon_1_00016_p0,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p1,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p2,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p3,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p4,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p5,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p6,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p7,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p8,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p9,"('bryggen', 'kleppesto')",,12.0
+baja,472.0,barco_0,,,,,escalon_1_00016_p10,"('bryggen', 'kleppesto')",,12.0
+decision,472.0,barco_0,laksevag,,,,,,,
+sube,472.0,barco_0,,,,,escalon_1_00003_p0,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p1,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p2,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p3,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p4,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p5,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p6,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p7,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p8,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p9,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p10,"('kleppesto', 'laksevag')",24.980000000000018,
+sube,472.0,barco_0,,,,,escalon_1_00003_p11,"('kleppesto', 'laksevag')",24.980000000000018,
+movimiento,472.0,barco_0,,kleppesto,laksevag,12.0,,,,
+baja,478.0,barco_0,,,,,escalon_1_00003_p0,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p1,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p2,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p3,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p4,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p5,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p6,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p7,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p8,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p9,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p10,"('kleppesto', 'laksevag')",,6.0
+baja,478.0,barco_0,,,,,escalon_1_00003_p11,"('kleppesto', 'laksevag')",,6.0
+decision,478.0,barco_0,bryggen,,,,,,,
+sube,478.0,barco_0,,,,,escalon_1_00015_p0,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p1,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p2,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p3,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p4,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p5,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p6,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p7,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p8,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p9,"('laksevag', 'bryggen')",33.49000000000001,
+sube,478.0,barco_0,,,,,escalon_1_00015_p10,"('laksevag', 'bryggen')",33.49000000000001,
+movimiento,478.0,barco_0,,laksevag,bryggen,11.0,,,,
+decision,478.0,barco_1,sandviken,,,,,,,
+movimiento,478.0,barco_1,,laksevag,sandviken,0.0,,,,
+baja,488.0,barco_0,,,,,escalon_1_00015_p0,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p1,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p2,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p3,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p4,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p5,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p6,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p7,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p8,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p9,"('laksevag', 'bryggen')",,10.0
+baja,488.0,barco_0,,,,,escalon_1_00015_p10,"('laksevag', 'bryggen')",,10.0
+decision,488.0,barco_0,sandviken,,,,,,,
+movimiento,488.0,barco_0,,bryggen,sandviken,0.0,,,,
+decision,488.0,barco_1,bryggen,,,,,,,
+sube,488.0,barco_1,,,,,escalon_1_00022_p0,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p1,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p2,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p3,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p4,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p5,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p6,"('sandviken', 'bryggen')",29.00999999999999,
+sube,488.0,barco_1,,,,,escalon_1_00022_p7,"('sandviken', 'bryggen')",29.00999999999999,
+movimiento,488.0,barco_1,,sandviken,bryggen,8.0,,,,
+baja,496.0,barco_1,,,,,escalon_1_00022_p0,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p1,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p2,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p3,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p4,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p5,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p6,"('sandviken', 'bryggen')",,8.0
+baja,496.0,barco_1,,,,,escalon_1_00022_p7,"('sandviken', 'bryggen')",,8.0
+decision,496.0,barco_0,kleppesto,,,,,,,
+movimiento,496.0,barco_0,,sandviken,kleppesto,0.0,,,,
+decision,496.0,barco_1,kleppesto,,,,,,,
+movimiento,496.0,barco_1,,bryggen,kleppesto,0.0,,,,
+decision,506.0,barco_0,bryggen,,,,,,,
+sube,506.0,barco_0,,,,,escalon_1_00008_p0,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p1,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p2,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p3,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p4,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p5,"('kleppesto', 'bryggen')",18.19999999999999,
+sube,506.0,barco_0,,,,,escalon_1_00008_p6,"('kleppesto', 'bryggen')",18.19999999999999,
+movimiento,506.0,barco_0,,kleppesto,bryggen,7.0,,,,
+decision,508.0,barco_1,sandviken,,,,,,,
+sube,508.0,barco_1,,,,,escalon_1_00010_p0,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p1,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p2,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p3,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p4,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p5,"('kleppesto', 'sandviken')",4.75,
+sube,508.0,barco_1,,,,,escalon_1_00010_p6,"('kleppesto', 'sandviken')",4.75,
+movimiento,508.0,barco_1,,kleppesto,sandviken,7.0,,,,
+baja,518.0,barco_0,,,,,escalon_1_00008_p0,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p1,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p2,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p3,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p4,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p5,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_0,,,,,escalon_1_00008_p6,"('kleppesto', 'bryggen')",,12.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p0,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p1,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p2,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p3,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p4,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p5,"('kleppesto', 'sandviken')",,10.0
+baja,518.0,barco_1,,,,,escalon_1_00010_p6,"('kleppesto', 'sandviken')",,10.0
+decision,518.0,barco_0,laksevag,,,,,,,
+sube,518.0,barco_0,,,,,escalon_1_00018_p0,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p1,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p2,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p3,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p4,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p5,"('bryggen', 'laksevag')",15.139999999999986,
+sube,518.0,barco_0,,,,,escalon_1_00018_p6,"('bryggen', 'laksevag')",15.139999999999986,
+movimiento,518.0,barco_0,,bryggen,laksevag,7.0,,,,
+decision,518.0,barco_1,kleppesto,,,,,,,
+movimiento,518.0,barco_1,,sandviken,kleppesto,0.0,,,,
+baja,528.0,barco_0,,,,,escalon_1_00018_p0,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p1,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p2,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p3,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p4,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p5,"('bryggen', 'laksevag')",,10.0
+baja,528.0,barco_0,,,,,escalon_1_00018_p6,"('bryggen', 'laksevag')",,10.0
+decision,528.0,barco_0,kleppesto,,,,,,,
+movimiento,528.0,barco_0,,laksevag,kleppesto,0.0,,,,
+decision,528.0,barco_1,bryggen,,,,,,,
+sube,528.0,barco_1,,,,,escalon_1_00009_p0,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p1,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p2,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p3,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p4,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p5,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p6,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p7,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p8,"('kleppesto', 'bryggen')",19.45999999999998,
+sube,528.0,barco_1,,,,,escalon_1_00009_p9,"('kleppesto', 'bryggen')",19.45999999999998,
+movimiento,528.0,barco_1,,kleppesto,bryggen,10.0,,,,
+decision,534.0,barco_0,esperar,,,,,,,
+decision,536.0,barco_0,esperar,,,,,,,
+decision,538.0,barco_0,esperar,,,,,,,
+baja,540.0,barco_1,,,,,escalon_1_00009_p0,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p1,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p2,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p3,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p4,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p5,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p6,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p7,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p8,"('kleppesto', 'bryggen')",,12.0
+baja,540.0,barco_1,,,,,escalon_1_00009_p9,"('kleppesto', 'bryggen')",,12.0
