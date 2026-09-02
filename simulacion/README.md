@@ -1,6 +1,6 @@
-# Simulador de despacho de barcos (entorno Gymnasium, sin aprendizaje todavía)
+# Simulador de despacho de barcos (entorno Gymnasium + primer agente PPO)
 
-**Qué es esto, en una frase:** un programa que modela minuto a minuto (en pasos de 2 min) qué hacen los barcos y los pasajeros en Bergen, controlado por una regla fija ("nearest-available"), para poder verificar que el mundo funciona bien ANTES de conectarle un agente que aprenda a controlarlo.
+**Qué es esto, en una frase:** un programa que modela minuto a minuto (en pasos de 2 min) qué hacen los barcos y los pasajeros en Bergen. Primero se verificó a fondo con una regla fija ("nearest-available", secciones 1-10) — franja mañana, día completo, y una semana — y ahora se conectó un primer agente de RL (PPO, secciones 11-13) para compararlo contra esa línea base.
 
 **Documento fuente (manda sobre cualquier duda):** `docs/especificacion_simulador_rl.md`. Todo lo de abajo está mapeado a sus secciones (§1-§12).
 
@@ -18,18 +18,25 @@ simulacion/
 │   ├── recompensa.py         # la fórmula de puntaje (§7)
 │   ├── politica_base.py      # la regla fija "nearest-available" + coordinación de flota (§9)
 │   ├── env.py                # el simulador en sí (junta todo lo anterior, §3/§5/§6)
-│   ├── metricas.py           # verificación de conservación + métricas detalladas
+│   ├── entrenamiento.py      # EntornoDemandaAleatoria -- demanda fresca por reset, para RL (sección 11)
+│   ├── metricas.py           # verificación de conservación + métricas detalladas + combinar_corridas
 │   └── visualizacion.py      # mapa animado, gráficas, e inspector de un minuto concreto
 ├── notebooks/
-│   ├── 00_preparar_demanda_escalones.ipynb   # genera la demanda de prueba (2 tamaños)
+│   ├── 00_preparar_demanda_escalones.ipynb   # genera la demanda de prueba (escalones 1-3)
 │   ├── 01_escalon_1_verificacion.ipynb        # franja mañana, verificación a ojo + animación
-│   └── 02_escalon_2_metricas.ipynb            # día completo, métricas agregadas (sin animación)
+│   ├── 02_escalon_2_metricas.ipynb            # día completo, métricas agregadas (sin animación)
+│   ├── 03_escalon_3_semana.ipynb              # semana completa (7 días), métricas agregadas
+│   ├── 04_entrenamiento_rl.ipynb              # entrena PPO sobre la instancia chica (sección 12)
+│   └── 05_comparacion_agente_vs_base.ipynb    # agente PPO vs. política base (sección 13)
 └── output/
     ├── escalon1/              # todo lo que produce el notebook 01
-    └── escalon2/              # todo lo que produce el notebook 02, misma estructura de archivos
+    ├── escalon2/              # todo lo que produce el notebook 02, misma estructura de archivos
+    ├── escalon3/               # todo lo que produce el notebook 03 (semana)
+    ├── rl_ppo/                 # modelo entrenado, monitor.csv, curva de entrenamiento (notebook 04)
+    └── comparacion/             # tablas y gráficas de agente vs. base (notebook 05)
 ```
 
-Cada escalón tiene su propia carpeta en `output/` con los mismos nombres de archivo adentro (`grupos.csv`, `metricas_por_par.csv`, `heatmap_cumplimiento.png`, etc.) — así no hay que andar leyendo prefijos largos, y es fácil comparar un escalón contra el otro abriendo la carpeta correspondiente. La única diferencia de contenido: `escalon1/` tiene `animacion.gif` e `inspeccion_minuto400.png` (la corrida es chica, 90 pasos, se puede animar); `escalon2/` no (540 pasos — un GIF de esa duración pesa y tarda mucho más, y la verificación visual paso a paso ya se hizo a fondo en el escalón 1, no hacía falta repetirla).
+Cada escalón tiene su propia carpeta en `output/` con los mismos nombres de archivo adentro (`grupos.csv`, `metricas_por_par.csv`, `heatmap_cumplimiento.png`, etc.) — así no hay que andar leyendo prefijos largos, y es fácil comparar un escalón contra el otro abriendo la carpeta correspondiente. La única diferencia de contenido: `escalon1/` tiene `animacion.gif` e `inspeccion_minuto400.png` (la corrida es chica, 90 pasos, se puede animar); `escalon2/` y `escalon3/` no (corridas largas — un GIF de esa duración pesa y tarda mucho más, y la verificación visual paso a paso ya se hizo a fondo en el escalón 1, no hacía falta repetirla). `escalon3/` usa `grupos_semana.csv` en vez de `grupos.csv` (7 días concatenados, columna `dia`).
 
 **Cómo leer esto si nunca programaste en Python:** cada archivo de `src/` es una "pieza" con una responsabilidad. Los notebooks son los que las juntan y las corren, mostrando resultados. Nada se ejecuta solo con crear los archivos — hay que abrir un notebook y correrlo (ya está corrido y guardado, puedes abrirlo y ver los resultados sin volver a correrlo).
 
@@ -44,11 +51,11 @@ Cada escalón tiene su propia carpeta en `output/` con los mismos nombres de arc
 - `reset()` → arranca el mundo desde cero, devuelve el estado inicial.
 - `step(accion)` → recibe una acción, avanza el mundo un paso, devuelve `(nuevo_estado, recompensa, terminó, se_truncó, info_extra)`.
 
-Ese molde es TODO lo que Gymnasium impone. Nosotros escribimos el 100% de la lógica real (qué hace un barco, cómo suben y bajan los pasajeros) en `src/env.py`, clase `SimuladorBarcosBergen`. Gymnasium no sabe nada de barcos ni de Bergen — solo garantiza que nuestra clase "hable el mismo idioma" que espera cualquier librería de RL después (Stable-Baselines3, mencionada en la especificación §11, fase siguiente). Es como un enchufe: Gymnasium estandariza la forma del enchufe, nosotros construimos el aparato.
+Ese molde es TODO lo que Gymnasium impone. Nosotros escribimos el 100% de la lógica real (qué hace un barco, cómo suben y bajan los pasajeros) en `src/env.py`, clase `SimuladorBarcosBergen`. Gymnasium no sabe nada de barcos ni de Bergen — solo garantiza que nuestra clase "hable el mismo idioma" que espera cualquier librería de RL después (Stable-Baselines3, mencionada en la especificación §11, ya conectada -- ver secciones 11-13). Es como un enchufe: Gymnasium estandariza la forma del enchufe, nosotros construimos el aparato.
 
 **El "tipo" de simulación** (una pregunta distinta, sobre la mecánica interna, no sobre Gymnasium): es una **simulación de tiempo discreto en pasos fijos de 2 minutos** — cada `step()` siempre avanza exactamente 2 minutos, nunca menos ni más (a diferencia de una simulación "por eventos", que salta directo al próximo momento interesante). La especificación (§3) pide explícitamente pasos fijos, por simplicidad y porque encaja natural con el `step()` de Gymnasium.
 
-**¿Sí estamos usando Gymnasium de verdad, o solo el nombre?** Sí, de verdad: `src/env.py`, línea 27, `class SimuladorBarcosBergen(gym.Env):` — hereda literalmente de la clase base de la librería (`import gymnasium as gym`). Eso obliga (y verifica en tiempo de ejecución) a que la clase tenga `action_space` y `observation_space` bien declarados (líneas 90-92: `MultiDiscrete` para las acciones, `Box` para el vector aplanado) y los métodos `reset()`/`step()` con la firma exacta que la librería espera. No es una simulación casera a la que le pusimos "Gymnasium" de nombre — si `SimuladorBarcosBergen` no cumpliera el contrato, Stable-Baselines3 (fase siguiente) no podría usarla.
+**¿Sí estamos usando Gymnasium de verdad, o solo el nombre?** Sí, de verdad: `src/env.py`, línea 27, `class SimuladorBarcosBergen(gym.Env):` — hereda literalmente de la clase base de la librería (`import gymnasium as gym`). Eso obliga (y verifica en tiempo de ejecución) a que la clase tenga `action_space` y `observation_space` bien declarados (líneas 90-92: `MultiDiscrete` para las acciones, `Box` para el vector aplanado) y los métodos `reset()`/`step()` con la firma exacta que la librería espera. No es una simulación casera a la que le pusimos "Gymnasium" de nombre — si `SimuladorBarcosBergen` no cumpliera el contrato, Stable-Baselines3 (secciones 11-13) no podría usarla; de hecho `check_env` (sección 12) lo confirma en tiempo de ejecución.
 
 **¿Qué semilla estamos usando?** `simulacion/config/instance.yaml` → `semilla: 42`. Aclaración importante: como se explica en la sección de reproducibilidad más abajo, esa semilla se usa para regenerar la DEMANDA (`demand/src/llegadas.py`), no dentro de `env.py` — el entorno en sí no tiene ningún sorteo propio, así que `env.reset(seed=...)` no cambia nada por sí solo; lo que realmente reproduce una corrida es generar la tabla de grupos con la semilla 42 (paso 00) y correr el entorno sobre esa misma tabla.
 
@@ -178,16 +185,16 @@ Verificar el simulador a ojo antes de conectar el agente sirvió exactamente par
 
 ## 7. Los escalones (instancias de prueba)
 
-| | Escalón 1 | Escalón 2 |
-|---|---|---|
-| Cuándo | Franja mañana (6-9h) | Día completo (6-24h) |
-| Barcos | 2 | 3 |
-| Grupos / personas | 23 / 202 | 133 / 1106 |
-| Pasos de 2 min | 90 | 540 |
-| Para qué | Verificar a ojo, log de texto, animación | Métricas agregadas, sin animación (ver sección 8.1) |
-| Notebook | `01_escalon_1_verificacion.ipynb` | `02_escalon_2_metricas.ipynb` |
+| | Escalón 1 | Escalón 2 | Escalón 3 |
+|---|---|---|---|
+| Cuándo | Franja mañana (6-9h) | Día completo (6-24h) | Semana completa (7 días, 6-24h c/u) |
+| Barcos | 2 | 3 | 3 |
+| Grupos / personas | 23 / 202 | 133 / 1106 | 620 / 5429 |
+| Pasos de 2 min | 90 | 540 | 7 × hasta 540 (7 episodios independientes) |
+| Para qué | Verificar a ojo, log de texto, animación | Métricas agregadas, sin animación (ver sección 8.1) | Métricas agregadas sobre entre-semana + fin de semana (ver sección 8.4) |
+| Notebook | `01_escalon_1_verificacion.ipynb` | `02_escalon_2_metricas.ipynb` | `03_escalon_3_semana.ipynb` |
 
-La demanda de cada escalón se generó con `demand/src/llegadas.py` **sin tocarlo** — solo se le pasó un `porcentaje_poblacion_dia` más bajo que el oficial (10%), calibrado por prueba y error hasta acercarse a "~20-30 grupos" (escalón 1) que pedía la especificación. `demand/config/instance.yaml` sigue intacto en 10%.
+La demanda de cada escalón se generó con `demand/src/llegadas.py` **sin tocarlo** — solo se le pasó un `porcentaje_poblacion_dia` más bajo que el oficial (10%), calibrado por prueba y error hasta acercarse a "~20-30 grupos" (escalón 1) que pedía la especificación. `demand/config/instance.yaml` sigue intacto en 10%. El escalón 3 reusa la densidad y flota del escalón 2 (`porcentaje_poblacion_dia=0.012`, 3 barcos) sobre `generar_llegadas_semana` (`demand/src/llegadas.py`) en vez de `generar_llegadas_dia` -- 7 días (lunes=0..domingo=6), con el factor entre-semana/fin-de-semana (`factor_dia_semana`) ya resuelto adentro.
 
 ---
 
@@ -254,6 +261,23 @@ No hay ningún log de "perdidas" — no existe ese evento (sección 4.5). Quien 
 
 Nada de esto se guarda a disco automáticamente con solo correr la simulación -- si cierras Python, se pierde. Cada notebook (01 y 02) sí exporta a su carpeta (`output/escalon1/` o `output/escalon2/`): los CSV crudos (`log_eventos.csv`, `log_recompensa.csv`) y las tablas de métricas ya calculadas (`metricas_por_par.csv`, `metricas_por_barco.csv`), para poder auditar los números sin volver a correr nada.
 
+## 8.4 Escalón 3 (semana completa)
+
+`notebooks/03_escalon_3_semana.ipynb` corre 7 episodios independientes (uno por día, `SimuladorBarcosBergen` sin tocar) y los junta con `metricas.combinar_corridas` (nueva función en `metricas.py` -- ver su docstring) antes de llamar a `metricas.reporte_completo`, exactamente igual que para 1 y 2. Un día es su propio episodio (su propio reloj 6:00-24:00) -- no hay un timeline único de 10 080 minutos; ver la justificación completa en la introducción del notebook.
+
+**Conservación:** 5429 generadas = 5406 atendidas + 0 esperando al final + **23 a bordo al final**. A diferencia de los escalones 1 y 2 (100% atendidas en ambos), aquí sí aparece gente a bordo al cierre de un día -- con 7 ventanas de cierre en vez de una, hay 7 veces más oportunidades de que alguien suba a un barco justo antes de que se acabe la hora operativa (24:00) y el barco no alcance a llegar antes del corte. Es exactamente el caso que las categorías "esperando/a bordo al final" existen para capturar correctamente (sección 4.5) -- no es un bug, es información real de la corrida.
+
+| Métrica | Escalón 3 (semana) |
+|---|---|
+| % atendidas | 99.58% |
+| Espera media | 10.0 min |
+| Tiempo en sistema medio / máximo | 19.8 / 57.1 min |
+| Espera p50 / p90 / p95 | 9.1 / 21.4 / 25.1 min |
+
+Demanda por día: lunes-viernes entre 756 y 1121 personas; sábado y domingo, 324-326 (factor `fin_de_semana=0.4` de `demand/config/instance.yaml`, aplicado automáticamente por `generar_llegadas_semana`). El backlog de las 23 personas a bordo al cierre se concentra en 3 pares (`bryggen->laksevag`: 10, `laksevag->bryggen`: 7, `kleppesto->bryggen`: 6) -- las rutas más transitadas de la semana, donde es más probable que un barco parta justo antes del corte.
+
+Reproducibilidad verificada igual que 1 y 2 (misma semilla de demanda semanal → misma corrida completa en los 7 días; semilla distinta → resultado distinto).
+
 ## 9. Supuestos y limitaciones
 
 - **El entorno en sí no tiene aleatoriedad propia.** Toda la aleatoriedad del pipeline vive en la generación de demanda (`demand/`, ya con su semilla). Una vez que la tabla de grupos está fija, el simulador es 100% determinista (misma entrada → mismo resultado siempre) — es una propiedad deseable para verificar, no un defecto.
@@ -274,10 +298,72 @@ cd simulacion/notebooks
 jupyter nbconvert --to notebook --execute --inplace 00_preparar_demanda_escalones.ipynb
 jupyter nbconvert --to notebook --execute --inplace 01_escalon_1_verificacion.ipynb
 jupyter nbconvert --to notebook --execute --inplace 02_escalon_2_metricas.ipynb
+jupyter nbconvert --to notebook --execute --inplace 03_escalon_3_semana.ipynb
+
+# RL (necesita `pip install stable-baselines3`, instala torch como dependencia)
+jupyter nbconvert --to notebook --execute --inplace 04_entrenamiento_rl.ipynb
+jupyter nbconvert --to notebook --execute --inplace 05_comparacion_agente_vs_base.ipynb
 ```
 
-Necesita que `demand/output/` y `bergen-boats/02_ruteo_navegable/output/` ya existan (pasos previos, cerrados). El notebook 00 tiene que correr antes que el 01 y el 02 (genera `output/escalon1/grupos.csv` y `output/escalon2/grupos.csv`, que los otros dos leen).
+Necesita que `demand/output/` y `bergen-boats/02_ruteo_navegable/output/` ya existan (pasos previos, cerrados). El notebook 00 tiene que correr antes que el 01, 02 y 03 (genera `output/escalon1/grupos.csv`, `output/escalon2/grupos.csv` y `output/escalon3/grupos_semana.csv`, que los otros leen). El 05 necesita que el 04 ya haya guardado `output/rl_ppo/modelo_ppo.zip`.
+
+---
+
+## 11. Demanda fresca en cada reset (`entrenamiento.py`) -- necesario para RL
+
+Los escalones 1-3 corren la política base sobre una demanda **fija**: se genera UNA VEZ (notebook 00) y se guarda en un CSV que los notebooks 01-03 solo leen. Eso es correcto para verificar el simulador (la política no tiene nada que ajustar), pero **no sirve para entrenar un agente**: si todos los episodios de entrenamiento fueran siempre la misma tabla de grupos, el agente podría memorizar esa realización particular (qué grupo exacto aparece en qué minuto exacto) en vez de aprender una política que generaliza sobre el patrón de demanda real.
+
+`src/entrenamiento.py`, clase `EntornoDemandaAleatoria(SimuladorBarcosBergen)`: la misma subclase sirve para las dos cosas que hacen falta, según cómo se llame `reset()`:
+
+- **`reset(seed=None)`** (el caso normal en un loop de entrenamiento -- SB3 no manda una semilla en cada episodio): genera una demanda NUEVA cada vez, con una semilla sacada de una secuencia propia (reproducible si se dio `semilla_entrenamiento` al construir el entorno). Cada episodio ve una realización distinta del mismo patrón de fondo -- muestreo Montecarlo de episodios.
+- **`reset(seed=42)`** (caso explícito -- evaluación, comparación contra la política base): genera la demanda con ESA semilla exacta, reproducible igual que `SimuladorBarcosBergen` hoy. Dos instancias distintas de `EntornoDemandaAleatoria` con `reset(seed=misma_semilla)` producen la MISMA demanda (verificado en `04_entrenamiento_rl.ipynb`), porque la generación depende solo de la semilla, no de ningún estado interno del entorno -- es lo que hace posible comparar el agente y la política base en igualdad de condiciones (sección 13).
+
+**Por qué es un wrapper y no un cambio a `env.py`:** `env.py` recibe un `grupos_df` ya construido y nunca sabe nada de `demand/` (rutas, `intensidad_od`, `conexiones_fuertes`, etc. -- ver su docstring, "nada se recalcula aquí"). Meter la generación de demanda ahí complicaría el entorno base que política base y los escalones 1-3 siguen usando tal cual. `EntornoDemandaAleatoria` solo cambia una cosa (qué `grupos_df` usa cada episodio); todo lo demás (acciones, transición, recompensa) es exactamente `SimuladorBarcosBergen` sin tocar. Tampoco importa `demand/src/llegadas.py` directamente -- recibe la función `generar_llegadas_dia` ya importada como parámetro (`generar_llegadas_dia_fn`), igual patrón de inyección de dependencia que ya usaba `00_preparar_demanda_escalones.ipynb` (nunca un import cruzado hardcodeado entre carpetas).
+
+---
+
+## 12. Agente PPO (Stable-Baselines3)
+
+**PPO, no DQN.** El `action_space` del entorno es `MultiDiscrete` (una acción por barco, sección 4.3) -- el DQN de Stable-Baselines3 no soporta `MultiDiscrete` de forma nativa, PPO sí.
+
+**Instancia de entrenamiento:** los parámetros de `escalon_1` (franja mañana, 2 barcos, pocos grupos) -- la instancia más chica, para verificar rápido si el agente aprende algo antes de escalar. Hiperparámetros en `config/instance.yaml` → `agente`:
+```yaml
+agente:
+  gamma: 0.99
+  entrenamiento:
+    escalon_base: "escalon_1"
+    semilla_entrenamiento: 123     # raiz de la secuencia de demandas de entrenamiento
+    total_timesteps: 100000        # ~1115 episodios de 90 pasos c/u
+  evaluacion:
+    semillas: [1001, 1002, 1003, 1004, 1005]   # fijas, fuera del rango de entrenamiento
+```
+
+**`notebooks/04_entrenamiento_rl.ipynb`, en orden:** (1) confirma demanda fresca por reset (sección 11); (2) `stable_baselines3.common.env_checker.check_env` -- pasó sin advertencias, los espacios ya declarados (`MultiDiscrete`, `Box` float32) no necesitaron ningún ajuste; (3) envuelve el entorno con `Monitor` (guarda `output/rl_ppo/monitor.monitor.csv`, recompensa/duración por episodio, sin depender de TensorBoard); (4) entrena `PPO("MlpPolicy", ...)` con `gamma` del config; (5) guarda el modelo (`output/rl_ppo/modelo_ppo.zip`) y grafica la curva de recompensa por episodio.
+
+**Resultado de esta primera corrida (100 000 timesteps, 1115 episodios):** la recompensa media de los primeros 20 episodios fue -2650.65; la de los últimos 20, -2161.18 -- **sí mejora**, la curva de entrenamiento (`output/rl_ppo/curva_entrenamiento.png`) muestra una tendencia al alza clara, confirmando que el agente está aprendiendo algo. Pero, como se ve en la sección 13, ese nivel de entrenamiento todavía está lejos de igualar a la política base -- 100k timesteps sobre una instancia de 90 pasos es un presupuesto de verificación rápida, no un entrenamiento a convergencia.
+
+---
+
+## 13. Comparación: agente PPO vs. política base
+
+`notebooks/05_comparacion_agente_vs_base.ipynb` corre las dos políticas sobre las 5 semillas de `agente.evaluacion.semillas` (misma semilla → misma demanda para ambas, vía `EntornoDemandaAleatoria.reset(seed=...)`, sección 11), y junta los 5 episodios de cada política con `metricas.combinar_corridas` -- mismo mecanismo que el escalón 3, reusando el 100% de las funciones de `metricas.py` ya existentes.
+
+**Resultado honesto de esta primera versión: la política base todavía gana, con margen amplio.**
+
+| Métrica (agregada sobre las 5 semillas de evaluación) | Agente PPO | Política base |
+|---|---|---|
+| % atendidas | 27.6% | 88.0% |
+| Espera media | 10.5 min | 16.4 min |
+| Tiempo en sistema medio | 21.2 min | 26.1 min |
+| Tiempo en sistema máximo | 36.3 min | 69.7 min |
+| Movimientos totales (5 episodios) | 79 | 155 |
+| Ocupación media | 1.15 | 3.50 |
+| Recompensa total (5 episodios) | -17 913.76 | -2444.46 |
+
+**Por qué el agente pierde tan claramente todavía:** la política base tiene una regla ya afinada por varias rondas de verificación (secciones 4-6); el agente, en cambio, entrenó apenas 100 000 timesteps (~1115 episodios) sobre una instancia de solo 90 pasos -- la curva de entrenamiento (sección 12) muestra que SÍ está mejorando, pero claramente no llegó a convergencia. Se nota en los números: mueve la flota mucho menos (79 movimientos vs. 155) y la ocupación media es mucho más baja (1.15 vs. 3.50 personas/barco) -- todavía no aprendió a despachar tan agresivamente como hace falta, se queda "esperando" en vez de salir a buscar demanda. Esto es exactamente lo que se buscaba verificar en esta primera versión (mostrar si el agente iguala o supera a la línea base, no exigir que gane) -- confirma que el entorno, `check_env`, y el loop de entrenamiento funcionan de punta a punta, y deja claro que **el próximo paso real es aumentar el presupuesto de entrenamiento** (más timesteps, quizás más semillas de evaluación, y eventualmente escalar a instancias más grandes) antes de sacar cualquier conclusión sobre si PPO puede superar a "nearest-available" en este problema.
+
+Tablas completas (por par origen-destino comparado) y gráficas (heatmaps lado a lado, recompensa por semilla) en `output/comparacion/` (`tabla_comparativa.csv`, `por_par_comparado.csv`, `heatmaps_comparados.png`, `reward_por_semilla.png`).
 
 ## Siguiente paso
 
-Los dos escalones ya corren, sin paciencia, y dan métricas consistentes con datos de espera sin censurar. Sigue: usar los percentiles de `metricas_por_usuario` para proponer una garantía de tiempo de servicio con sustento en datos (sección 9), y conectar el agente de RL (DQN vía Stable-Baselines3, según la especificación §11) para compararlo contra la línea base medida aquí. Después, actualizar el informe LaTeX del proyecto (`docs/informe/`) con estos resultados.
+El siguiente paso real, según la sección 13, es **aumentar el presupuesto de entrenamiento de PPO** (más timesteps, y revisar hiperparámetros si hace falta) antes de sacar cualquier conclusión sobre si puede igualar o superar a la política base -- 100k timesteps sobre la instancia chica alcanzó para confirmar que el loop completo funciona (el entorno, `check_env`, demanda fresca por reset, entrenamiento, guardado del modelo, comparación) y que el agente SÍ mejora con el entrenamiento, pero no para competir todavía. Después de eso: usar los percentiles de `metricas_por_usuario` para proponer una garantía de tiempo de servicio con sustento en datos (sección 9), y actualizar el informe LaTeX del proyecto (`docs/informe/`) con estos resultados.

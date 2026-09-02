@@ -55,6 +55,11 @@ escalones:
     # Calibrado igual: 0.012 da 133 grupos / 1106 personas en el dia completo.
     porcentaje_poblacion_dia: 0.012
     num_barcos: 3
+  escalon_3:
+    descripcion: "Semana completa (7 dias, entre semana + fin de semana) -- metricas agregadas de una semana"
+    horas: [6, 24]                   # mismo horario operativo que escalon_2, cada dia
+    porcentaje_poblacion_dia: 0.012  # reusa la densidad de escalon_2 (mismo patron, mas dias)
+    num_barcos: 3                    # reusa la flota de escalon_2
 
 escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
 
@@ -81,12 +86,22 @@ recompensa:
   peso_movimiento: 0.1                 # penalizacion por barco navegando en el paso
 
 # ---------------------------------------------------------------------------
-# Para la fase siguiente (agente, fuera de este paso) -- se deja declarado
-# aqui porque la especificacion lo pide en la seccion de parametros (§10),
-# aunque el entorno de este paso no lo usa todavia.
+# Agente de RL (PPO via Stable-Baselines3). `gamma` ya estaba declarado
+# desde antes (especificacion §10); `entrenamiento`/`evaluacion` son nuevos
+# -- ver `simulacion/src/entrenamiento.py` (demanda fresca por reset) y
+# `notebooks/04_entrenamiento_rl.ipynb` / `05_comparacion_agente_vs_base.ipynb`.
 # ---------------------------------------------------------------------------
 agente:
   gamma: 0.99
+  entrenamiento:
+    escalon_base: "escalon_1"      # de donde saca horas/porcentaje_poblacion_dia/num_barcos
+    semilla_entrenamiento: 123     # semilla RAIZ de la secuencia de demandas de entrenamiento (reproducible)
+    total_timesteps: 100000        # ~1100 episodios de 90 pasos c/u -- para verificar rapido que aprende
+  evaluacion:
+    # Semillas fijas, fuera del rango que barre semilla_entrenamiento -- mismas
+    # semillas para el agente y la politica base, para comparar en igualdad
+    # de condiciones (ver notebooks/05_comparacion_agente_vs_base.ipynb).
+    semillas: [1001, 1002, 1003, 1004, 1005]
 
 # ---------------------------------------------------------------------------
 # Reproducibilidad: misma semilla -> misma corrida exacta.

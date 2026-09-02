@@ -22,6 +22,8 @@ junta todo lo demás, incluida `verificar_conservacion`.
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import dataclass
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -116,6 +118,70 @@ def metricas_globales(env) -> dict:
         "sistema_medio_min": float(np.mean(sistema)) if sistema else float("nan"),
         "sistema_maximo_min": float(np.max(sistema)) if sistema else float("nan"),
     }
+
+
+@dataclass
+class CorridaCombinada:
+    """Junta varias corridas independientes (mismos nodos/flota -- p.ej. los
+    7 días de una semana, ver `combinar_corridas`) en un solo objeto con la
+    misma interfaz que el resto de este módulo espera de un `env`, para
+    poder llamar `reporte_completo` sobre la semana entera sin duplicar
+    ninguna lógica de métricas.
+    """
+
+    nodos: list[str]
+    num_barcos: int
+    capacidad_barco: int
+    paso_tiempo_min: float
+    total_unidades_generadas: int
+    atendidas_historico: list
+    colas: dict
+    barcos: list
+    log_eventos: list
+    log_recompensa: list
+    historial_estados: list
+
+
+def combinar_corridas(envs: list) -> CorridaCombinada:
+    """Junta N corridas independientes (mismos nodos/flota -- p.ej. una por
+    día de una semana, `notebooks/03_escalon_3_semana.ipynb`) sumando sus
+    resultados. Cada corrida es su propio episodio (su propio reloj
+    0..hora_fin_min) -- aquí no se arma un timeline único, solo se
+    concatenan/suman las listas y conteos que las funciones de arriba ya
+    saben leer.
+    """
+    if not envs:
+        raise ValueError("combinar_corridas necesita al menos una corrida")
+    nodos, num_barcos = envs[0].nodos, envs[0].num_barcos
+    for e in envs:
+        if e.nodos != nodos or e.num_barcos != num_barcos:
+            raise ValueError("combinar_corridas espera corridas con los mismos nodos/flota")
+
+    colas: dict[tuple[str, str], list] = {par: [] for par in pares_od(nodos)}
+    for e in envs:
+        for par, cola in e.colas.items():
+            colas[par].extend(cola)
+
+    # Solo se necesita `.a_bordo` de cada barco (lo único que lee este
+    # módulo) -- se combina por índice, no hace falta un `Barco` real.
+    barcos = [
+        SimpleNamespace(a_bordo=[u for e in envs for u in e.barcos[i].a_bordo])
+        for i in range(num_barcos)
+    ]
+
+    return CorridaCombinada(
+        nodos=nodos,
+        num_barcos=num_barcos,
+        capacidad_barco=envs[0].capacidad_barco,
+        paso_tiempo_min=envs[0].paso_tiempo_min,
+        total_unidades_generadas=sum(e.total_unidades_generadas for e in envs),
+        atendidas_historico=[u for e in envs for u in e.atendidas_historico],
+        colas=colas,
+        barcos=barcos,
+        log_eventos=[ev for e in envs for ev in e.log_eventos],
+        log_recompensa=[r for e in envs for r in e.log_recompensa],
+        historial_estados=[f for e in envs for f in e.historial_estados],
+    )
 
 
 def metricas_por_barco(env) -> pd.DataFrame:
