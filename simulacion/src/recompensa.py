@@ -38,6 +38,16 @@ falta reconstruir el razonamiento):
    (1.0) es el mismo valor que antes marcaba "a punto de perderse" -- la
    escala de la recompensa no cambió, solo se dejó de borrar a la gente al
    llegar ahí.
+5. **Premio positivo por entrega** (`premio_por_persona_entregada`, default
+   0.0 -- inactivo salvo que se configure explícitamente). Se agregó durante
+   el diagnóstico de un agente PPO que aprendió una política degenerada
+   (ver `simulacion/README.md`, sección de diagnóstico): con una recompensa
+   de puro castigo (nunca positiva), no había ninguna señal explícita de
+   "esto salió bien" -- solo distintos grados de "esto salió mal". El nuevo
+   término (`env.py` cuenta cuántas personas bajó cada barco este paso,
+   `entregas_este_paso`, y lo pasa aquí) da una recompensa positiva cada vez
+   que alguien llega a destino, proporcional a cuánta gente se entregó. Con
+   peso 0.0 el comportamiento es idéntico al de antes (término aditivo).
 """
 from __future__ import annotations
 
@@ -57,14 +67,23 @@ def _unidades_activas(estado: EstadoSimulacion) -> list[Unidad]:
     return activas
 
 
-def calcular_recompensa(estado: EstadoSimulacion, cfg_recompensa: dict) -> tuple[float, dict]:
-    """Recompensa del paso (negativa) + desglose por término, para poder
+def calcular_recompensa(
+    estado: EstadoSimulacion, cfg_recompensa: dict, entregas_este_paso: float = 0.0,
+) -> tuple[float, dict]:
+    """Recompensa del paso + desglose por término, para poder
     loguear/graficar cada componente por separado durante la verificación.
+
+    `entregas_este_paso` = suma de `tamano` de quienes llegaron a destino
+    (bajaron de un barco) EN ESTE paso -- la cuenta `env.py` en `step()`
+    (acumulando lo que devuelve `_desembarcar` por cada barco que llega) y
+    la pasa aquí. Default 0.0 para que llamadas antiguas (sin este
+    argumento) sigan funcionando igual.
     """
     tolerancia = cfg_recompensa["tolerancia_incomodidad_min"]
     sobrante_normalizador = cfg_recompensa["sobrante_normalizador_min"]
     techo_persona = cfg_recompensa["penalizacion_maxima_persona"]
     peso_movimiento = cfg_recompensa["peso_movimiento"]
+    premio_entrega = cfg_recompensa.get("premio_por_persona_entregada", 0.0)
 
     penalizacion_incomodidad = 0.0
     for u in _unidades_activas(estado):
@@ -76,9 +95,12 @@ def calcular_recompensa(estado: EstadoSimulacion, cfg_recompensa: dict) -> tuple
     barcos_en_movimiento = sum(1 for b in estado.barcos if b.nodo_origen != b.nodo_destino)
     penalizacion_movimiento = peso_movimiento * barcos_en_movimiento
 
+    premio_entregas = premio_entrega * entregas_este_paso
+
     desglose = {
         "incomodidad": penalizacion_incomodidad,
         "movimiento": penalizacion_movimiento,
+        "entrega": premio_entregas,
     }
-    r = -(penalizacion_incomodidad + penalizacion_movimiento)
+    r = -(penalizacion_incomodidad + penalizacion_movimiento) + premio_entregas
     return r, desglose

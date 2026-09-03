@@ -60,6 +60,18 @@ escalones:
     horas: [6, 24]                   # mismo horario operativo que escalon_2, cada dia
     porcentaje_poblacion_dia: 0.012  # reusa la densidad de escalon_2 (mismo patron, mas dias)
     num_barcos: 3                    # reusa la flota de escalon_2
+  escalon_toy:
+    # Instancia de juguete para el diagnostico del agente RL (notebooks/04a_verificacion_toy_rl.ipynb):
+    # 1 barco, 2 nodos (bryggen<->kleppesto, conexion fuerte, viaje corto), demanda chica,
+    # franja mañana (90 pasos, igual que escalon_1) -- para iterar rapido si PPO aprende algo
+    # antes de gastar tiempo entrenando sobre la instancia real. `nodos` es un campo nuevo,
+    # solo lo usa este escalon -- EntornoDemandaAleatoria filtra la demanda generada a estos
+    # nodos (ver src/entrenamiento.py, _generar_grupos).
+    descripcion: "Instancia de juguete -- 1 barco, 2 nodos -- verificacion minima de que PPO aprende algo"
+    horas: [6, 9]
+    porcentaje_poblacion_dia: 0.05
+    num_barcos: 1
+    nodos: ["bryggen", "kleppesto"]
 
 escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
 
@@ -84,6 +96,13 @@ recompensa:
   sobrante_normalizador_min: 18        # ancho de la curva -- constante fija para todos (antes: paciencia - tolerancia, por unidad)
   penalizacion_maxima_persona: 1.0     # techo de (sobrante/normalizador)^2 por persona -- evita que alguien muy retrasado domine la recompensa
   peso_movimiento: 0.1                 # penalizacion por barco navegando en el paso
+  # Premio positivo por cada persona entregada a destino este paso (ver recompensa.py,
+  # calcular_recompensa, parametro entregas_este_paso). Default 0.0: sin esto, escalones
+  # 1-3 y politica base no cambian de comportamiento -- el termino es aditivo. Los
+  # experimentos de entrenamiento RL NO tocan este valor por defecto -- usan su propio
+  # override, ver agente.entrenamiento.recompensa_overrides mas abajo, precisamente para
+  # no alterar retroactivamente la recompensa ya reportada de escalones 1-3.
+  premio_por_persona_entregada: 0.0
 
 # ---------------------------------------------------------------------------
 # Agente de RL (PPO via Stable-Baselines3). `gamma` ya estaba declarado
@@ -96,7 +115,30 @@ agente:
   entrenamiento:
     escalon_base: "escalon_1"      # de donde saca horas/porcentaje_poblacion_dia/num_barcos
     semilla_entrenamiento: 123     # semilla RAIZ de la secuencia de demandas de entrenamiento (reproducible)
-    total_timesteps: 100000        # ~1100 episodios de 90 pasos c/u -- para verificar rapido que aprende
+    # 100000 fue la corrida original (aprendio una politica degenerada, ver bitacora);
+    # subido a 150000 (~1.5x) para B.7, una vez validado el combo de abajo sobre escalon_toy
+    # -- calibrado a ~73 steps/seg en esta maquina, 300000 hubiera tomado ~68 min (se
+    # probo, tardo demasiado para iterar); 150000 es un compromiso practico de tiempo,
+    # subir mas es la primera palanca a probar si el resultado de B.7 no alcanza a la base.
+    # output/rl_ppo/bitacora_experimentos.md tiene el detalle de cada paso B.1-B.7.
+    total_timesteps: 150000
+    # Diagnostico RL (README, seccion de diagnostico): la corrida original (100k timesteps,
+    # sin nada de esto) aprendio una politica degenerada. Estos 4 campos se agregaron para
+    # corregirlo, en orden, y se validaron primero rapido sobre escalon_toy antes de usarlos
+    # aqui -- ver la bitacora de experimentos en output/rl_ppo/.
+    usar_vecnormalize: true        # VecNormalize (obs y reward) via DummyVecEnv, stable_baselines3.common.vec_env
+    ent_coef: 0.01                 # sube la entropia (default SB3 = 0.0) -- mas exploracion
+    learning_rate: 0.0003          # estandar de PPO (3e-4) -- se deja salvo que un experimento muestre inestabilidad
+    n_steps: 512                   # mas chico que el default (2048): actualiza cada ~5-6 episodios de 90 pasos, no ~22
+    # Overrides de recompensa SOLO para entrenar/evaluar el agente -- NO tocan la seccion
+    # `recompensa:` de arriba (esa sigue gobernando escalones 1-3 y la politica base tal
+    # cual, sin cambios). `premio_por_persona_entregada` (B.3) y `peso_movimiento=0.0`
+    # (B.4, TEMPORAL para esta fase de diagnostico -- "que el agente aprenda a servir antes
+    # de optimizar eficiencia", no es el valor de produccion) se aplican por encima de
+    # `recompensa:` solo al construir el entorno de entrenamiento/evaluacion RL.
+    recompensa_overrides:
+      premio_por_persona_entregada: 0.5
+      peso_movimiento: 0.0
   evaluacion:
     # Semillas fijas, fuera del rango que barre semilla_entrenamiento -- mismas
     # semillas para el agente y la politica base, para comparar en igualdad

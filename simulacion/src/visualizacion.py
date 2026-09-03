@@ -22,6 +22,7 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 from matplotlib.animation import FuncAnimation, PillowWriter
 from shapely.geometry import Point
 
@@ -191,41 +192,129 @@ def animar_corrida(historial: list[dict], gdf_nodos, gdf_rutas, matriz_tiempos, 
 
 
 # -- Gráficas de métricas (docs/especificacion_simulador_rl.md, "presenta con tablas y gráficas") --
+#
+# Interactivas (Plotly, no matplotlib): zoom/pan nativo, y la leyenda ya
+# permite aislar una serie (click = ocultar/mostrar, doble click = aislar) --
+# es como se resuelve "elegir qué barco ver o todos", sin widgets aparte.
+# En inglés (títulos/ejes/leyendas), a partir de esta reescritura.
 
-def graficar_perfil_espera(env, ax=None):
-    """Personas esperando (suma de las 12 colas) en cada paso -- de
-    `env.historial_estados`, no requiere volver a correr nada.
+def _eje_tiempo(minutos: list[float], paso_tiempo_min: float, limites_episodio: list[int] | None = None):
+    """Eje X para una serie de tiempo del simulador, a partir de la lista de
+    `minuto_del_dia` (uno por paso). Se usa para las 3 gráficas de series de
+    tiempo de abajo -- misma lógica, no se repite en cada una.
+
+    `limites_episodio`: cuántos frames aportó cada corrida fuente, en orden
+    (`metricas.CorridaCombinada.limites_episodio`, ver `combinar_corridas`).
+    Si se da, los límites de episodio se toman de ahí EXACTOS -- si no (un
+    `env` de un solo episodio, nunca combinado), no hace falta ninguno.
+
+    **Por qué no se detectan los límites mirando si `minuto_del_dia` baja**
+    (versión anterior de esta función): para un escalón cuyo `hora_fin_min`
+    es un múltiplo exacto de 1440 (medianoche -- p.ej. escalón 2/3, que
+    terminan a las 24:00), el ÚLTIMO frame de CADA episodio cae justo en
+    `t_actual_min == 1440`, y `minuto_del_dia = t_actual_min % 1440` da `0`
+    -- indistinguible de un verdadero cambio de episodio. Eso hacía que el
+    escalón 3 (7 días) detectara 8 "episodios" en vez de 7 (uno de sobra,
+    con los límites corridos un frame). Con `limites_episodio` exacto, este
+    caso límite no puede volver a pasar -- no se adivina nada de los datos.
+
+    Devuelve `(x, tick_vals, tick_text, hover)`:
+    - `x`: índice de paso (0..N-1) -- SIEMPRE monótono, nunca se superpone,
+      a diferencia de `minuto_del_dia` crudo (que se reinicia en 0 cada
+      episodio). Antes de este cambio, una corrida combinada de varios
+      episodios (escalón 3 = 7 días, o la comparación = 5 semillas de
+      evaluación, ver `metricas.combinar_corridas`) dibujaba la MISMA línea
+      de un barco superpuesta varias veces en el mismo rango 0-1439 --
+      parecía "varias líneas del mismo barco". Usar el índice de paso lo
+      resuelve de raíz.
+    - `tick_vals`/`tick_text`: para un solo episodio, ticks de hora real
+      (`HH:MM`) cada ~1h -- así se sabe qué hora es mirando el eje, tal como
+      se pidió. Para una corrida combinada, los ticks marcan el inicio de
+      cada episodio ("Ep 1", "Ep 2", ...) -- meter 7 días de horas legibles
+      en un solo eje no cabe, así que la hora exacta de cada punto se
+      muestra al pasar el mouse (`hover`) en vez de en el eje.
+    - `hover`: texto por punto (`"09:34"` o `"Ep 3, 09:34"`) para el tooltip.
+    """
+    n = len(minutos)
+    x = list(range(n))
+    combinado = limites_episodio is not None and len(limites_episodio) > 1
+    segmentos = [sum(limites_episodio[:k]) for k in range(len(limites_episodio))] if combinado else [0]
+
+    def _hhmm(m):
+        hh, mm = divmod(int(round(m)), 60)
+        return f"{hh:02d}:{mm:02d}"
+
+    if not combinado:
+        pasos_por_hora = max(1, round(60 / paso_tiempo_min))
+        tick_vals = list(range(0, n, pasos_por_hora))
+        if tick_vals[-1] != n - 1:
+            tick_vals.append(n - 1)
+        tick_text = [_hhmm(minutos[i]) for i in tick_vals]
+        hover = [_hhmm(m) for m in minutos]
+    else:
+        tick_vals = segmentos
+        tick_text = [f"Ep {k + 1}" for k in range(len(segmentos))]
+        episodio_de = [0] * n
+        for k, inicio in enumerate(segmentos):
+            fin = segmentos[k + 1] if k + 1 < len(segmentos) else n
+            for i in range(inicio, fin):
+                episodio_de[i] = k
+        hover = [f"Ep {episodio_de[i] + 1}, {_hhmm(minutos[i])}" for i in range(n)]
+
+    return x, tick_vals, tick_text, hover
+
+
+def graficar_perfil_espera(env) -> go.Figure:
+    """People waiting (sum of the 12 queues) at each step -- from
+    `env.historial_estados`, no need to rerun anything.
     """
     minutos = [f["tiempo"]["minuto_del_dia"] for f in env.historial_estados]
+    x, tick_vals, tick_text, hover = _eje_tiempo(minutos, env.paso_tiempo_min, getattr(env, "limites_episodio", None))
     esperando = [sum(v["personas"] for v in f["demanda"].values()) for f in env.historial_estados]
-    ax = ax or plt.subplots(figsize=(8, 4))[1]
-    ax.plot(minutos, esperando, color="#e67e22", linewidth=1.8)
-    ax.fill_between(minutos, esperando, color="#e67e22", alpha=0.15)
-    ax.set_xlabel("Minuto del día")
-    ax.set_ylabel("Personas esperando")
-    ax.set_title("Perfil temporal de personas esperando")
-    return ax
+
+    fig = go.Figure(go.Scatter(
+        x=x, y=esperando, mode="lines", fill="tozeroy",
+        line=dict(color="#e67e22", width=2),
+        name="waiting",
+        customdata=hover, hovertemplate="%{customdata}<br>waiting: %{y}<extra></extra>",
+    ))
+    fig.update_layout(
+        title="People waiting over time", xaxis_title="Time", yaxis_title="People waiting",
+        xaxis=dict(tickmode="array", tickvals=tick_vals, ticktext=tick_text),
+        template="plotly_white",
+    )
+    return fig
 
 
-def graficar_ocupacion_flota(env, ax=None):
-    """Ocupación de cada barco en el tiempo -- de `env.historial_estados`."""
+def graficar_ocupacion_flota(env) -> go.Figure:
+    """Occupancy of each boat over time -- from `env.historial_estados`.
+    One line per boat; click a legend entry to hide/show it, double-click
+    to isolate it (Plotly's native legend behaviour) -- that's how to look
+    at just one boat, or all of them.
+    """
     minutos = [f["tiempo"]["minuto_del_dia"] for f in env.historial_estados]
-    ax = ax or plt.subplots(figsize=(8, 4))[1]
+    x, tick_vals, tick_text, hover = _eje_tiempo(minutos, env.paso_tiempo_min, getattr(env, "limites_episodio", None))
+
+    fig = go.Figure()
     for i in range(env.num_barcos):
         ocup = [f["barcos"][i]["ocupacion"] for f in env.historial_estados]
-        ax.plot(minutos, ocup, linewidth=1.5, label=f"barco_{i}")
-    ax.axhline(env.capacidad_barco, color="grey", linestyle="--", linewidth=1, label="capacidad")
-    ax.set_xlabel("Minuto del día")
-    ax.set_ylabel("Ocupación (personas)")
-    ax.set_title("Ocupación de la flota en el tiempo")
-    ax.legend(fontsize=8)
-    return ax
+        fig.add_trace(go.Scatter(
+            x=x, y=ocup, mode="lines", name=f"boat_{i}",
+            customdata=hover, hovertemplate="%{customdata}<br>occupancy: %{y}<extra>%{fullData.name}</extra>",
+        ))
+    fig.add_hline(y=env.capacidad_barco, line_dash="dash", line_color="grey",
+                  annotation_text="capacity", annotation_position="top left")
+    fig.update_layout(
+        title="Fleet occupancy over time", xaxis_title="Time", yaxis_title="Occupancy (people)",
+        xaxis=dict(tickmode="array", tickvals=tick_vals, ticktext=tick_text),
+        template="plotly_white",
+    )
+    return fig
 
 
-def graficar_heatmap_cumplimiento(env, ax=None):
-    """Heatmap 4x4 de % atendidas (atendidas/generadas, dentro de la
-    ventana de la corrida) por par origen-destino -- de
-    `metricas.metricas_por_par`.
+def graficar_heatmap_cumplimiento(env) -> go.Figure:
+    """4x4 heatmap of % served (served/generated, within the run window) by
+    origin-destination pair -- from `metricas.metricas_por_par`.
     """
     df = met.metricas_por_par(env)
     nodos = env.nodos
@@ -234,59 +323,74 @@ def graficar_heatmap_cumplimiento(env, ax=None):
         o, d = r["par"].split("->")
         matriz.loc[o, d] = r["pct_atendidas"]
 
-    ax = ax or plt.subplots(figsize=(5.5, 5))[1]
-    im = ax.imshow(matriz.values, cmap="RdYlGn", vmin=0, vmax=100)
-    ax.set_xticks(range(len(nodos)))
-    ax.set_xticklabels([CODIGO_CORTO[n] for n in nodos])
-    ax.set_yticks(range(len(nodos)))
-    ax.set_yticklabels([CODIGO_CORTO[n] for n in nodos])
-    ax.set_xlabel("Destino")
-    ax.set_ylabel("Origen")
-    ax.set_title("% atendidas por par (dentro de la ventana de la corrida)")
-    for i in range(len(nodos)):
-        for j in range(len(nodos)):
-            v = matriz.values[i, j]
-            if not np.isnan(v):
-                ax.text(j, i, f"{v:.0f}%", ha="center", va="center", fontsize=9)
-    plt.colorbar(im, ax=ax, label="% cumplimiento", fraction=0.046)
-    return ax
+    etiquetas = [CODIGO_CORTO[n] for n in nodos]
+    texto = [[f"{v:.0f}%" if not np.isnan(v) else "" for v in fila] for fila in matriz.values]
+    fig = go.Figure(go.Heatmap(
+        z=matriz.values, x=etiquetas, y=etiquetas, zmin=0, zmax=100, colorscale="RdYlGn",
+        text=texto, texttemplate="%{text}",
+        hovertemplate="origin %{y} -> destination %{x}<br>%{z:.1f}% served<extra></extra>",
+        colorbar=dict(title="% served"),
+    ))
+    fig.update_layout(
+        title="% served by O-D pair (within the run window)",
+        xaxis_title="Destination", yaxis_title="Origin",
+        template="plotly_white",
+    )
+    return fig
 
 
-def graficar_desglose_recompensa(env, ax=None):
-    """Desglose de recompensa (incomodidad, movimiento) en el tiempo -- de
-    `env.log_recompensa`. Ya no hay término de pérdida (ver recompensa.py).
+def graficar_desglose_recompensa(env) -> go.Figure:
+    """Reward breakdown over time -- from `env.log_recompensa`. Lines, not
+    a stacked area: since the delivery bonus (`recompensa.py`,
+    `premio_por_persona_entregada`) is positive and discomfort/movement are
+    negative, a stackplot of mixed signs would be misleading -- each
+    component keeps its true sign here, plus the total reward line.
     """
     df = met.desglose_recompensa(env)
-    ax = ax or plt.subplots(figsize=(8, 4))[1]
-    ax.stackplot(
-        df["minuto"], df["incomodidad"], df["movimiento"],
-        labels=["incomodidad", "movimiento"],
-        colors=["#3498db", "#7f8c8d"], alpha=0.85,
+    x, tick_vals, tick_text, hover = _eje_tiempo(df["minuto"].tolist(), env.paso_tiempo_min, getattr(env, "limites_episodio", None))
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=-df["incomodidad"], mode="lines", name="discomfort",
+                              line=dict(color="#3498db"), customdata=hover,
+                              hovertemplate="%{customdata}<br>discomfort: %{y:.3f}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=x, y=-df["movimiento"], mode="lines", name="movement",
+                              line=dict(color="#7f8c8d"), customdata=hover,
+                              hovertemplate="%{customdata}<br>movement: %{y:.3f}<extra></extra>"))
+    if "entrega" in df.columns and df["entrega"].abs().sum() > 0:
+        fig.add_trace(go.Scatter(x=x, y=df["entrega"], mode="lines", name="delivery bonus",
+                                  line=dict(color="#27ae60"), customdata=hover,
+                                  hovertemplate="%{customdata}<br>delivery bonus: %{y:.3f}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=x, y=df["total"], mode="lines", name="total reward",
+                              line=dict(color="black", dash="dot"), customdata=hover,
+                              hovertemplate="%{customdata}<br>total: %{y:.3f}<extra></extra>"))
+    fig.update_layout(
+        title="Reward breakdown over time", xaxis_title="Time", yaxis_title="Reward component",
+        xaxis=dict(tickmode="array", tickvals=tick_vals, ticktext=tick_text),
+        template="plotly_white",
     )
-    ax.set_xlabel("Minuto del día")
-    ax.set_ylabel("Penalización del paso (positiva = magnitud)")
-    ax.set_title("Desglose de la recompensa en el tiempo")
-    ax.legend(fontsize=8, loc="upper left")
-    return ax
+    return fig
 
 
-def graficar_sin_atender_al_final(env, ax=None):
-    """Barras del backlog al final de la corrida (gente todavía esperando o
-    a bordo cuando terminó la corrida), por par -- de
-    `metricas.sin_atender_al_final_por_par`. No son "pérdidas" (el
-    simulador ya no pierde a nadie, ver `env.py`): es gente que se habría
-    atendido si la corrida hubiera seguido un poco más.
+def graficar_sin_atender_al_final(env) -> go.Figure:
+    """Backlog at the end of the run (people still waiting or on board
+    when the run ended), by pair -- from
+    `metricas.sin_atender_al_final_por_par`. Not "losses" (the simulator
+    never drops anyone, see `env.py`): it's people who would have been
+    served if the run had continued a bit longer.
     """
     df = met.sin_atender_al_final_por_par(env)
-    ax = ax or plt.subplots(figsize=(7, 4))[1]
+    fig = go.Figure()
     if df.empty:
-        ax.text(0.5, 0.5, "Todos atendidos al terminar la corrida", ha="center", va="center", transform=ax.transAxes)
+        fig.add_annotation(text="Everyone served by the end of the run", showarrow=False,
+                            xref="paper", yref="paper", x=0.5, y=0.5, font=dict(size=14))
     else:
-        ax.bar(df["par"], df["sin_atender"], color="#e67e22")
-        ax.tick_params(axis="x", rotation=45)
-    ax.set_ylabel("Personas sin atender")
-    ax.set_title("Backlog al final de la corrida (por par origen-destino)")
-    return ax
+        fig.add_trace(go.Bar(x=df["par"], y=df["sin_atender"], marker_color="#e67e22"))
+    fig.update_layout(
+        title="Backlog at the end of the run (by O-D pair)",
+        xaxis_title="O-D pair", yaxis_title="People not yet served",
+        template="plotly_white",
+    )
+    return fig
 
 
 # -- Inspector de un minuto concreto -------------------------------------------

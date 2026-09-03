@@ -180,13 +180,14 @@ class SimuladorBarcosBergen(gym.Env):
         # 2) avanzar paso_tiempo_min; el que llega baja a TODOS (por construccion,
         #    todos a bordo van al mismo destino) y queda libre
         self.t_actual_min += self.paso_tiempo_min
+        entregas_este_paso = 0
         for barco in self.barcos:
             if barco.nodo_origen != barco.nodo_destino:
                 barco.min_para_llegar -= self.paso_tiempo_min
                 if barco.min_para_llegar <= 1e-9:
                     barco.nodo_origen = barco.nodo_destino
                     barco.min_para_llegar = 0.0
-                    self._desembarcar(barco)
+                    entregas_este_paso += self._desembarcar(barco)
 
         # 3) incorporar unidades nuevas del intervalo (a las colas, para el
         #    proximo paso -- no alcanzan a subir al barco que acaba de partir
@@ -196,7 +197,7 @@ class SimuladorBarcosBergen(gym.Env):
         # 4) recompensa + nuevo estado (ya no hay paso de "purgar perdidas" --
         #    nadie se va nunca, ver docstring del modulo)
         estado = self._construir_estado()
-        r, desglose = calcular_recompensa(estado, self.cfg_recompensa)
+        r, desglose = calcular_recompensa(estado, self.cfg_recompensa, entregas_este_paso)
         self.log_recompensa.append({"minuto": self.t_actual_min, **desglose, "total": r})
 
         terminated = False   # no hay estado terminal natural en despacho continuo
@@ -253,13 +254,16 @@ class SimuladorBarcosBergen(gym.Env):
         self.colas[(origen, destino)] = [u for u in cola if u.id not in ids_embarcados]
         barco.a_bordo.extend(embarcados)
 
-    def _desembarcar(self, barco: Barco) -> None:
+    def _desembarcar(self, barco: Barco) -> int:
         """Baja a TODOS los que lleva el barco -- por construcción (viajes
         directos punto a punto), todos a bordo comparten el mismo destino:
-        el nodo al que el barco acaba de llegar.
+        el nodo al que el barco acaba de llegar. Devuelve la suma de
+        `tamano` entregada (0 si el barco no llevaba a nadie) -- `step()` la
+        acumula en `entregas_este_paso` para el premio positivo de
+        `recompensa.py`.
         """
         if not barco.a_bordo:
-            return
+            return 0
         for u in barco.a_bordo:
             minuto_embarque = u.minuto_llegada + (u.tiempo_espera_min or 0.0)
             tiempo_viaje = self.t_actual_min - minuto_embarque
@@ -267,8 +271,10 @@ class SimuladorBarcosBergen(gym.Env):
                 "tipo": "baja", "minuto": self.t_actual_min, "barco_id": barco.id,
                 "unidad_id": u.id, "par": (u.origen, u.destino), "tiempo_viaje": tiempo_viaje,
             })
+        entregados = sum(u.tamano for u in barco.a_bordo)
         self.atendidas_historico.extend(barco.a_bordo)
         barco.a_bordo = []
+        return entregados
 
     def _construir_estado(self) -> EstadoSimulacion:
         return EstadoSimulacion(

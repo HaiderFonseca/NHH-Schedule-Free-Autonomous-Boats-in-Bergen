@@ -92,7 +92,15 @@ class EntornoDemandaAleatoria(SimuladorBarcosBergen):
             es_fin_de_semana=self._es_fin_de_semana, rng=rng, dia_id=f"ep{self._contador_episodio}",
         )
         hora_ini, hora_fin = self._horas
-        return grupos[(grupos["hora"] >= hora_ini) & (grupos["hora"] < hora_fin)].reset_index(drop=True)
+        grupos = grupos[(grupos["hora"] >= hora_ini) & (grupos["hora"] < hora_fin)]
+        # `self.nodos` ya existe (lo fija `SimuladorBarcosBergen.__init__`, corrido en
+        # `super().__init__()` del constructor de esta clase, antes de que `reset()` -- y por
+        # lo tanto este metodo -- se pueda llamar). Si es un subconjunto de los 4 nodos reales
+        # (p.ej. `escalon_toy`, solo bryggen/kleppesto), la demanda generada se restringe a los
+        # pares dentro de ese subconjunto -- sin tocar `demand/`, mismo patron que el filtro de
+        # horas de arriba.
+        grupos = grupos[grupos["origen"].isin(self.nodos) & grupos["destino"].isin(self.nodos)]
+        return grupos.reset_index(drop=True)
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         self._contador_episodio += 1

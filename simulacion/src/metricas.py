@@ -140,6 +140,7 @@ class CorridaCombinada:
     log_eventos: list
     log_recompensa: list
     historial_estados: list
+    limites_episodio: list[int]  # cuántos frames aportó cada corrida, en orden -- ver visualizacion._eje_tiempo
 
 
 def combinar_corridas(envs: list) -> CorridaCombinada:
@@ -181,6 +182,7 @@ def combinar_corridas(envs: list) -> CorridaCombinada:
         log_eventos=[ev for e in envs for ev in e.log_eventos],
         log_recompensa=[r for e in envs for r in e.log_recompensa],
         historial_estados=[f for e in envs for f in e.historial_estados],
+        limites_episodio=[len(e.historial_estados) for e in envs],
     )
 
 

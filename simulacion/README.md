@@ -1,6 +1,6 @@
 # Simulador de despacho de barcos (entorno Gymnasium + primer agente PPO)
 
-**Qué es esto, en una frase:** un programa que modela minuto a minuto (en pasos de 2 min) qué hacen los barcos y los pasajeros en Bergen. Primero se verificó a fondo con una regla fija ("nearest-available", secciones 1-10) — franja mañana, día completo, y una semana — y ahora se conectó un primer agente de RL (PPO, secciones 11-13) para compararlo contra esa línea base.
+**Qué es esto, en una frase:** un programa que modela minuto a minuto (en pasos de 2 min) qué hacen los barcos y los pasajeros en Bergen. Primero se verificó a fondo con una regla fija ("nearest-available", secciones 1-10) — franja mañana, día completo, y una semana — y ahora se conectó un primer agente de RL (PPO, secciones 11-13) para compararlo contra esa línea base; la sección 14 documenta un ciclo de diagnóstico (gráficas interactivas + un agente que aprendía mal, arreglado) que mejoró ambas partes.
 
 **Documento fuente (manda sobre cualquier duda):** `docs/especificacion_simulador_rl.md`. Todo lo de abajo está mapeado a sus secciones (§1-§12).
 
@@ -226,7 +226,7 @@ El escalón 2, pese a tener 5.5× más demanda y 9× más pasos que el escalón 
 
 **Por par origen-destino, por barco, por usuario (percentiles), y backlog al final de la corrida** — tablas completas en cada notebook (`metricas.metricas_por_par`, `metricas_por_barco`, `metricas_por_usuario`, `metricas.sin_atender_al_final_por_par`), guardadas también en `output/escalon1/metricas_por_par.csv` / `metricas_por_barco.csv` y su equivalente en `output/escalon2/`. En las dos corridas, `sin_atender_al_final_por_par` da una tabla vacía (nadie quedó sin atender) — consistente con el 100% de arriba.
 
-**Gráficas** (`src/visualizacion.py`, `output/escalon1/*.png` y `output/escalon2/*.png`): perfil temporal de personas esperando, ocupación de la flota en el tiempo, heatmap de % atendidas por par (4×4), desglose de recompensa en el tiempo, barras de backlog (sin atender al final) por par — mismas gráficas, misma función, para los dos escalones.
+**Gráficas** (`src/visualizacion.py`, interactivas -- Plotly, no matplotlib; `output/escalon1/*.html` y `output/escalon2/*.html`, además de `output/escalon3/`): perfil temporal de personas esperando (`wait_profile.html`), ocupación de la flota en el tiempo (`fleet_occupancy.html`), heatmap de % atendidas por par (`pct_served_heatmap.html`), desglose de recompensa en el tiempo (`reward_breakdown.html`), barras de backlog por par (`backlog_by_pair.html`) — mismas gráficas, misma función, para los tres escalones. Zoom/pan nativo, valores exactos al pasar el mouse, y la leyenda de `fleet_occupancy.html` permite aislar un barco (click) o volver a mostrarlos todos (doble click) -- ver sección 14 para por qué se rehicieron en Plotly.
 
 Reproducibilidad verificada en los dos escalones: misma semilla de demanda → misma corrida exacta (recompensa total, atendidas y sin-atender-al-final idénticas); semilla distinta → resultado distinto.
 
@@ -326,21 +326,28 @@ Los escalones 1-3 corren la política base sobre una demanda **fija**: se genera
 
 **PPO, no DQN.** El `action_space` del entorno es `MultiDiscrete` (una acción por barco, sección 4.3) -- el DQN de Stable-Baselines3 no soporta `MultiDiscrete` de forma nativa, PPO sí.
 
-**Instancia de entrenamiento:** los parámetros de `escalon_1` (franja mañana, 2 barcos, pocos grupos) -- la instancia más chica, para verificar rápido si el agente aprende algo antes de escalar. Hiperparámetros en `config/instance.yaml` → `agente`:
+**Instancia de entrenamiento:** los parámetros de `escalon_1` (franja mañana, 2 barcos, pocos grupos) -- la instancia más chica, para verificar rápido si el agente aprende algo antes de escalar. Hiperparámetros en `config/instance.yaml` → `agente` (valores actuales, tras el diagnóstico de la sección 14.2):
 ```yaml
 agente:
   gamma: 0.99
   entrenamiento:
     escalon_base: "escalon_1"
     semilla_entrenamiento: 123     # raiz de la secuencia de demandas de entrenamiento
-    total_timesteps: 100000        # ~1115 episodios de 90 pasos c/u
+    total_timesteps: 150000        # ~1666 episodios de 90 pasos c/u (calibrado: 300000 hubiera tomado ~68 min)
+    usar_vecnormalize: true        # VecNormalize (obs y reward) -- ver seccion 14.2
+    ent_coef: 0.01                 # mas exploracion (default SB3 = 0.0)
+    learning_rate: 0.0003
+    n_steps: 512                   # actualiza cada ~5-6 episodios, no ~22 (default 2048)
+    recompensa_overrides:          # SOLO para el entorno RL, no toca la seccion `recompensa:` de arriba
+      premio_por_persona_entregada: 0.5
+      peso_movimiento: 0.0         # temporal para esta fase de diagnostico
   evaluacion:
     semillas: [1001, 1002, 1003, 1004, 1005]   # fijas, fuera del rango de entrenamiento
 ```
 
-**`notebooks/04_entrenamiento_rl.ipynb`, en orden:** (1) confirma demanda fresca por reset (sección 11); (2) `stable_baselines3.common.env_checker.check_env` -- pasó sin advertencias, los espacios ya declarados (`MultiDiscrete`, `Box` float32) no necesitaron ningún ajuste; (3) envuelve el entorno con `Monitor` (guarda `output/rl_ppo/monitor.monitor.csv`, recompensa/duración por episodio, sin depender de TensorBoard); (4) entrena `PPO("MlpPolicy", ...)` con `gamma` del config; (5) guarda el modelo (`output/rl_ppo/modelo_ppo.zip`) y grafica la curva de recompensa por episodio.
+**`notebooks/04_entrenamiento_rl.ipynb`, en orden:** (1) confirma demanda fresca por reset (sección 11); (2) `stable_baselines3.common.env_checker.check_env` -- pasó sin advertencias, los espacios ya declarados (`MultiDiscrete`, `Box` float32) no necesitaron ningún ajuste; (3) envuelve el entorno con `Monitor` + (si `usar_vecnormalize`) `DummyVecEnv`/`VecNormalize` (guarda `output/rl_ppo/monitor.monitor.csv` y `vecnormalize.pkl`); (4) entrena `PPO("MlpPolicy", ...)` con los hiperparámetros del config; (5) guarda el modelo (`output/rl_ppo/modelo_ppo.zip`) y grafica la curva de recompensa por episodio (interactiva, Plotly -- `output/rl_ppo/training_curve.html`).
 
-**Resultado de esta primera corrida (100 000 timesteps, 1115 episodios):** la recompensa media de los primeros 20 episodios fue -2650.65; la de los últimos 20, -2161.18 -- **sí mejora**, la curva de entrenamiento (`output/rl_ppo/curva_entrenamiento.png`) muestra una tendencia al alza clara, confirmando que el agente está aprendiendo algo. Pero, como se ve en la sección 13, ese nivel de entrenamiento todavía está lejos de igualar a la política base -- 100k timesteps sobre una instancia de 90 pasos es un presupuesto de verificación rápida, no un entrenamiento a convergencia.
+**Resultado de la corrida actual (150 000 timesteps, 1666 episodios, combo validado):** la recompensa media de los primeros 20 episodios fue -2439.28; la de los últimos 20, -691.15 -- una mejora mucho más marcada que el primer intento (100k timesteps sin ajustes: de -2650.65 a solo -2161.18). La curva de entrenamiento (`output/rl_ppo/training_curve.html`) todavía no se había aplanado cuando se detuvo -- el agente seguía mejorando activamente. Ver sección 13 para el resultado de esta corrida comparado contra la política base, y sección 14.2 para el diagnóstico completo (por qué la primera corrida fallaba y qué se cambió).
 
 ---
 
@@ -348,22 +355,66 @@ agente:
 
 `notebooks/05_comparacion_agente_vs_base.ipynb` corre las dos políticas sobre las 5 semillas de `agente.evaluacion.semillas` (misma semilla → misma demanda para ambas, vía `EntornoDemandaAleatoria.reset(seed=...)`, sección 11), y junta los 5 episodios de cada política con `metricas.combinar_corridas` -- mismo mecanismo que el escalón 3, reusando el 100% de las funciones de `metricas.py` ya existentes.
 
-**Resultado honesto de esta primera versión: la política base todavía gana, con margen amplio.**
+**Versión original (100k timesteps, sin ajustes) -- política degenerada:** % atendidas 27.6% vs. 88.0% de la base, ocupación 1.15 vs. 3.50, apenas 79 movimientos vs. 155. Se armó un ciclo de diagnóstico completo (sección 14.2) que encontró la causa principal (falta de normalización de observaciones/recompensa) y la corrigió.
 
-| Métrica (agregada sobre las 5 semillas de evaluación) | Agente PPO | Política base |
-|---|---|---|
-| % atendidas | 27.6% | 88.0% |
-| Espera media | 10.5 min | 16.4 min |
-| Tiempo en sistema medio | 21.2 min | 26.1 min |
-| Tiempo en sistema máximo | 36.3 min | 69.7 min |
-| Movimientos totales (5 episodios) | 79 | 155 |
-| Ocupación media | 1.15 | 3.50 |
-| Recompensa total (5 episodios) | -17 913.76 | -2444.46 |
+**Después del diagnóstico (150k timesteps, combo validado -- sección 14.2, `agente.entrenamiento.recompensa_overrides` activo): mejora enorme, todavía por debajo de la política base.**
 
-**Por qué el agente pierde tan claramente todavía:** la política base tiene una regla ya afinada por varias rondas de verificación (secciones 4-6); el agente, en cambio, entrenó apenas 100 000 timesteps (~1115 episodios) sobre una instancia de solo 90 pasos -- la curva de entrenamiento (sección 12) muestra que SÍ está mejorando, pero claramente no llegó a convergencia. Se nota en los números: mueve la flota mucho menos (79 movimientos vs. 155) y la ocupación media es mucho más baja (1.15 vs. 3.50 personas/barco) -- todavía no aprendió a despachar tan agresivamente como hace falta, se queda "esperando" en vez de salir a buscar demanda. Esto es exactamente lo que se buscaba verificar en esta primera versión (mostrar si el agente iguala o supera a la línea base, no exigir que gane) -- confirma que el entorno, `check_env`, y el loop de entrenamiento funcionan de punta a punta, y deja claro que **el próximo paso real es aumentar el presupuesto de entrenamiento** (más timesteps, quizás más semillas de evaluación, y eventualmente escalar a instancias más grandes) antes de sacar cualquier conclusión sobre si PPO puede superar a "nearest-available" en este problema.
+| Métrica (agregada sobre las 5 semillas de evaluación) | Agente PPO (tras el diagnóstico) | Agente PPO (original, sin diagnóstico) | Política base |
+|---|---|---|---|
+| % atendidas | **77.2%** | 27.6% | 88.0% |
+| Espera media | 20.5 min | 10.5 min | 16.4 min |
+| Tiempo en sistema medio | 30.4 min | 21.2 min | 26.1 min |
+| Tiempo en sistema máximo | 117.1 min | 36.3 min | 69.7 min |
+| Movimientos totales (5 episodios) | 177 | 79 | 155 |
+| Ocupación media | 2.97 | 1.15 | 3.50 |
+| Recompensa total (5 episodios) | -4807.00 | -17 913.76 | -2009.26 |
 
-Tablas completas (por par origen-destino comparado) y gráficas (heatmaps lado a lado, recompensa por semilla) en `output/comparacion/` (`tabla_comparativa.csv`, `por_par_comparado.csv`, `heatmaps_comparados.png`, `reward_por_semilla.png`).
+**Lectura:** de 27.6% a 77.2% atendidas es un salto enorme -- pasó de una política que casi no se mueve a una que atiende a 3 de cada 4 personas, con ocupación de flota (2.97) ya cerca de la de la base (3.50). Sigue por debajo de la base en % atendidas y tiene una cola de espera más larga (máximo 117 min vs. 69.7 min -- al menos un par, `laksevag->sandviken`, queda especialmente desatendido). La curva de entrenamiento (sección 12) NO se había aplanado cuando se detuvo (recompensa media: -2439 en los primeros 20 episodios de esta corrida, -691 en los últimos 20, de 1666 episodios entrenados) -- el agente seguía mejorando activamente. **La conclusión del ciclo de diagnóstico (sección 14.2) es clara: la palanca que falta es más presupuesto de entrenamiento**, no otro fix estructural -- con el combo ya validado (VecNormalize, premio de entrega, sin penalización de movimiento temporal, más entropía/n_steps ajustados), subir `total_timesteps` más allá de 150k es el paso directo antes de evaluar si PPO puede igualar o superar a "nearest-available" en esta instancia.
+
+**Nota sobre las recompensas reportadas:** desde el diagnóstico, la comparación usa `agente.entrenamiento.recompensa_overrides` (premio de entrega activo, sin penalización de movimiento) para AMBAS políticas -- así el reward es comparable 1:1. No es la misma fórmula que reportan las secciones 4.4/8 para escalones 1-3 (esas usan la recompensa de producción, sin overrides) -- ver sección 14.2 para el porqué.
+
+Tablas completas (por par origen-destino comparado) y gráficas interactivas (heatmaps lado a lado, recompensa por semilla) en `output/comparacion/` (`tabla_comparativa.csv`, `por_par_comparado.csv`, `heatmaps_comparados.html`, `reward_por_semilla.html`).
+
+---
+
+## 14. Diagnóstico: gráficas confusas y agente PPO degenerado (y cómo se corrigieron)
+
+### 14.1 Gráficas -- por qué parecían "varias líneas del mismo barco"
+
+La gráfica de ocupación de flota del escalón 3 (semana) mostraba algo que parecía varias líneas del mismo barco superpuestas. **Causa raíz confirmada leyendo el código, no un supuesto:** `graficar_ocupacion_flota`/`graficar_perfil_espera`/`graficar_desglose_recompensa` usaban `minuto_del_dia` (0-1439) como eje X. En una corrida combinada de varios episodios (escalón 3 = 7 días, o la comparación agente-vs-base = 5 semillas de evaluación, ver `metricas.combinar_corridas`) ese valor se REINICIA en cada episodio -- la misma línea de un barco se dibujaba repetida 7 veces, superpuesta en el mismo rango 0-1439.
+
+**Arreglo:** las 5 gráficas de métricas (`src/visualizacion.py`) se reescribieron en **Plotly** (interactivo -- ya estaba instalado) en vez de matplotlib, y el eje de tiempo pasó a ser el **índice de paso** (0..N-1, siempre monótono, nunca se superpone) en vez de `minuto_del_dia` crudo. Para no perder la hora real: en una corrida de un solo episodio, los ticks del eje muestran `HH:MM`; en una combinada, los ticks marcan el inicio de cada episodio ("Ep 1", "Ep 2", ...) y la hora exacta de cada punto aparece al pasar el mouse. La leyenda de `fleet_occupancy.html` ya permite aislar un barco (click) o verlos todos (doble click) -- resuelve "elegir qué barco ver" sin controles aparte. Todo en inglés desde esta reescritura (títulos, ejes, leyendas).
+
+**Bug encontrado y corregido durante la propia reescritura:** la primera versión detectaba los límites de episodio mirando si `minuto_del_dia` bajaba entre un paso y el siguiente. Para un escalón cuyo `hora_fin_min` es un múltiplo exacto de 1440 (medianoche -- escalón 2/3, que terminan a las 24:00), el ÚLTIMO frame de CADA episodio cae justo en `t_actual_min == 1440`, y `minuto_del_dia = t_actual_min % 1440` da `0` -- indistinguible de un cambio real de episodio. Esto hacía que el escalón 3 (7 días reales) mostrara 8 "episodios" en vez de 7. Se corrigió de raíz: `metricas.combinar_corridas` ahora guarda `limites_episodio` (cuántos frames aportó cada corrida fuente, un número exacto, conocido de antemano) en el objeto combinado, y `visualizacion._eje_tiempo` lo usa directo en vez de adivinar mirando los datos. Verificado con la corrida real de escalón 3: exactamente 7 episodios, límites en 0/541/1082/.../3246 (541 = 540 pasos + el frame inicial de `reset()`).
+
+**Se dejaron en matplotlib** (no son series de tiempo, y no eran la parte confusa): el mapa real con barcos moviéndose (`dibujar_frame`, `animar_corrida`, `inspeccionar`, `reproductor_interactivo`) -- siguen igual que antes, sección 8.1-8.2.
+
+**Nota técnica:** se probó también exportar una imagen estática (`.png`) de cada gráfica con `kaleido` (motor de renderizado de Plotly, headless-Chrome) además del `.html` interactivo -- causaba que notebooks con muchas gráficas + celdas de cómputo posteriores se colgaran bajo `nbconvert` (mismo síntoma que un bug ya visto antes en este proyecto con acumulación de figuras de matplotlib, pero esta vez con el manejo interno de procesos de `kaleido`). Se sacaron esas llamadas -- el entregable real (el `.html` interactivo) no las necesitaba, y una imagen estática se puede generar aparte si hace falta para el informe, fuera del camino crítico de estos notebooks.
+
+### 14.2 Agente PPO -- diagnóstico y arreglo, paso a paso
+
+**Punto de partida:** el primer entrenamiento (100k timesteps sobre `escalon_1`, sin ajustes) aprendió una política degenerada -- 27.6% atendidas vs. 88.0% de la política base, ocupación 1.15 vs. 3.50, apenas 79 movimientos vs. 155 (sección 13, versión original). Se armó un ciclo de diagnóstico ordenado, verificando cada cambio antes del siguiente -- detalle completo, con cada corrida y sus números, en `output/rl_ppo/bitacora_experimentos.md`; el setup completo (qué entra, qué semillas, qué significa cada parámetro) en `output/rl_ppo/README.md`.
+
+**B.1 -- Instancia de juguete, receta original.** Antes de tocar nada, se verificó si PPO podía aprender algo en el problema más simple posible (1 barco, 2 nodos, `escalones.escalon_toy`, nuevo en el config). Con la receta original (sin normalización, sin premio positivo, `ent_coef=0.0` por defecto de SB3): el agente entrenado sirvió **0% de la demanda** (vs. 67.1% de la política base en la misma instancia), pese a que `check_env` y la mecánica de recompensa ya estaban verificadas correctas. Esto descarta un bug estructural (el entorno funciona bien) y apunta a un problema de escala/forma de la recompensa/exploración -- exactamente lo que se sospechaba.
+
+**B.2 -- `VecNormalize`.** Se envolvió el entorno en `DummyVecEnv` + `VecNormalize` (normaliza observaciones y recompensa con estadísticas corridas). Resultado en la instancia de juguete: **0% → 67.1%, empatando exactamente con la política base**, y con mejor reward. Esta fue la causa principal.
+
+**B.3 -- Premio positivo por entrega.** Se agregó un término nuevo a la recompensa (`recompensa.py`, `premio_por_persona_entregada`, activado solo para las corridas de RL vía `agente.entrenamiento.recompensa_overrides` -- no afecta escalones 1-3 ni la política base, que siguen con el valor default 0.0). En la instancia de juguete el % atendidas se mantuvo en 67.1% (parece ser un techo real de esa instancia con 1 solo barco), pero el reward crudo mejoró de forma consistente.
+
+**B.4 -- Penalización de movimiento en 0 (temporal).** `peso_movimiento` bajado a 0 solo para el entrenamiento RL (mismo mecanismo de override), para que el agente aprenda a servir antes de optimizar eficiencia -- explícitamente temporal para esta fase, no el valor de producción de escalones 1-3.
+
+**B.5 -- Exploración e hiperparámetros de PPO.** `ent_coef=0.01` (más exploración que el default 0.0), `n_steps=512` (actualiza cada ~5-6 episodios de 90 pasos en vez de ~22).
+
+**B.6 -- Consistencia train/eval.** Se verificó (y se dejó un `assert` explícito en `05_comparacion_agente_vs_base.ipynb`, que compara la FORMA del vector de observación del modelo cargado contra la de la instancia de evaluación) que entrenamiento y evaluación usan el mismo escalón -- **no era un problema real en este proyecto** (los dos notebooks ya leían `cfg_entren["escalon_base"]` de la misma clave), pero queda la verificación estructural para que un desajuste futuro no pase desapercibido.
+
+**B.7 -- Entrenamiento final sobre `escalon_1` (la instancia real), con el combo validado, más timesteps (150k).** Resultado: **27.6% -> 77.2% atendidas** -- mejora enorme, todavía por debajo del 88.0% de la política base (detalle completo en la sección 13, más arriba, y en `output/rl_ppo/bitacora_experimentos.md`). La curva de entrenamiento no se había aplanado -- la palanca directa para la siguiente iteración es más `total_timesteps`, no otro fix estructural.
+
+**Bug real encontrado y corregido durante esta corrida:** la primera versión de `correr_agente` (en `05_comparacion_agente_vs_base.ipynb`) steppeaba el entorno A TRAVÉS del `DummyVecEnv` (`venv.step(...)`) para poder usar las estadísticas de `VecNormalize` -- pero `DummyVecEnv.step_wait()` auto-resetea el entorno interno en el mismo `step()` en que `done=True` (comportamiento estándar de estos wrappers, para no perder un paso al encadenar episodios), lo que borraba `atendidas_historico`/`log_eventos` ANTES de poder leerlos -- `metricas.verificar_conservacion` lo detectó de inmediato (todo en 0 salvo las generadas). Se corrigió steppeando el entorno CRUDO directamente y usando `VecNormalize` solo para normalizar la observación antes de `model.predict()` -- mismo patrón ya usado en el diagnóstico sobre `escalon_toy`.
+
+**Meta de este ciclo (como se pidió):** que el agente al menos iguale a la política base -- superarla queda para un siguiente escalón del proyecto.
+
+---
 
 ## Siguiente paso
 
-El siguiente paso real, según la sección 13, es **aumentar el presupuesto de entrenamiento de PPO** (más timesteps, y revisar hiperparámetros si hace falta) antes de sacar cualquier conclusión sobre si puede igualar o superar a la política base -- 100k timesteps sobre la instancia chica alcanzó para confirmar que el loop completo funciona (el entorno, `check_env`, demanda fresca por reset, entrenamiento, guardado del modelo, comparación) y que el agente SÍ mejora con el entrenamiento, pero no para competir todavía. Después de eso: usar los percentiles de `metricas_por_usuario` para proponer una garantía de tiempo de servicio con sustento en datos (sección 9), y actualizar el informe LaTeX del proyecto (`docs/informe/`) con estos resultados.
+Con el diagnóstico de la sección 14 aplicado: revisar los resultados finales de B.7 en la sección 13 y decidir si hace falta seguir subiendo el presupuesto de entrenamiento, o si el combo ya es competitivo. Después: usar los percentiles de `metricas_por_usuario` para proponer una garantía de tiempo de servicio con sustento en datos (sección 9), y actualizar el informe LaTeX del proyecto (`docs/informe/`) con estos resultados.
