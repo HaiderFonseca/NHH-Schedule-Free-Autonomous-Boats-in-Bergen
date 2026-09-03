@@ -82,3 +82,16 @@ directa para la siguiente iteración es subir `total_timesteps`** (ya con el
 combo de fixes validado, sin necesidad de repetir B.1-B.6). Superar a la
 política base queda, como se esperaba desde el principio, para un siguiente
 escalón del proyecto.
+
+**Post-B.7, diagnóstico adicional pedido: ¿el agente no mueve la flota?**
+`metricas.decisiones_por_barco` (nueva) cuenta, por barco, cuántas decisiones
+fueron "esperar" y cuántas de esas tenían demanda esperando en el propio nodo
+(oportunidad perdida). Resultado sobre las 5 semillas de evaluación: el
+agente espera en 13.0% de sus decisiones (`barco_1` nunca espera) vs. 47.5%
+de la base -- **el agente mueve MÁS la flota** (177 movimientos, 1334 min
+navegados) que la base (155, 1224 min), pero sirve menos gente (77.2% vs.
+88.0%). No es un problema de pasividad -- es que parte de ese movimiento
+extra no está bien dirigido (reposicionamientos que no terminan sirviendo a
+nadie o llegan tarde). Detalle en `output/comparacion/decisiones_por_barco_comparado.csv`
+y en la visualización paso a paso (mapa + animación + reproductor) al final
+de `05_comparacion_agente_vs_base.ipynb`, sobre la semilla 1001.

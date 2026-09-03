@@ -373,6 +373,10 @@ agente:
 
 **Nota sobre las recompensas reportadas:** desde el diagnóstico, la comparación usa `agente.entrenamiento.recompensa_overrides` (premio de entrega activo, sin penalización de movimiento) para AMBAS políticas -- así el reward es comparable 1:1. No es la misma fórmula que reportan las secciones 4.4/8 para escalones 1-3 (esas usan la recompensa de producción, sin overrides) -- ver sección 14.2 para el porqué.
 
+**¿El agente simplemente no mueve la flota?** No -- es justo lo contrario. `metricas.decisiones_por_barco` (nueva, cuenta cuántas veces cada barco decidió "esperar" vs. moverse, cruzando `log_eventos` con el estado en ese momento) muestra que el agente espera en solo **13.0%** de sus decisiones, contra **47.5%** de la política base -- un barco del agente (`barco_1`) no espera NUNCA en las 5 semillas de evaluación. El agente mueve la flota más (177 movimientos vs. 155, 1334 min navegados vs. 1224) pero sirve MENOS gente (77.2% vs. 88.0%) -- el problema no es pasividad, es que parte de ese movimiento extra no está bien dirigido (reposicionamientos que no terminan sirviendo a nadie, o llegan tarde) -- visible en la comparación por par (arriba) y en la visualización paso a paso de abajo. Tabla completa en `output/comparacion/decisiones_por_barco_comparado.csv`.
+
+**Visualización paso a paso (una semilla de ejemplo, las dos políticas):** `notebooks/05_comparacion_agente_vs_base.ipynb`, al final -- mapa real + animación GIF de los 90 pasos completos para el agente y para la base por separado (`output/comparacion/animacion_agente_semilla1001.gif` / `animacion_base_semilla1001.gif`), inspector en un par de minutos concretos para las dos, y el reproductor completo con botones de paso a paso (mismo patrón que el escalón 1, sección 8.2) para poder seguir exactamente qué decide cada barco, minuto a minuto, en las dos políticas sobre la misma demanda.
+
 Tablas completas (por par origen-destino comparado) y gráficas interactivas (heatmaps lado a lado, recompensa por semilla) en `output/comparacion/` (`tabla_comparativa.csv`, `por_par_comparado.csv`, `heatmaps_comparados.html`, `reward_por_semilla.html`).
 
 ---

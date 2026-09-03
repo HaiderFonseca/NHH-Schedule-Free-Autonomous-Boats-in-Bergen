@@ -1,4 +1,4 @@
-\begin{thebibliography}{3}
+\begin{thebibliography}{6}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -11,16 +11,31 @@ Caroline Braathen, Julio~C. Goez, and Mario Guajardo.
 \newblock \emph{Maritime Transport Research}, 7:\penalty0 100115, 2024.
 \newblock \doi{10.1016/j.martra.2024.100115}.
 
+\bibitem[Brockman et~al.(2016)Brockman, Cheung, Pettersson, Schneider, Schulman, Tang, and Zaremba]{Brockman2016}
+Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schulman, Jie Tang, and Wojciech Zaremba.
+\newblock Openai gym.
+\newblock \emph{arXiv preprint arXiv:1606.01720}, 2016.
+
 \bibitem[Gu and Wallace(2021)]{Gu2021}
 Yong Gu and Stein~W. Wallace.
 \newblock Operational benefits of autonomous vessels in logistics -- a case of autonomous water-taxis in {Bergen}.
 \newblock \emph{Transportation Research Part E: Logistics and Transportation Review}, 154:\penalty0 102456, 2021.
 \newblock \doi{10.1016/j.tre.2021.102456}.
 
+\bibitem[Raffin et~al.(2021)Raffin, Hill, Gleave, Kanervisto, Ernestus, and Dormann]{Raffin2021}
+Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian Ernestus, and Noah Dormann.
+\newblock Stable-baselines3: Reliable reinforcement learning implementations.
+\newblock \emph{Journal of Machine Learning Research}, 22\penalty0 (268):\penalty0 1--8, 2021.
+
 \bibitem[S{\'a}nchez-Mart{\'i}nez et~al.(2016)S{\'a}nchez-Mart{\'i}nez, Wilson, and Koutsopoulos]{SanchezMartinez2017}
 Gabriel~E. S{\'a}nchez-Mart{\'i}nez, Nigel H.~M. Wilson, and Haris~N. Koutsopoulos.
 \newblock Schedule-free high-frequency transit operations.
 \newblock \emph{Public Transport}, 9:\penalty0 285--305, 2016.
 \newblock \doi{10.1007/s12469-016-0129-8}.
+
+\bibitem[Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and Klimov]{Schulman2017}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1707.06347}, 2017.
 
 \end{thebibliography}

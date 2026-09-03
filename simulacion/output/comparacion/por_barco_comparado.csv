@@ -1,0 +1,3 @@
+barco_id,movimientos_agente,tiempo_navegado_min_agente,ocupacion_media_agente,ocupacion_maxima_agente,pct_ocioso_agente,movimientos_base,tiempo_navegado_min_base,ocupacion_media_base,ocupacion_maxima_base,pct_ocioso_base
+barco_0,71,648,3.2835164835164834,20,28.79120879120879,79,624,3.3714285714285714,20,31.428571428571427
+barco_1,106,686,2.6615384615384614,20,24.615384615384617,76,600,3.61978021978022,20,34.065934065934066

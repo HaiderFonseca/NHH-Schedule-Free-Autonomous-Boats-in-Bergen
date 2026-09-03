@@ -215,6 +215,64 @@ def metricas_por_barco(env) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 
+def decisiones_por_barco(env) -> pd.DataFrame:
+    """Cuántas veces decidió cada barco "esperar" en vez de moverse, y --
+    lo más diagnóstico -- cuántas de esas veces esperó TENIENDO demanda
+    esperando en su propio nodo (una oportunidad perdida, no una espera
+    justificada por falta de demanda). Pensada para responder directamente
+    "¿la política simplemente no mueve los barcos?" con un número, no una
+    impresión -- ver `simulacion/README.md` sección 15.
+
+    Cruza `log_eventos` (tipo `"decision"`) con el frame de `historial_estados`
+    vigente en el momento de esa decisión. Como una decisión se loguea ANTES
+    de que el paso avance el reloj (`env.py`, `step()`), el frame relevante es
+    el ÚLTIMO ya construido -- se reconstruye avanzando un puntero cada vez
+    que el `minuto` de la decisión cambia respecto a la anterior (sube en una
+    corrida normal, o baja al empezar el siguiente episodio de una corrida
+    combinada -- funciona igual en los dos casos, sin necesitar saber de
+    antemano dónde están los límites de episodio).
+    """
+    decisiones = [e for e in env.log_eventos if e["tipo"] == "decision"]
+    frames = env.historial_estados
+
+    frame_de_decision: list[dict | None] = []
+    idx_frame = 0
+    minuto_anterior = None
+    for d in decisiones:
+        if minuto_anterior is not None and d["minuto"] != minuto_anterior:
+            idx_frame += 1
+        frame_de_decision.append(frames[idx_frame] if idx_frame < len(frames) else None)
+        minuto_anterior = d["minuto"]
+
+    filas = []
+    for barco_idx in range(env.num_barcos):
+        barco_id = f"barco_{barco_idx}"
+        idxs = [i for i, d in enumerate(decisiones) if d["barco_id"] == barco_id]
+        n_total = len(idxs)
+        n_espero = sum(1 for i in idxs if decisiones[i]["decision"] == "esperar")
+
+        n_espero_con_demanda_local = 0
+        for i in idxs:
+            if decisiones[i]["decision"] != "esperar":
+                continue
+            frame = frame_de_decision[i]
+            if frame is None:
+                continue
+            origen = frame["barcos"][barco_idx]["origen"]
+            demanda_local = sum(v["personas"] for clave, v in frame["demanda"].items() if clave.startswith(origen + "->"))
+            if demanda_local > 0:
+                n_espero_con_demanda_local += 1
+
+        filas.append({
+            "barco_id": barco_id,
+            "decisiones_totales": n_total,
+            "veces_espero": n_espero,
+            "pct_espero": 100.0 * n_espero / n_total if n_total else float("nan"),
+            "veces_espero_con_demanda_local": n_espero_con_demanda_local,
+        })
+    return pd.DataFrame(filas)
+
+
 def metricas_por_usuario(env) -> dict:
     """Distribución (percentiles) de espera, tiempo de viaje, y tiempo en
     sistema, sobre las unidades ATENDIDAS -- datos reales, sin censurar por

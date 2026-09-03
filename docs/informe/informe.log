@@ -1,10 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.6.3)  1 SEP 2026 13:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.6.3)  3 SEP 2026 14:33
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
-**"c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe/informe.tex"
-(c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe/informe.tex
+**informe.tex
+(./informe.tex
 LaTeX2e <2025-06-01>
 L3 programming layer <2025-05-26>
 (c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/base/article.cls
@@ -347,25 +346,27 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 LaTeX Font Info:    Trying to load font information for U+msb on input line 18.
  (c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) (./informe.toc)
+) (./informe.toc
+
+[1
+
+{c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}])
 \tf@toc=\write4
 \openout4 = `informe.toc'.
 
 
 
-[1
-
-{c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-
 [2]
-<figuras/mapa_rutas_navegables.png, id=105, 678.97665pt x 410.13225pt>
+
+[3]
+<figuras/mapa_rutas_navegables.png, id=171, 678.97665pt x 410.13225pt>
 File: figuras/mapa_rutas_navegables.png Graphic file (type png)
 <use figuras/mapa_rutas_navegables.png>
 Package pdftex.def Info: figuras/mapa_rutas_navegables.png  used on input line 97.
 (pdftex.def)             Requested size: 339.72592pt x 205.20955pt.
 
 
-[3
+[4
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
@@ -376,14 +377,14 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has 
                                                   \__shipout_drop_firstpage_...
 l.101 
       ]
-<figuras/mapa_general_zonas_grunnkretser.png, id=119, 649.2255pt x 715.8745pt>
+<figuras/mapa_general_zonas_grunnkretser.png, id=189, 649.2255pt x 715.8745pt>
 File: figuras/mapa_general_zonas_grunnkretser.png Graphic file (type png)
 <use figuras/mapa_general_zonas_grunnkretser.png>
 Package pdftex.def Info: figuras/mapa_general_zonas_grunnkretser.png  used on input line 133.
 (pdftex.def)             Requested size: 385.02547pt x 424.54695pt.
 
 
-[4
+[5
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
@@ -395,73 +396,197 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has 
 l.137 
        <./figuras/mapa_rutas_navegables.png>]
 
-[5
+[6
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.150 \end{equation}
                      <./figuras/mapa_general_zonas_grunnkretser.png>]
 
-[6
+[7
 pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.197 
       ]
-<figuras/heatmaps_od_por_franja.png, id=162, 860.013pt x 766.4635pt>
+<figuras/heatmaps_od_por_franja.png, id=232, 860.013pt x 766.4635pt>
 File: figuras/heatmaps_od_por_franja.png Graphic file (type png)
 <use figuras/heatmaps_od_por_franja.png>
 Package pdftex.def Info: figuras/heatmaps_od_por_franja.png  used on input line 206.
 (pdftex.def)             Requested size: 385.02547pt x 343.1394pt.
-<figuras/histograma_tamano_grupo.png, id=163, 498.2615pt x 317.5865pt>
+<figuras/histograma_tamano_grupo.png, id=233, 498.2615pt x 317.5865pt>
 File: figuras/histograma_tamano_grupo.png Graphic file (type png)
 <use figuras/histograma_tamano_grupo.png>
 Package pdftex.def Info: figuras/histograma_tamano_grupo.png  used on input line 213.
 (pdftex.def)             Requested size: 317.07614pt x 202.10132pt.
 
 
-[7
+[8
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.217 
        <./figuras/heatmaps_od_por_franja.png>]
 
-[8
+[9
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.234 
        <./figuras/histograma_tamano_grupo.png>]
-Overfull \hbox (43.81805pt too wide) detected at line 254
-[][][]\OML/cmm/m/it/10.95 r \OT1/cmr/m/n/10.95 = \OMS/cmsy/m/n/10.95 ^^@[] [] [][]  \OT1/cmr/m/n/10.95 +  \OML/cmm/m/it/10.95 P[] \OMS/cmsy/m/n/10.95 ^^A \OT1/cmr/m/n/10.95 ([])  +  \OML/cmm/m/it/10.95 w[] \OMS/cmsy/m/n/10.95 ^^A \OT1/cmr/m/n/10.95 ([])[]\OML/cmm/m/it/10.95 ;
+
+[10]
+
+[11]
+Overfull \hbox (0.5211pt too wide) in paragraph at lines 301--311
+ [][] 
  []
 
-(./informe.bbl
 
-[9])
 
-[10] (./informe.aux)
+[12
+pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.316 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{table.6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.316 
+      ]
+<figuras/politica_base_heatmap.png, id=270, 2007.5pt x 1104.125pt>
+File: figuras/politica_base_heatmap.png Graphic file (type png)
+<use figuras/politica_base_heatmap.png>
+Package pdftex.def Info: figuras/politica_base_heatmap.png  used on input line 319.
+(pdftex.def)             Requested size: 385.02547pt x 211.7571pt.
+<figuras/politica_base_ocupacion_flota.png, id=271, 2007.5pt x 1104.125pt>
+File: figuras/politica_base_ocupacion_flota.png Graphic file (type png)
+<use figuras/politica_base_ocupacion_flota.png>
+Package pdftex.def Info: figuras/politica_base_ocupacion_flota.png  used on input line 326.
+(pdftex.def)             Requested size: 452.9679pt x 249.125pt.
+<figuras/politica_base_perfil_espera.png, id=272, 2007.5pt x 1104.125pt>
+File: figuras/politica_base_perfil_espera.png Graphic file (type png)
+<use figuras/politica_base_perfil_espera.png>
+Package pdftex.def Info: figuras/politica_base_perfil_espera.png  used on input line 333.
+(pdftex.def)             Requested size: 452.9679pt x 249.125pt.
+
+
+[13
+pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.337 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.337 
+       <./figuras/politica_base_heatmap.png> <./figuras/politica_base_ocupacion_flota.png>]
+<figuras/politica_base_snapshots.png, id=284, 1130.7846pt x 437.4744pt>
+File: figuras/politica_base_snapshots.png Graphic file (type png)
+<use figuras/politica_base_snapshots.png>
+Package pdftex.def Info: figuras/politica_base_snapshots.png  used on input line 340.
+(pdftex.def)             Requested size: 452.9679pt x 175.24031pt.
+
+
+[14
+pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.347 \subsection
+                 {Known limitations}
+pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.347 \subsection
+                 {Known limitations} <./figuras/politica_base_perfil_espera.png> <./figuras/politica_base_snapshots.png>]
+
+[15]
+
+[16]
+
+[17
+pdfTeX warning (ext4): destination with the same identifier (name{table.7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.425 \paragraph
+                {Step 2: observation and reward normalization.} The single l...]
+
+[18]
+<figuras/rl_training_curve.png, id=359, 2007.5pt x 1104.125pt>
+File: figuras/rl_training_curve.png Graphic file (type png)
+<use figuras/rl_training_curve.png>
+Package pdftex.def Info: figuras/rl_training_curve.png  used on input line 462.
+(pdftex.def)             Requested size: 452.9679pt x 249.125pt.
+
+
+[19
+pdfTeX warning (ext4): destination with the same identifier (name{table.8}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.466 
+      ]
+<figuras/rl_heatmaps_comparados.png, id=370, 2007.5pt x 1104.125pt>
+File: figuras/rl_heatmaps_comparados.png Graphic file (type png)
+<use figuras/rl_heatmaps_comparados.png>
+Package pdftex.def Info: figuras/rl_heatmaps_comparados.png  used on input line 491.
+(pdftex.def)             Requested size: 452.9679pt x 249.125pt.
+
+
+[20
+pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.495 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{table.9}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.495 
+       <./figuras/rl_training_curve.png>]
+<figuras/rl_reward_por_semilla.png, id=378, 2007.5pt x 1104.125pt>
+File: figuras/rl_reward_por_semilla.png Graphic file (type png)
+<use figuras/rl_reward_por_semilla.png>
+Package pdftex.def Info: figuras/rl_reward_por_semilla.png  used on input line 498.
+(pdftex.def)             Requested size: 452.9679pt x 249.125pt.
+
+
+[21
+pdfTeX warning (ext4): destination with the same identifier (name{figure.10}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.504 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{figure.11}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.504 
+       <./figuras/rl_heatmaps_comparados.png> <./figuras/rl_reward_por_semilla.png>] (./informe.bbl
+
+[22])
+
+[23] (./informe.aux)
  ***********
 LaTeX2e <2025-06-01>
 L3 programming layer <2025-05-26>
  ***********
 Package rerunfilecheck Info: File `informe.out' has not changed.
-(rerunfilecheck)             Checksum: ABB5C5DB89821D28AC0274D5E90A0551;2243.
+(rerunfilecheck)             Checksum: 57245DE2D0448F8B01C92D7ED18630AF;4936.
  ) 
 Here is how much of TeX's memory you used:
- 10462 strings out of 469873
- 161271 string characters out of 5482854
- 573417 words of memory out of 5000000
- 38580 multiletter control sequences out of 15000+600000
- 635359 words of font info for 72 fonts, out of 8000000 for 9000
+ 10629 strings out of 469873
+ 164586 string characters out of 5482854
+ 578258 words of memory out of 5000000
+ 38690 multiletter control sequences out of 15000+600000
+ 638603 words of font info for 86 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,13n,79p,1160b,455s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on informe.pdf (10 pages, 2845758 bytes).
+ 75i,13n,79p,1514b,571s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on informe.pdf (23 pages, 4297186 bytes).
 PDF statistics:
- 266 PDF objects out of 1000 (max. 8388607)
- 215 compressed objects within 3 object streams
- 52 named destinations out of 1000 (max. 500000)
- 133 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 505 PDF objects out of 1000 (max. 8388607)
+ 416 compressed objects within 5 object streams
+ 104 named destinations out of 1000 (max. 500000)
+ 272 words of extra memory for PDF output out of 10000 (max. 10000000)
 
