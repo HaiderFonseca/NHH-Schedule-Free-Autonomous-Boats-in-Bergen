@@ -137,11 +137,7 @@ Sandviken (BSI Padling)  & 21 & 14.6 & 11{,}109 & 4{,}106 \\
 
 \subsection{From population and employment to origin-destination intensity}
 
-\citet{Braathen2024} generate synthetic demand with a multiplicative popularity score,
-\begin{equation}
-\text{pop}_{pg} := \ln\Big(1 + \prod_{i=1}^{4} p_{i,pg}\Big),
-\end{equation}
-where $pg$ indexes a passenger group and the four factors $p_i$ are station-level popularity scores set by judgment for origin, destination, weekday, and hour. This project does not use that formula as written: no popularity-score table is published in the source paper to reuse, and the logarithm is specific to how that paper turns a popularity score into a deterministic group size, a step this project replaces (see below). What is adapted is the general idea of a multiplicative score built from real masses instead of judgment scores, implemented as follows.
+\citet{Braathen2024}  generate synthetic demand using a multiplicative popularity score that combines different factors associated with the attractiveness of stations, travel times, weekdays, and hours. This project adopts the general logic of using a score to represent the relative attractiveness or intensity of demand, but replaces the judgment-based popularity factors with observable population, employment, and university-related measures for the Bergen study area. The score used in this project is defined as follows.
 
 Let $\text{pop}(n)$ and $\text{emp}(n)$ be the population and employment of node $n$ from Table~\ref{tab:masas}, and let $u(n) \in [0,1]$ be the university weighting factor described below. Masses are first normalized against the largest node, so that both scales end up comparable before being multiplied:
 \begin{equation}
@@ -239,8 +235,6 @@ Every 2 minutes, each free boat receives one of five orders: travel to one of th
 \subsection{Transition}
 
 Each step executes, in order: (1) apply the chosen action to every free boat, boarding from the matching pair queue as described above; (2) advance all boats in transit by the fixed time step, disembarking everyone aboard any boat that reaches its destination; (3) add to the queues any new arrivals whose arrival time falls within the interval just elapsed (these do not board the boat that just departed in step 1, since they had not yet arrived when boarding happened); (4) compute the step's reward and assemble the new state.
-
-\paragraph{A design change worth flagging.} The original specification for this environment included a patience threshold: a waiting person whose patience ran out (15 minutes on strong connections, 30 minutes elsewhere, with random jitter) was removed from the queue and counted as lost, and the transition above had a fifth step for this purge. That mechanism has since been removed entirely, and the current environment never drops anyone from a queue; a person waits until a boat serves them or until the simulated run ends, in which case they are counted separately as still waiting rather than as lost. The reason is a data quality problem rather than a modeling taste: removing someone once their patience runs out erases exactly the observation needed to know how long they would actually have waited, which biases any waiting-time statistic computed only over the people who were served, since the slowest cases are precisely the ones the mechanism deletes. Without that ceiling, the full waiting-time distribution, including its upper tail, is available directly from simulated data, which is what a defensible service-level guarantee should be built on. The cost of the change is that nothing in the transition itself keeps a badly neglected pair from waiting arbitrarily long; that pressure is now carried entirely by the reward function described next.
 
 \subsection{Reward}
 

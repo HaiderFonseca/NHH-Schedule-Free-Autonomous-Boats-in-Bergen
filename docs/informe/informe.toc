@@ -16,13 +16,12 @@
 \contentsline {subsection}{\numberline {5.1}State}{9}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Actions}{10}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Transition}{10}{subsection.5.3}%
-\contentsline {paragraph}{A design change worth flagging.}{10}{section*.7}%
 \contentsline {subsection}{\numberline {5.4}Reward}{10}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Reference Dispatch Policy}{11}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Decision rule}{11}{subsection.6.1}%
+\contentsline {section}{\numberline {6}Reference Dispatch Policy}{10}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Decision rule}{10}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}Coordinating several free boats at once}{11}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Verification at three scales}{12}{subsection.6.3}%
-\contentsline {paragraph}{Conservation check.}{12}{section*.8}%
+\contentsline {subsection}{\numberline {6.3}Verification at three scales}{11}{subsection.6.3}%
+\contentsline {paragraph}{Conservation check.}{12}{section*.7}%
 \contentsline {subsection}{\numberline {6.4}Known limitations}{15}{subsection.6.4}%
 \contentsline {section}{\numberline {7}Reinforcement Learning Agent}{15}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Method}{15}{subsection.7.1}%
@@ -30,13 +29,13 @@
 \contentsline {subsection}{\numberline {7.3}Reward function}{16}{subsection.7.3}%
 \contentsline {subsection}{\numberline {7.4}Fresh demand on every reset}{17}{subsection.7.4}%
 \contentsline {subsection}{\numberline {7.5}Diagnosing and fixing a degenerate first training run}{17}{subsection.7.5}%
-\contentsline {paragraph}{Step 1: a minimal sanity check.}{17}{section*.9}%
-\contentsline {paragraph}{Step 2: observation and reward normalization.}{18}{section*.10}%
-\contentsline {paragraph}{Step 3: a positive term for deliveries.}{18}{section*.11}%
-\contentsline {paragraph}{Step 4: a temporary reduction of the movement penalty.}{18}{section*.12}%
-\contentsline {paragraph}{Step 5: exploration and update frequency.}{18}{section*.13}%
-\contentsline {paragraph}{Step 6: confirming training and evaluation use the same instance.}{18}{section*.14}%
-\contentsline {paragraph}{A bug found while building the evaluation procedure.}{19}{section*.15}%
+\contentsline {paragraph}{Step 1: a minimal sanity check.}{17}{section*.8}%
+\contentsline {paragraph}{Step 2: observation and reward normalization.}{18}{section*.9}%
+\contentsline {paragraph}{Step 3: a positive term for deliveries.}{18}{section*.10}%
+\contentsline {paragraph}{Step 4: a temporary reduction of the movement penalty.}{18}{section*.11}%
+\contentsline {paragraph}{Step 5: exploration and update frequency.}{18}{section*.12}%
+\contentsline {paragraph}{Step 6: confirming training and evaluation use the same instance.}{18}{section*.13}%
+\contentsline {paragraph}{A bug found while building the evaluation procedure.}{19}{section*.14}%
 \contentsline {subsection}{\numberline {7.6}Training run and comparison against the reference policy}{19}{subsection.7.6}%
-\contentsline {paragraph}{Is the agent simply refusing to move the fleet.}{22}{section*.16}%
+\contentsline {paragraph}{Is the agent simply refusing to move the fleet.}{22}{section*.15}%
 \contentsline {subsection}{\numberline {7.7}Discussion and next step}{22}{subsection.7.7}%
