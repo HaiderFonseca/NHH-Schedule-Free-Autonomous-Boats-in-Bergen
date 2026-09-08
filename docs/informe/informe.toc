@@ -17,25 +17,28 @@
 \contentsline {subsection}{\numberline {5.2}Actions}{10}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Transition}{10}{subsection.5.3}%
 \contentsline {subsection}{\numberline {5.4}Reward}{10}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Reference Dispatch Policy}{10}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Decision rule}{10}{subsection.6.1}%
+\contentsline {section}{\numberline {6}Reference Dispatch Policy}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Decision rule}{11}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}Coordinating several free boats at once}{11}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Verification at three scales}{11}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.3}Verification at three scales}{12}{subsection.6.3}%
 \contentsline {paragraph}{Conservation check.}{12}{section*.7}%
 \contentsline {subsection}{\numberline {6.4}Known limitations}{15}{subsection.6.4}%
 \contentsline {section}{\numberline {7}Reinforcement Learning Agent}{15}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Method}{15}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Implementation, observation, and action}{15}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Reward function}{16}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}Fresh demand on every reset}{17}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}Diagnosing and fixing a degenerate first training run}{17}{subsection.7.5}%
-\contentsline {paragraph}{Step 1: a minimal sanity check.}{17}{section*.8}%
-\contentsline {paragraph}{Step 2: observation and reward normalization.}{18}{section*.9}%
-\contentsline {paragraph}{Step 3: a positive term for deliveries.}{18}{section*.10}%
-\contentsline {paragraph}{Step 4: a temporary reduction of the movement penalty.}{18}{section*.11}%
-\contentsline {paragraph}{Step 5: exploration and update frequency.}{18}{section*.12}%
-\contentsline {paragraph}{Step 6: confirming training and evaluation use the same instance.}{18}{section*.13}%
-\contentsline {paragraph}{A bug found while building the evaluation procedure.}{19}{section*.14}%
-\contentsline {subsection}{\numberline {7.6}Training run and comparison against the reference policy}{19}{subsection.7.6}%
-\contentsline {paragraph}{Is the agent simply refusing to move the fleet.}{22}{section*.15}%
-\contentsline {subsection}{\numberline {7.7}Discussion and next step}{22}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.1}Method}{16}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Implementation, observation, and action}{16}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Reward function}{17}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Reward-shaping experiments}{18}{subsection.7.4}%
+\contentsline {paragraph}{Capped vs. uncapped discomfort (A vs. B).}{18}{section*.8}%
+\contentsline {paragraph}{Adding a small movement penalty (C1 vs. C2).}{18}{section*.9}%
+\contentsline {subsection}{\numberline {7.5}Fresh demand on every reset}{19}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Training run}{19}{subsection.7.6}%
+\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{20}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{20}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{21}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Assumptions and Limitations}{22}{section.9}%
+\contentsline {paragraph}{No real demand data.}{22}{section*.10}%
+\contentsline {paragraph}{No passenger patience, by design.}{22}{section*.11}%
+\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{23}{section*.12}%
+\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{23}{section*.13}%
+\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{23}{section*.14}%
+\contentsline {section}{\numberline {10}Conclusion}{23}{section.10}%

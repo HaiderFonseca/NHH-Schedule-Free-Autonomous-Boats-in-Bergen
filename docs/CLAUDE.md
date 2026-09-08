@@ -66,13 +66,41 @@ Todos los parámetros de demanda deben vivir en un archivo de config para cambia
 ## Stack técnico
 
 - **Python** (todo el proyecto). Entorno con `venv` o conda.
-- Optimización MILP: **Gurobi** vía `gurobipy` (licencia académica gratis; el usuario debe confirmar que NHH la tiene). Parte cónica/SOCP (Julio): Gurobi o **MOSEK**.
-- Simulación: bucle propio por pasos de tiempo (rolling-horizon), re-optimizando el estado cada 3 min. `SimPy` opcional.
-- ML/RL (fase posterior): Gymnasium + PyTorch.
-- Geo/plots: `numpy`, `pandas`, `matplotlib`; `geopandas` + `contextily` para el mapa; `shapely` para geometrías.
+- **Despacho: no se usó Gurobi/MILP en la práctica.** La idea original de esta sección (abajo queda como registro histórico) era optimizar el despacho con un solver entero-mixto; el proyecto evolucionó hacia **simulación + política de despacho** (una heurística de referencia, después un agente de RL) -- ver "Estado actual" más abajo. No se descarta retomar una capa de optimización más adelante, pero no es lo que hoy corre.
+- Simulación: **Gymnasium** (`gymnasium.Env`, pasos fijos de 2 min) -- no un bucle rolling-horizon con re-optimización cada 3 min como se planteó originalmente; ver `simulador/README.md` sección 2.
+- RL: **Stable-Baselines3** (PPO) + PyTorch, sobre el entorno Gymnasium -- ver `modelo_rl/README.md`.
+- Geo/plots: `numpy`, `pandas`; `geopandas` + `contextily` para el mapa; `shapely` para geometrías; `plotly` para las gráficas interactivas de métricas (`matplotlib` solo para el mapa animado).
 - Control de versiones: **git + GitHub**.
 
-## Estructura de carpetas propuesta
+## Estado actual de la estructura (reemplaza la propuesta original de abajo)
+
+```
+.
+├── bergen-boats/          # Instancia base: nodos, matriz de tiempos, ruteo navegable
+├── demand/                 # Generación de demanda sintética (gravedad + SSB + Poisson)
+├── simulador/               # El MOTOR: entorno Gymnasium, estado, recompensa, métricas, visualización
+├── politica_base/            # Política de referencia ("nearest-available") + verificación (escalones 1-3)
+├── modelo_rl/                 # Agente PPO: entrenamiento, experimentos de recompensa, corrida final
+├── comparacion/                 # Agente PPO vs. política base, mismas semillas de evaluación
+├── docs/                         # Este archivo + especificación + informe LaTeX (docs/informe/)
+└── papers/                       # Papers de referencia
+```
+
+`simulador/`, `politica_base/`, `modelo_rl/` y `comparacion/` son 4 bloques con responsabilidad única (ver `simulador/README.md` sección 1 para el detalle de cada uno y cómo se conectan) -- reemplazan una carpeta `simulacion/` anterior que mezclaba las cuatro cosas. `simulador/config/instance.yaml` es la única fuente de verdad de los parámetros que comparten los 4 bloques (recompensa, escalones, hiperparámetros de PPO); cada bloque lee ese archivo, ninguno lo copia -- misma regla que ya usaban `bergen-boats/` y `demand/` con sus propios `config/instance.yaml`.
+
+Documento de diseño detallado del simulador/MDP: `docs/especificacion_simulador_rl.md`. Informe final (LaTeX, en inglés): `docs/informe/`.
+
+## Convenciones
+
+- **Todo parámetro va en un `config/instance.yaml`** propio de cada bloque, nunca hardcodeado -- las demás carpetas lo leen, nunca lo copian.
+- Cada módulo de `src/` con un docstring explicando qué hace y por qué (español en el código de simulación/RL, inglés en las figuras/informe final).
+- Documentar decisiones en el `README.md` de cada bloque, o en `docs/` para decisiones transversales.
+- Reproducibilidad: semillas fijas y explícitas para generar demanda; semillas de evaluación (`simulador/config/instance.yaml` → `agente.evaluacion.semillas`) siempre fuera del rango usado para entrenar.
+
+## Estructura de carpetas propuesta originalmente (registro histórico, ya no vigente)
+
+La sección de abajo era el plan de arranque del proyecto (antes de que existiera `bergen-boats/02_ruteo_navegable`, `demand/`, o cualquiera de los 4 bloques de simulación) -- se conserva para trazabilidad de cómo cambió el enfoque (de MILP/Gurobi hacia simulación + RL), no como referencia de dónde está el código hoy (ver "Estado actual" arriba).
+
 ```
 bergen-boats/
 ├── CLAUDE.md                  # este archivo
@@ -96,16 +124,3 @@ bergen-boats/
     ├── parametros_instancia_base_bergen.md
     └── modelo_barcos_a_demanda_bergen.md
 ```
-
-## Convenciones
-- **Todo parámetro va en `config/instance.yaml`**, nunca hardcodeado, para cambiar cosas rápido.
-- Cada módulo de `src/` con un docstring en español explicando qué hace y por qué.
-- Documentar decisiones en `docs/` en markdown.
-- Escribir tests mínimos (ej. que la matriz reproduzca los 14 min de Kleppestø–Bryggen).
-
-## Primeras tareas (en orden)
-1. Crear la estructura de carpetas, `requirements.txt`, `venv`, y `config/instance.yaml` con todos los parámetros de arriba.
-2. `src/geo.py`: cargar los 4 nodos de demanda, calcular matriz de distancias (Haversine) y de tiempos (con velocidad calibrada). Test: Kleppestø–Bryggen ≈ 14 min.
-3. `src/demand.py`: generar las solicitudes de un día según las franjas (solo entre los 4 nodos de demanda). Graficar el perfil de demanda para verlo.
-4. `src/plotting.py`: dibujar los 4 nodos de demanda sobre un mapa de Bergen (con `contextily`, sin necesidad de descargar nada). Si existe `data/route_490.geojson`, dibujarlo como capa.
-5. `src/simulation.py` + `src/dispatch.py`: primera política de despacho simple (ej. asignar el barco libre más cercano) y luego la versión optimizada con Gurobi. Comparar contra la garantía de 15 min.

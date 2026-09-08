@@ -1,8 +1,8 @@
-PWD c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe
+PWD C:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf.cnf
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/web2c/texmf.cnf
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe/informe.tex
+INPUT informe.tex
 OUTPUT informe.log
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/base/article.cls
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/base/article.cls
@@ -225,16 +225,21 @@ INPUT ./figuras/rl_training_curve.png
 INPUT ./figuras/rl_training_curve.png
 INPUT ./figuras/rl_training_curve.png
 INPUT ./figuras/rl_training_curve.png
-INPUT ./figuras/rl_heatmaps_comparados.png
-INPUT ./figuras/rl_heatmaps_comparados.png
-INPUT ./figuras/rl_heatmaps_comparados.png
-INPUT ./figuras/rl_heatmaps_comparados.png
-INPUT ./figuras/rl_heatmaps_comparados.png
-INPUT ./figuras/rl_reward_por_semilla.png
-INPUT ./figuras/rl_reward_por_semilla.png
-INPUT ./figuras/rl_reward_por_semilla.png
-INPUT ./figuras/rl_reward_por_semilla.png
-INPUT ./figuras/rl_reward_por_semilla.png
+INPUT ./figuras/comparacion_heatmaps.png
+INPUT ./figuras/comparacion_heatmaps.png
+INPUT ./figuras/comparacion_heatmaps.png
+INPUT ./figuras/comparacion_heatmaps.png
+INPUT ./figuras/comparacion_heatmaps.png
+INPUT ./figuras/comparacion_perfil_espera_semilla1001.png
+INPUT ./figuras/comparacion_perfil_espera_semilla1001.png
+INPUT ./figuras/comparacion_perfil_espera_semilla1001.png
+INPUT ./figuras/comparacion_perfil_espera_semilla1001.png
+INPUT ./figuras/comparacion_perfil_espera_semilla1001.png
+INPUT ./figuras/comparacion_ocupacion_semilla1001.png
+INPUT ./figuras/comparacion_ocupacion_semilla1001.png
+INPUT ./figuras/comparacion_ocupacion_semilla1001.png
+INPUT ./figuras/comparacion_ocupacion_semilla1001.png
+INPUT ./figuras/comparacion_ocupacion_semilla1001.png
 INPUT ./informe.bbl
 INPUT ./informe.bbl
 INPUT informe.bbl

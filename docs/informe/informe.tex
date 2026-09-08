@@ -8,7 +8,7 @@
 \usepackage{natbib}
 \usepackage{float}
 
-\title{Schedule-Free On-Demand Water Transport in Bergen:\\ Progress Report}
+\title{Schedule-Free On-Demand Water Transport in Bergen}
 \author{}
 \date{\today}
 
@@ -18,7 +18,7 @@
 
 \begin{abstract}
 \noindent
-This note documents the progress made so far on a project that designs the real-time dispatch logic for a small-boat, on-demand water transport service in Bergen, Norway. The service does not exist yet: rather than optimizing an existing system, the project builds a model of how such a service would operate, replacing fixed timetables with a dispatch policy that recomputes itself every few minutes. Five pieces are covered in this report: a navigable routing module that computes real, coastline-respecting travel times between the four candidate stops (replacing an earlier straight-line approximation); a synthetic demand model anchored in official Norwegian population and employment data; a first, deliberately simple simulation environment, implemented to the Gymnasium interface standard, that hosts the dispatch policy; a fixed, rule-based reference policy verified against that environment at three increasing scales; and an initial reinforcement-learning agent, trained with proximal policy optimization, intended to eventually replace that fixed rule. The agent does not yet match the reference policy, and this report documents both that gap and the diagnostic process already carried out to narrow it. This is a partial, working progress report, not a finished piece of work.
+This report documents the design of the real-time dispatch logic for a small-boat, on-demand water transport service in Bergen, Norway. The service does not exist yet: rather than optimizing an existing system, the project builds a model of how such a service would operate, replacing fixed timetables with a dispatch policy that recomputes itself every few minutes. Six pieces are covered: a navigable routing module that computes real, coastline-respecting travel times between the four candidate stops; a synthetic demand model anchored in official Norwegian population and employment data; a simulation environment, implemented to the Gymnasium interface standard, that hosts the dispatch policy; a fixed, rule-based reference policy, including the fleet-coordination logic needed to run it with more than one boat, verified against that environment at three increasing scales; a reinforcement-learning agent trained with proximal policy optimization to learn a dispatch policy directly, including the sequence of reward-shaping experiments that determined how the agent is trained; and a final comparison of the trained agent against the reference policy, aggregated over held-out evaluation seeds and examined in detail on one of them.
 \end{abstract}
 
 \tableofcontents
@@ -32,7 +32,7 @@ Bergen is a coastal city whose public transport network is structured as a hub-a
 
 This project explores a small-boat, on-demand water transport service as a complementary mode. Two principles guide its design. First, the service is not modeled as a profit-making venture (public transport of this kind is rarely self-financing, and its justification is environmental and related to congestion relief, not revenue); the objective is to deliver a good level of service efficiently, not to maximize income. Second, the flexible layer of the service has no fixed timetable: a passenger requests a trip and a boat is dispatched to serve it, subject to a waiting-time guarantee, and the dispatch policy is recomputed at short, regular intervals rather than following a pre-published schedule. Section 2 situates this "schedule-free" operating philosophy, and the static water-taxi model it builds on, within the closely related literature.
 
-\paragraph{Scope of this report.} This is a progress note, not a finished piece of work. It covers the routing and demand modeling that feed the project (Sections 3 and 4), a first version of the simulation environment (Section 5), a fixed reference dispatch policy verified against that environment (Section 6), and a first attempt at replacing that policy with a trained reinforcement-learning agent (Section 7). The environment is intentionally simple: it is a first iteration meant to establish a working structure, not the final model the project targets, and both policies described here are early results rather than settled conclusions. The reinforcement-learning agent in particular has not yet matched the reference policy it is meant to eventually surpass; Section 7 reports that gap honestly, together with the diagnostic work already done to close it.
+\paragraph{Scope of this report.} It covers the routing and demand modeling that feed the project (Sections 3 and 4), the simulation environment that hosts the dispatch problem (Section 5), a fixed reference dispatch policy verified against that environment (Section 6), a reinforcement-learning agent trained to learn a dispatch policy directly (Section 7), and a final comparison between the two (Section 8). The environment is intentionally simple -- four stops, direct point-to-point trips, a small set of rules -- chosen so that its mechanics could be verified before adding complexity to the model of how boats and passengers behave; Section 9 states this and the project's other simplifying choices explicitly, together, rather than leaving them implicit.
 
 % =====================================================================
 \section{Related Work}
@@ -225,12 +225,13 @@ A group, as generated above, is the atomic unit of the demand model. For the dis
 The dispatch problem is modeled as a Markov decision process and implemented as a discrete-time simulation environment following the Gymnasium interface standard (\texttt{reset()} / \texttt{step()}), which is not a library of pre-built simulators but an interface contract: the environment implements the entire boat-and-passenger logic itself, and only its shape is standardized, so that a reinforcement-learning library can later drive it without modification. The environment advances in fixed 2-minute steps, rather than jumping between discrete events, for simplicity and because it maps directly onto the \texttt{step()} call.
 
 \subsection{State}
+\label{sec:state}
 
-The state has three parts. For each boat: origin node, destination node (equal to the origin if idle), minutes remaining until arrival, current occupancy, and whether it is free to receive a new order. For demand: one queue per origin-destination pair (twelve pairs for four nodes, not one queue per node), holding the number of people waiting and the waiting time of the oldest person in that specific pair. For time: minute of day and day of week. This rich, dictionary-shaped state is used for logging and inspection; a separate fixed-size numeric vector is derived from it for the eventual learning agent, using one-hot node encoding and cyclical (sine/cosine) time encoding so that midnight and day-of-week wraparound do not appear as artificial discontinuities to a neural network.
+The state has three parts. For each boat: origin node, destination node (equal to the origin if idle), minutes remaining until arrival, current occupancy, and whether it is free to receive a new order. For demand: one queue per origin-destination pair (twelve pairs for four nodes, not one queue per node), holding the number of people waiting and the waiting time of the oldest person in that specific pair. For time: minute of day and day of week. This rich, dictionary-shaped state is used for logging and inspection; a separate fixed-size numeric vector is derived from it for the learning agent (Section~\ref{sec:implementacion} gives its exact composition and size), built from one-hot node encodings for each boat's origin and destination, a normalized time-to-arrival and occupancy per boat, normalized counts and waiting times per pair queue, and two plain normalized scalars for time (minute of day divided by the length of the day, day of week divided by six) rather than a cyclical encoding: every simulated run is one self-contained episode that starts at a fixed hour and ends within the same day, so the wraparound a cyclical encoding exists to smooth out (23:59 rolling into 00:00, Sunday into Monday) never actually occurs inside a single episode, and a plain linear value carries the same information with two entries instead of four. Two fields present in the dictionary-shaped state are deliberately left out of this numeric vector: whether a boat is free is redundant once its origin and destination one-hot encodings and its time-to-arrival are already present (free is exactly the case origin equals destination and time-to-arrival is zero), and including it as a separate entry would only repeat information already available to the network in a different form.
 
 \subsection{Actions}
 
-Every 2 minutes, each free boat receives one of five orders: travel to one of the four nodes, or wait. A boat already en route ignores any new order and continues to its destination; it is not redirected mid-trip. Boarding follows a fixed rule, not chosen by the policy: when a free boat at node $A$ is ordered to travel to node $B$, it boards strictly from the queue for the pair $(A,B)$, in arrival order, up to capacity, and travels directly to $B$, where everyone aboard disembarks. Trips are therefore always direct, point-to-point journeys between exactly two stops; a boat never carries passengers with mixed destinations, since it can only ever board from the one queue that matches the trip it was just ordered to make.
+Every 2 minutes, each free boat receives one of five orders: travel to one of the four nodes, or wait. A boat already en route ignores any new order and continues to its destination; it is not redirected mid-trip. Boarding follows a fixed rule, not chosen by the policy: when a free boat at node $A$ is ordered to travel to node $B$, it boards strictly from the queue for the pair $(A,B)$, in arrival order, up to capacity, and travels directly to $B$, where everyone aboard disembarks. Trips are therefore always direct, point-to-point journeys between exactly two stops; a boat never carries passengers with mixed destinations, since it can only ever board from the one queue that matches the trip it was just ordered to make. Ordering a free boat to travel to its own current node is treated identically to the explicit wait order: both leave the boat's destination equal to its origin, so neither boards anyone, advances the boat, nor incurs the per-step movement penalty of Section~\ref{sec:reward-agent}; the event log used for the metrics reported throughout this document records both forms of staying put under the same label, so that waiting time is never undercounted simply because a policy expressed it as "go to where I already am" rather than the dedicated wait action.
 
 \subsection{Transition}
 
@@ -238,7 +239,7 @@ Each step executes, in order: (1) apply the chosen action to every free boat, bo
 
 \subsection{Reward}
 
-The reward returned at every 2-minute step is a single scalar, negative unless passengers are actually delivered, that penalizes letting people wait or travel beyond a tolerance and, more lightly, sending a boat under way; a positive term rewarding deliveries directly is added later for training the reinforcement-learning agent. This scalar plays no role in the reference dispatch policy of Section 6, which follows a fixed rule and never consults it; it exists purely to give the environment a well-defined objective for a policy that has to learn from experience. Because the reward is meaningful chiefly in that training context, and because it changed materially once patience was removed and again while diagnosing the training agent, its full definition and the reasoning behind each term are given together in Section 7.3, next to the training results it is meant to explain.
+The reward returned at every 2-minute step is a single scalar, negative unless passengers are actually delivered, that penalizes letting people wait or travel beyond a tolerance and, more lightly, sending a boat under way; a positive term rewarding deliveries directly is available as well, though unused in the results reported here. This scalar plays no role in the reference dispatch policy of Section~\ref{sec:politica-base}, which follows a fixed rule and never consults it; it exists purely to give the environment a well-defined objective for a policy that has to learn from experience. Because the reward is meaningful chiefly in that training context, and because its exact shape (in particular, whether the discomfort term is capped, and how strongly movement is penalized) is itself a design choice explored deliberately rather than fixed in advance, its full definition and the reasoning behind each term are given together in Section~\ref{sec:reward-agent}, next to the experiments it is meant to explain.
 
 % =====================================================================
 \section{Reference Dispatch Policy}
@@ -258,7 +259,7 @@ This rule is deliberately myopic. It never looks two moves ahead: a boat ordered
 
 A second issue appears only when more than one boat is free at the same node in the same step. Applying the decision rule above independently to each boat, using the same snapshot of the world for both, can make two boats choose the same destination: each one sees, say, eleven people waiting at a shared destination and decides that is the most urgent trip to make, without knowing the other boat just made the identical decision. The first boat to be processed picks up all eleven; the second arrives at the same destination with nobody left to serve, having paid the cost of the trip for nothing. This was not a hypothetical concern. It was found by inspecting the state of a verification run at a single simulated minute and confirmed in the accompanying event log, and it visibly hurt the fraction of demand served in that run.
 
-The fix, applied whenever more than one boat is free in the same step, is to assign boats to actions one at a time rather than all at once from the same snapshot. Boats are processed in a fixed order; after each one is assigned a destination, the pair queue it would draw from is reduced locally, in a scratch copy of the state, by exactly what that boat would pick up, following the same first-in-first-out and capacity rule the environment itself uses when boarding. The next boat in line then applies the decision rule to this already-discounted picture of demand, so a second boat heading to the same busy destination sees only what would genuinely still be waiting for it, not what the first boat already claimed. This coordination step does not change the underlying decision rule; it only prevents two boats from acting on the same stale piece of information. All results reported below use this coordinated version, referred to as \emph{fleet assignment}, never the single-boat rule applied independently to a group.
+The fix, applied whenever more than one boat is free in the same step, is to assign boats to actions one at a time rather than all at once from the same snapshot. Boats are processed in a fixed order; after each one is assigned a destination, the pair queue it would draw from is reduced locally, in a scratch copy of the state, by exactly what that boat would pick up, following the same first-in-first-out and capacity rule the environment itself uses when boarding. The next boat in line then applies the decision rule to this already-discounted picture of demand, so a second boat heading to the same busy destination sees only what would genuinely still be waiting for it, not what the first boat already claimed. This coordination step does not change the underlying decision rule; it only prevents two boats from acting on the same stale piece of information. All results reported below use this coordinated version, referred to as \emph{fleet assignment}, never the single-boat rule applied independently to a group. The combination of strict local-first prioritization (Section~\ref{sec:politica-base}) with this one-at-a-time fleet coordination is what makes nearest-available a competent reference policy rather than a trivial one: it is simple to state, but reasoning correctly about several simultaneously free boats sharing the same demand picture is not automatic, and Section~\ref{sec:comparacion} shows it setting a bar that is not trivial for a learned policy to clear.
 
 \subsection{Verification at three scales}
 \label{sec:escalones}
@@ -341,14 +342,14 @@ Figure~\ref{fig:politica-base-heatmap} breaks the aggregate percent-served figur
 \subsection{Known limitations}
 \label{sec:limitaciones-politica-base}
 
-Three limitations of this policy are worth stating explicitly rather than leaving implicit. First, the strict local-before-remote priority described above means a lightly connected pair can in principle wait indefinitely while a busier pair keeps the fleet occupied; this did not occur in the three runs reported here, but nothing in the rule itself prevents it, and a busier or more imbalanced instance could expose it. Second, fleet assignment (Section~\ref{sec:asignar-flota}) prevents two boats from claiming the same destination in the same step, but it still assigns boats one at a time, in a fixed order, rather than searching over every possible joint assignment for the one that would serve the most people; it removes the worst failure mode without claiming to be optimal. Third, repositioning is myopic by construction, evaluating only the immediate move rather than the pickup and delivery as a planned pair, so a boat can occasionally reposition toward demand that a different, better-timed choice would have served faster. None of these are hidden costs: they are the price of a rule simple enough to state in a paragraph and verify by hand, which is exactly why it is a useful baseline rather than a proposed final design.
+Three limitations of this policy are worth stating explicitly rather than leaving implicit. First, the strict local-before-remote priority described above means a lightly connected pair can in principle wait indefinitely while a busier pair keeps the fleet occupied; this did not occur in the three runs reported here, but nothing in the rule itself prevents it, and a busier or more imbalanced instance could expose it. Second, fleet assignment (Section~\ref{sec:asignar-flota}) prevents two boats from claiming the same destination in the same step, but it still assigns boats one at a time, in a fixed order, rather than searching over every possible joint assignment for the one that would serve the most people; it removes the worst failure mode without claiming to be optimal. Third, repositioning is myopic by construction, evaluating only the immediate move rather than the pickup and delivery as a planned pair, so a boat can occasionally reposition toward demand that a different, better-timed choice would have served faster.
 
 % =====================================================================
 \section{Reinforcement Learning Agent}
 \label{sec:rl}
 % =====================================================================
 
-The reference policy of Section~\ref{sec:politica-base} is a fixed rule with no parameters to tune; it cannot improve with experience, and it does not attempt to plan more than one move ahead. This section describes a first attempt to replace it with a policy that learns, reports how that first attempt initially failed in an informative way, and documents the diagnostic process that fixed it.
+The reference policy of Section~\ref{sec:politica-base} is a fixed rule with no parameters to tune; it cannot improve with experience, and it does not attempt to plan more than one move ahead. This section describes replacing it with a policy that learns: the learning method and why it fits this problem (Section~\ref{sec:implementacion}), how the environment is observed and acted on (Section~\ref{sec:implementacion}), the reward the policy is trained to optimize and the deliberate sequence of experiments that shaped its exact form (Sections~\ref{sec:reward-agent}-\ref{sec:experimentos-reward}), and the training run itself (Section~\ref{sec:entrenamiento}), with results given together with the reference policy's in Section~\ref{sec:comparacion}.
 
 \subsection{Method}
 
@@ -361,7 +362,7 @@ PPO was chosen over value-based alternatives such as deep Q-networks specificall
 
 The agent is implemented with Stable-Baselines3 \citep{Raffin2021}, a maintained, widely used reinforcement-learning library built on PyTorch, driving the same Gymnasium-standard environment \citep{Brockman2016} described in Section~\ref{sec:mdp}; no separate implementation of the environment exists for training, since the whole point of standardizing the environment's interface in the first place was to let a learning library drive it without modification. The policy is Stable-Baselines3's default \texttt{MlpPolicy}, a small feedforward network with two hidden layers of 64 units each and hyperbolic-tangent activations, shared as a common trunk between the policy head (which outputs the five-way action distribution for each boat independently) and the value head (which estimates expected future reward from the current state, used internally by PPO to judge whether a batch of experience was better or worse than expected).
 
-The network's input is exactly the fixed-size numeric vector described in Section~\ref{sec:mdp}'s discussion of state: one-hot node encodings and a normalized time-to-arrival for each boat, a normalized occupancy and free/busy flag for each boat, a normalized count of people waiting and a normalized oldest-waiting-time for each of the twelve pair queues, and sine/cosine encodings of the minute of day and day of week. For the two-boat, four-node instance used for training (Step 1 of Section~\ref{sec:escalones}), this vector has 50 entries. The network never sees the rich, dictionary-shaped state used for logging and inspection, and it never sees anything beyond this vector: no privileged information about, for instance, which specific person is waiting where, only the aggregated counts and times that the vector encodes.
+The network's input is exactly the fixed-size numeric vector described in Section~\ref{sec:state}: for each boat, a one-hot encoding of its origin node, a one-hot encoding of its destination node, a normalized time-to-arrival, and a normalized occupancy (ten entries per boat, with four nodes); for each of the twelve ordered pair queues, a normalized count of people waiting and a normalized oldest-waiting-time (twenty-four entries); and two plain normalized scalars for time, minute of day and day of week (two entries). For the two-boat, four-node instance used for training (Step 1 of Section~\ref{sec:escalones}), this totals 46 entries. The network never sees the rich, dictionary-shaped state used for logging and inspection, and it never sees anything beyond this vector: no privileged information about, for instance, which specific person is waiting where, only the aggregated counts and times that the vector encodes.
 
 \subsection{Reward function}
 \label{sec:reward-agent}
@@ -402,105 +403,138 @@ Waiting 12 minutes or less (within tolerance) & 0 \\
 \end{tabular}
 \end{table}
 
-The two weights $w_{\text{move}}$ and $w_{\text{deliver}}$ deserve a note on where their values come from, since they are not the same for the reference-policy runs of Section~\ref{sec:escalones} and for training this agent. In production, $w_{\text{move}} = 0.1$ and $w_{\text{deliver}} = 0$, meaning deliveries carry no direct reward and moving a boat is only lightly discouraged; this is the formula used to report reward figures throughout Section~\ref{sec:escalones}. Training this agent instead uses $w_{\text{move}} = 0$ and $w_{\text{deliver}} = 0.5$, an override applied only to the training and evaluation environments and never to the reference-policy runs. Section~\ref{sec:diagnostico} explains why this override exists and how its value was chosen.
+The cap $C$, the movement weight $w_{\text{move}}$, and the delivery weight $w_{\text{deliver}}$ are not the same for the reference-policy runs of Section~\ref{sec:escalones} and for training this agent: in production, $C = 1.0$, $w_{\text{move}} = 0.1$, and $w_{\text{deliver}} = 0$, the formula used to report reward figures throughout Section~\ref{sec:escalones}. Training this agent uses a different combination, arrived at through the deliberate sequence of experiments described next, applied only to the training and evaluation environments and never to the reference-policy runs.
+
+\subsection{Reward-shaping experiments}
+\label{sec:experimentos-reward}
+
+Two design questions about the reward were open before committing to a long training run: whether the discomfort cap $C$ helps or hurts a learning agent, and how large a movement penalty $w_{\text{move}}$ can be added without making the agent reluctant to dispatch boats at all. Both were resolved by direct experimentation rather than by assumption, using short training runs (30{,}000 timesteps each, a few minutes on the Step 1 instance) so that several configurations could be compared before committing to the long run of Section~\ref{sec:entrenamiento}. Every configuration below is evaluated, after its short training run, against the reference policy on the same five held-out seeds used throughout Section~\ref{sec:comparacion}.
+
+\paragraph{Capped vs. uncapped discomfort (A vs. B).} Configuration A keeps only the time-based discomfort term with the production cap active ($C=1.0$, $w_{\text{move}}=0$); configuration B removes the cap ($C \to \infty$) and is otherwise identical. The working hypothesis was that removing the cap should help: with the cap active, a person who has waited 35 minutes and one who has waited 50 minutes are charged the identical, maximal penalty, so the reward can no longer express that the second person needs attention more urgently than the first; without the cap, that distinction survives past the point where the tolerance is exceeded, and an agent optimizing the reward has a continuing incentive to serve whoever has been waiting longest rather than treating everyone past the cap as interchangeable.
+
+\paragraph{Adding a small movement penalty (C1 vs. C2).} Starting from the better of A and B, a further pair of configurations adds a small movement penalty back in, to test whether the agent can be nudged toward using fewer boat trips without giving up on service. Two candidate weights were chosen from a direct scale comparison rather than by trial and error: a single person whose wait has just exceeded the tolerance by about a minute already contributes a discomfort penalty of $(1/18)^2 \approx 0.003$ to the reward (Table~\ref{tab:reward-magnitudes}), so a movement weight much larger than that would let the cost of dispatching a single boat rival the cost of neglecting a person, and risk an agent that prefers to stay still. Configuration C1 sets $w_{\text{move}} = 0.003$, at that same order of magnitude; configuration C2 sets $w_{\text{move}} = 0.001$, smaller still, to check whether an even lighter penalty performs at least as well while presumably disturbing exploration even less.
+
+\begin{table}[H]
+\centering
+\caption{Reward-shaping experiments: configuration and outcome after 30{,}000 training timesteps, evaluated on five held-out seeds.}
+\label{tab:experimentos-reward}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Configuration & Cap $C$ & $w_{\text{move}}$ & Percent served & Mean wait (min) & Movements \\
+\midrule
+A  & 1.0      & 0     & 47.8\% & 26.2 & 135 \\
+B  & $\infty$ & 0     & 51.9\% & 21.9 & 125 \\
+C1 & $\infty$ & 0.003 & 52.0\% & 23.8 & 127 \\
+C2 & $\infty$ & 0.001 & 44.7\% & 22.5 & 95  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:experimentos-reward} confirms the first hypothesis: removing the cap (B) improves every metric over the capped configuration (A) at this training budget, including the number of movements, and becomes the base for the second pair. Between C1 and C2, the larger of the two candidate weights, C1, performs essentially on par with B on percent served while keeping a comparable number of movements, whereas the smaller weight, C2, both serves noticeably fewer people and moves the fleet less -- the reduction in movement is not accompanied by better use of the movements that remain. Neither training run in this exploratory sequence comes close to the reference policy's 88.0\% served on the same instance (Section~\ref{sec:comparacion}); this is expected, since 30{,}000 timesteps is a small fraction of the training budget used for the final agent (Section~\ref{sec:entrenamiento}), and the purpose of this sequence is only to choose a reward shape before spending that larger budget, not to produce a competitive agent on its own. The uncapped discomfort term together with $w_{\text{move}} = 0.003$ (configuration C1) is the combination carried forward to the training run reported in the rest of this section.
 
 \subsection{Fresh demand on every reset}
 \label{sec:demanda-fresca}
 
 Every run reported in Section~\ref{sec:escalones} uses one fixed table of demand, generated once and reused for the whole run, which is the right choice for verifying that the environment and the reference policy behave correctly: the policy has no parameters to overfit, so there is nothing to gain from varying the demand across runs. Training a learning agent on a single fixed table of demand is a different matter and a real risk: with enough experience against exactly the same arrivals, at exactly the same simulated minutes, a large enough network can begin to memorize that particular realization rather than learn a policy that generalizes to the underlying arrival pattern it is drawn from. To avoid this, the training environment regenerates its demand table on every reset, drawing a new realization of the same gravity-and-Poisson process of Section~\ref{sec:demand} each time, so that every training episode is an independent Monte Carlo sample of the same demand pattern rather than a repeat of the previous one. A reset called with an explicit seed still reproduces that exact realization, which is what makes the fixed evaluation seeds of Section~\ref{sec:comparacion} comparable across runs.
 
-\subsection{Diagnosing and fixing a degenerate first training run}
-\label{sec:diagnostico}
+\subsection{Training run}
+\label{sec:entrenamiento}
 
-The agent was first trained for 100{,}000 timesteps, roughly 1115 episodes of the 90-step training instance, using Stable-Baselines3's default hyperparameters and the production reward weights of Section~\ref{sec:reward-agent}. The result was a degenerate policy: it served only 27.6\% of demand against 88.0\% for the reference policy on the same evaluation seeds, moved the fleet less (79 boat movements against 155), and ran at a much lower average occupancy (1.15 against 3.50 passengers per boat). Rather than discarding this result, it was treated as a diagnostic starting point and investigated systematically, one change at a time, each verified before moving on to the next.
+The reward-shaping choice of Section~\ref{sec:experimentos-reward} (uncapped discomfort, $w_{\text{move}} = 0.003$) is carried into a single, longer training run of 150{,}000 timesteps on the Step 1 instance, roughly five times the budget used for any individual configuration in that exploratory sequence and the only long training run performed in this project; every other configuration is deliberately short, so that this one run is the point at which training budget itself, rather than reward shape, is the variable being spent.
 
-\paragraph{Step 1: a minimal sanity check.} Before touching the reward or the training hyperparameters, the same untouched recipe that produced the degenerate policy above was tried on a much smaller, purpose-built instance: a single boat serving only two of the four nodes, over the same 90-step morning window. If a learning method cannot learn anything useful on a problem this small, the most likely explanation is a wiring bug in the environment itself, not a matter of scale or of reward shaping. On this toy instance the trained agent served \emph{none} of the demand, against 67.1\% for the reference policy on the same seed, even though the environment's own contract checker (Stable-Baselines3's \texttt{check\_env}) reported no issues and the reward function had already been confirmed, in isolation, to respond correctly to deliveries. This ruled out a structural bug and pointed toward the scale or shape of the training signal instead.
-
-\paragraph{Step 2: observation and reward normalization.} The single largest change came from wrapping the environment in \texttt{VecNormalize}, a standard Stable-Baselines3 utility that maintains running mean and variance statistics and uses them to rescale both the observation vector and the reward before they reach the network. Without it, the roughly 50-dimensional observation vector mixes one-hot indicators (naturally in $\{0,1\}$) with counts and normalized times of quite different typical magnitudes, and the un-rescaled reward can swing by tens of units between quiet and busy steps; both are known sources of instability for gradient-based training. Adding normalization alone, with nothing else changed, took the toy instance from serving no one to matching the reference policy's 67.1\% exactly, with a better raw reward besides. This single change accounts for most of the improvement documented in this section.
-
-\paragraph{Step 3: a positive term for deliveries.} With normalization already in place, a positive reward term for each person delivered (Section~\ref{sec:reward-agent}, weight $w_{\text{deliver}}$) was added, so that the training signal has an explicit success case rather than only degrees of failure. On the toy instance this did not move the percentage served, which appeared to already be at that instance's ceiling given a single boat, but it produced a small, consistent improvement in raw reward.
-
-\paragraph{Step 4: a temporary reduction of the movement penalty.} The movement penalty $w_{\text{move}}$ was set to zero for training, again only for training, so that the agent is not discouraged from moving the fleet while it is still learning when moving is worthwhile. This is flagged explicitly as a temporary choice for this diagnostic phase, not a claim that movement should be free in a deployed policy.
-
-\paragraph{Step 5: exploration and update frequency.} PPO's entropy coefficient, which rewards a more exploratory (less deterministic) policy during training and defaults to zero in Stable-Baselines3, was raised to 0.01, and the number of environment steps collected between policy updates was reduced from the default of 2048 to 512, so that the policy is updated roughly every five or six episodes of the 90-step training instance rather than waiting for about twenty two.
-
-\paragraph{Step 6: confirming training and evaluation use the same instance.} A mismatch between the instance an agent is trained on and the instance it is evaluated on was considered as a candidate explanation and checked directly, not merely assumed. Both the training and the evaluation code read the same configuration key for which instance to use, and an explicit check, comparing the shape of the observation vector the loaded model expects against the shape the evaluation environment produces, was added to the evaluation procedure so that a future mismatch of this kind would stop the run with a clear error rather than silently producing an incomparable result. No mismatch was found in this project; the check is retained as a safeguard.
-
-\begin{table}[H]
-\centering
-\caption{Diagnostic steps on the toy instance (one boat, two nodes) and their effect, evaluated against the reference policy on the same seed.}
-\label{tab:diagnostico}
-\small
-\begin{tabular}{lccc}
-\toprule
-Configuration & Percent served & Reward (agent) & Reward (base) \\
-\midrule
-Original recipe (Step 1 above) & 0.0\% & $-13{,}218.9$ & $-3694.0$ \\
-+ Observation/reward normalization & 67.1\% & $-3521.4$ & $-3694.0$ \\
-+ Delivery reward & 67.1\% & $-3416.4$ & $-3589.0$ \\
-+ Movement penalty removed (training only) & 67.1\% & $-3408.9$ & $-3581.5$ \\
-+ Higher entropy, more frequent updates & 67.1\% & $-3408.9$ & $-3581.5$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{A bug found while building the evaluation procedure.} A second, unrelated implementation error surfaced only once the fixes above were carried over to the full-scale instance and evaluated: the first version of the evaluation code drove the environment through Stable-Baselines3's vectorized-environment wrapper in order to reuse its normalization statistics, and that wrapper, by design, automatically resets an environment the instant an episode ends, inside the same function call that reports the episode as finished. This silently erased the very history (who was served, at what time) that the evaluation code needed to read immediately afterward, and it was caught only because the conservation check of Section~\ref{sec:escalones} was run on the evaluation output too and failed outright, reporting zero people served against a nonzero number generated. The fix was to step the raw environment directly during evaluation and use the saved normalization statistics only to rescale the observation before it is shown to the network, never routing the actual simulation through the auto-resetting wrapper. This is reported here as a concrete illustration of why the conservation check of Section~\ref{sec:escalones} is applied everywhere in this project, not only to the reference-policy runs it was originally written for.
-
-\subsection{Training run and comparison against the reference policy}
-\label{sec:comparacion}
-
-With the combination of changes from Section~\ref{sec:diagnostico} validated on the toy instance, the agent was retrained on the real two-boat, four-node training instance (Step 1 of Section~\ref{sec:escalones}) for 150{,}000 timesteps, about 1666 episodes; a longer run of 300{,}000 timesteps was attempted first but did not complete in reasonable time on the machine available for this project (an observed throughput of roughly 73 simulated steps per second on this instance), so 150{,}000 was used as a practical compromise, with more training time flagged below as the most direct next step.
+A handful of further training settings are fixed identically across every run reported in this section and the exploratory sequence before it, chosen once and not revisited: the network observes and is rewarded on normalized quantities (via running mean and variance statistics computed online, frozen at their trained values for evaluation, Section~\ref{sec:comparacion}) rather than on raw values, an entropy coefficient of 0.01 (above Stable-Baselines3's default of zero) to keep exploration from collapsing too early, a learning rate of $3\times 10^{-4}$, and a rollout length of 512 steps between policy updates, short enough to update roughly every five to six 90-step episodes rather than every twenty or more.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figuras/rl_training_curve.png}
-\caption{Training curve: total reward per episode (light) and its 20-episode rolling mean (dark), over 1666 training episodes.}
-\label{fig:rl-curva}
+\caption{Episode reward over the course of the 150{,}000-timestep training run (raw reward per episode and a 20-episode rolling mean).}
+\label{fig:training-curve}
 \end{figure}
 
-Figure~\ref{fig:rl-curva} shows the resulting curve. The rolling mean rises from about $-2439$ over the first 20 episodes to about $-691$ over the last 20, a substantially larger improvement than the first, unfixed attempt managed, and it had clearly not flattened out when training stopped, meaning the agent was still improving at the point the run was cut off for time.
+Mean episode reward improved from $-24{,}871.4$ over the first 20 episodes of training to $-2{,}832.8$ over the last 20, almost an order of magnitude, with the final individual episodes ($-17{,}540.6$, $-1{,}905.5$, $-651.3$, $-1{,}007.3$, $-958.0$) mostly settled into a low range punctuated by occasional worse episodes, consistent with the fresh, unseen demand realization drawn on every reset (Section~\ref{sec:demanda-fresca}) rather than with unstable training.
 
-The trained agent was then compared against the reference policy on five fixed evaluation seeds, deliberately outside the range of seeds used during training, with the same demand realization given to both policies for each seed so the comparison is on equal terms. Both policies were run through the same reward formula, including the training-time weights of Section~\ref{sec:reward-agent}, so that the reward figures reported below are directly comparable to each other, though not to the production reward figures of Section~\ref{sec:escalones}.
+% =====================================================================
+\section{Results: Agent vs.\ Reference Policy}
+\label{sec:comparacion}
+% =====================================================================
+
+The trained agent of Section~\ref{sec:entrenamiento} and the reference policy of Section~\ref{sec:politica-base} are run on the same five evaluation seeds, 1001 through 1005, chosen outside the range of seeds used to generate training episodes so that neither policy is evaluated on demand it could have seen before. Because both policies act on the same \texttt{EntornoDemandaAleatoria.reset(seed=\ldots)} call (Section~\ref{sec:demanda-fresca}), a given seed produces the identical demand table for both, so any difference in outcome reflects the policy, not the demand.
+
+\subsection{Aggregate comparison, five seeds}
 
 \begin{table}[H]
 \centering
-\caption{Agent versus reference policy, averaged over five held-out evaluation seeds.}
-\label{tab:comparacion-final}
-\begin{tabular}{lcc}
+\caption{Agent vs.\ reference policy, aggregated over the five evaluation seeds. Reward is computed with the training reward (Section~\ref{sec:experimentos-reward}) for both policies, so that the total is comparable between them.}
+\label{tab:comparacion-agregada}
+\small
+\begin{tabular}{lccc}
 \toprule
-Metric & PPO agent & Reference policy \\
+Metric & PPO agent & Reference policy & Difference \\
 \midrule
-Percent served & 77.2\% & 88.0\% \\
-Mean waiting time (min) & 20.5 & 16.4 \\
-Mean / maximum time in system (min) & 30.4 / 117.1 & 26.1 / 69.7 \\
-Boat movements (5 episodes, total) & 177 & 155 \\
-Mean occupancy & 2.97 & 3.50 \\
-Total reward (5 episodes) & $-4807.0$ & $-2009.3$ \\
+Percent served & 88.0\% & 88.0\% & 0.0 pp \\
+Mean waiting time (min) & 17.1 & 16.4 & +0.6 \\
+Mean / maximum time in system (min) & 29.0 / 60.8 & 26.1 / 69.7 & +3.0 / $-$9.0 \\
+Total movements (5 episodes) & 191 & 155 & +36 \\
+Mean occupancy & 3.50 & 3.50 & $\approx$0 \\
+Total reward (5 episodes) & $-$3772.0 & $-$5259.0 & +1487.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+The agent matches the reference policy exactly on percent served (748 of 850 people, summed over the five seeds, for both) -- the earlier service gap (Section~\ref{sec:experimentos-reward} notes that no configuration in the exploratory sequence came close to the reference policy) closes entirely once trained for the full budget. The agent also wins clearly on the reward it was trained to maximize and on the worst single case of time in system (60.8 vs.\ 69.7 minutes), at the cost of a slightly higher mean wait and 36 more boat movements over the five episodes -- the expected signature of the uncapped discomfort term chosen in Section~\ref{sec:experimentos-reward}: without a ceiling on any one person's penalty, the agent has a standing incentive to prevent any case from growing into a very long wait, which shows up as a lower worst case rather than a lower average. The result is not uniform across seeds: the agent's reward is worse than the reference policy's on three of the five (1001, 1003, 1005), and the aggregate is driven by seed 1004, where the reference policy has its single worst run of the ten ($-4091.1$) while the agent handles the same demand comfortably ($-1525.6$) -- consistent with an agent that is more consistent in its worst case rather than uniformly better. Cross-checking the decision log directly: the agent chooses to wait in only 5.4\% of its decisions (11 of 202), against 47.5\% for the reference policy (140 of 295) -- it is not simply moving less to save the movement penalty; it is dispatching far more actively, and the extra movements above are the direct cost of that activity, not idle waste.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figuras/rl_heatmaps_comparados.png}
-\caption{Percent served by origin-destination pair, agent (left) against reference policy (right), same five evaluation seeds.}
-\label{fig:rl-heatmaps}
+\includegraphics[width=\textwidth]{figuras/comparacion_heatmaps.png}
+\caption{Percent served by origin-destination pair, agent vs.\ reference policy, aggregated over the five evaluation seeds.}
+\label{fig:comparacion-heatmap}
+\end{figure}
+
+\subsection{Detailed comparison on a single seed}
+
+To see behavior, not just the aggregate, seed 1001 is examined with the same package of metrics and figures produced for the reference-policy verification of Section~\ref{sec:escalones} (waiting profile, fleet occupancy over time, compliance heatmap by pair, reward breakdown, and backlog by pair), computed separately for the agent and for the reference policy on that one seed, so that the concrete pattern of a single run is visible side by side for both.
+
+On this specific seed, the reference policy serves more people and with a shorter mean wait than the agent (91.9\%, 124 of 135, at a mean wait of 9.4 minutes, against the agent's 81.5\%, 110 of 135, at 17.4 minutes) -- the opposite of what the aggregate table above might suggest on its own. This is exactly why the detailed view matters: seed 1001 is one of the three individual seeds where the reference policy's reward is better than the agent's, and the aggregate advantage comes from the reward's sensitivity to the worst case across all five seeds, not from the agent serving people better seed by seed. Both readings are correct at the same time: the agent is the stronger choice by the worst-case-aware reward it was trained on, while the reference policy can still be the better choice on a representative single run such as this one.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figuras/comparacion_perfil_espera_semilla1001.png}
+\caption{People waiting over time, seed 1001: agent (left) vs.\ reference policy (right).}
+\label{fig:comparacion-perfil-1001}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figuras/rl_reward_por_semilla.png}
-\caption{Total reward per evaluation episode, agent against reference policy, one bar pair per evaluation seed. The reference policy is ahead on every single seed, not only on average.}
-\label{fig:rl-reward-semilla}
+\includegraphics[width=\textwidth]{figuras/comparacion_ocupacion_semilla1001.png}
+\caption{Fleet occupancy over time, seed 1001: agent (left) vs.\ reference policy (right).}
+\label{fig:comparacion-ocupacion-1001}
 \end{figure}
 
-Table~\ref{tab:comparacion-final} and Figures~\ref{fig:rl-heatmaps}-\ref{fig:rl-reward-semilla} tell a consistent story: the diagnostic work of Section~\ref{sec:diagnostico} closed most of the gap from the original, degenerate attempt, but the agent has not yet matched the reference policy. It serves 77.2\% of demand against 88.0\%, and its worst pairs (30\% for Kleppestø to Sandviken, 52\% for Sandviken to Laksevåg) are considerably weaker than the reference policy's weakest pair (60\%). Its maximum time in system, 117 minutes, is also markedly worse than the reference policy's 69.7 minutes, indicating that at least a few people are left waiting substantially longer under the agent than under the fixed rule.
+% =====================================================================
+\section{Assumptions and Limitations}
+\label{sec:limitaciones}
+% =====================================================================
 
-\paragraph{Is the agent simply refusing to move the fleet.} This was a natural hypothesis, given the earlier, fully degenerate attempt, and it was checked directly rather than assumed either way, by counting, from the logged record of every decision each boat made, how often each policy chose to wait rather than travel. The finding contradicts the hypothesis: the agent waits in only 13.0\% of its decisions (31 out of 238, and one of its two boats never waits at all across all five evaluation episodes), against 47.5\% (140 out of 295) for the reference policy, and it accumulates more total time under way (1334 minutes against 1224). The agent moves the fleet \emph{more}, not less, than the reference policy, and still serves fewer people; the shortfall is better explained by some of that additional movement being poorly directed, for instance a repositioning trip that arrives too late or is not the one the situation most needed, than by any reluctance to dispatch boats at all.
+This project makes a number of explicit simplifying choices, stated here together rather than left scattered or implicit.
 
-\subsection{Discussion and next step}
+\paragraph{No real demand data.} The service does not exist, so no observed origin-destination counts are available anywhere in this report; Section~\ref{sec:demand}'s gravity-style intensity score, its distance-decay term, its role assignment by time band, and its daily participation rate are all team decisions made in the absence of that data, anchored in real population and employment figures but not validated against ridership.
 
-Taken together, the diagnostic process of Section~\ref{sec:diagnostico} and the results of Section~\ref{sec:comparacion} support a specific, narrow conclusion rather than a general one about whether reinforcement learning can work here. The first training attempt failed for identifiable, fixable reasons, chiefly the absence of observation and reward normalization, not because of a flaw in the environment or the reward design; once fixed, the same recipe reliably reaches the reference policy's level on a small instance and closes most, though not all, of the gap on the real training instance. The training curve of Figure~\ref{fig:rl-curva} had not leveled off when the run was stopped, which is the most direct evidence available that the remaining gap is, at least in part, simply a matter of training budget rather than a ceiling the method cannot get past. The most direct next step is therefore to train substantially longer before drawing any conclusion about whether proximal policy optimization can match, and eventually exceed, this reference policy on this problem; the goal for this stage of the project was for the agent to reach parity with the fixed rule, not to surpass it, and that goal has not yet been met, which is reported here plainly rather than understated.
+\paragraph{No passenger patience, by design.} The environment does not remove anyone from a queue for having waited too long (Section~\ref{sec:mdp}); every person generated is either served or still in the system when a run ends. This was a deliberate choice to obtain uncensored waiting-time statistics (Section~\ref{sec:escalones}), but it also means the reward's discomfort cap (Section~\ref{sec:reward-agent}) is the only mechanism preventing a badly neglected pair from being penalized without bound, and that neither policy has any pressure resembling a hard service-level deadline.
+
+\paragraph{The reference policy is local-first and myopic (Section~\ref{sec:limitaciones-politica-base}).} It is a considered heuristic, not an optimizer, and the comparison in Section~\ref{sec:comparacion} should be read as agent-vs-heuristic, not agent-vs-optimal.
+
+\paragraph{The agent is trained and evaluated on a single, small instance.} Both the reward-shaping experiments of Section~\ref{sec:experimentos-reward} and the long training run of Section~\ref{sec:entrenamiento} use Step 1 (two boats, the morning window) exclusively; nothing in this report establishes how the trained agent would behave on the larger Step 2 or Step 3 instances, or on a fleet of a different size.
+
+\paragraph{Reward shape was explored, not exhaustively searched.} Section~\ref{sec:experimentos-reward} tests four configurations along two design axes (discomfort cap, movement weight) at one training budget each; other combinations, and other training budgets for the same combinations, were not tried, so the chosen configuration is a reasonable, evidence-based choice rather than a demonstrably optimal one.
+
+% =====================================================================
+\section{Conclusion}
+% =====================================================================
+
+This project set out to build the simulation and dispatch logic for a schedule-free, on-demand water transport service in Bergen, and to compare a fixed reference policy against a learned one on that simulation. The fixed policy, nearest-available with fleet coordination (Section~\ref{sec:politica-base}), serves as more than a placeholder: verified at three increasing scales, it serves essentially all demand (99.6-100\%) and its coordination step (Section~\ref{sec:asignar-flota}) is what makes it work at all with more than one boat sharing the same demand picture. The reinforcement-learning agent, trained with PPO after a deliberate, evidence-based sequence of reward-shaping experiments (Section~\ref{sec:experimentos-reward}) rather than by assumption, closes the service gap entirely on aggregate (Section~\ref{sec:comparacion}) and improves on the reference policy's worst case, at the cost of dispatching the fleet more actively. The seed-level detail in the same section is a deliberate corrective to reading the aggregate table alone: on a single representative run, the reference policy can still serve more people with a shorter wait than the agent, so which policy is preferable depends on whether the objective is average service quality or protection against the worst individual case -- a question this project surfaces with concrete evidence rather than resolves.
+
+The most direct next steps follow from the limitations of Section~\ref{sec:limitaciones}: training and evaluating the agent on the larger Step 2 and Step 3 instances, to see whether its behavior generalizes beyond the two-boat morning instance used here; extending the reward-shaping search beyond the four configurations tested; and, longer term, using the uncensored waiting-time percentiles this environment already produces (Section~\ref{sec:escalones}) to propose a concrete service-time guarantee, the kind of commitment a real schedule-free service would need to state and hold itself to.
 
 \bibliographystyle{plainnat}
 \bibliography{referencias}

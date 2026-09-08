@@ -1,14 +1,13 @@
 # Fdb version 4
-["bibtex informe"] 1788513943.25967 "informe.aux" "informe.bbl" "informe" 1788513952.0215 0
+["bibtex informe"] 1788783678.27317 "informe.aux" "informe.bbl" "informe" 1788783686.02415 0
   "./referencias.bib" 1788438605 1917 efc69dc8ba687af89f8a4a6cfcdef2f0 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/bibtex/bst/natbib/plainnat.bst" 1748957407 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "informe.aux" 1788513951 15538 8178242290146c43a0a1e397705681ed "pdflatex"
+  "informe.aux" 1788783685 16498 459821b089b1fbecf9cc9b91447a89b4 "pdflatex"
   (generated)
   "informe.bbl"
   "informe.blg"
   (rewritten before read)
-["pdflatex"] 1788513943.34073 "c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe/informe.tex" "informe.pdf" "informe" 1788513952.0233 0
-  "c:/Users/hfons/Andes/OneDrive - Universidad de los Andes/NHH/NHH-Schedule-Free-Autonomous-Boats-in-Bergen/docs/informe/informe.tex" 1788513932 58699 b05d278c2cac2627b40c3d747dc21b35 ""
+["pdflatex"] 1788783678.39449 "informe.tex" "informe.pdf" "informe" 1788783686.0256 0
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1748957413 1004 54797486969f23fa377b128694d548df ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1748957413 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex9.tfm" 1748957413 996 a18840b13b499c08ac2de96a99eda4bc ""
@@ -113,6 +112,9 @@
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1748957427 94259 aec9939469efac8f0cf917369f632359 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt" 1748957502 2193975 12648406d9923e00f513b5cef61551c3 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf.cnf" 1748957458 956 3a220487175abd462f2198e027963bed ""
+  "figuras/comparacion_heatmaps.png" 1788783541 165187 2a683e5513fd3268cacbcdb749d8c8a3 ""
+  "figuras/comparacion_ocupacion_semilla1001.png" 1788783546 177372 4cc5520fe60eee5b97ac9aeace4c93f3 ""
+  "figuras/comparacion_perfil_espera_semilla1001.png" 1788783544 146889 437486725527d20998564692bbabec35 ""
   "figuras/heatmaps_od_por_franja.png" 1788191387 247612 9e892437f4bc6abd3a2bb18d0cd6fcd0 ""
   "figuras/histograma_tamano_grupo.png" 1788191388 66119 f89e13ce4c4180c11a957537125c7674 ""
   "figuras/mapa_general_zonas_grunnkretser.png" 1788191387 1532814 43b55c48eab3ad1ec046968518429072 ""
@@ -121,14 +123,12 @@
   "figuras/politica_base_ocupacion_flota.png" 1788438260 428891 175f4db57ef9e5d389ce00be12a66961 ""
   "figuras/politica_base_perfil_espera.png" 1788438258 194273 fd95b9119bd655f72c892e932d589dbc ""
   "figuras/politica_base_snapshots.png" 1788438333 409022 abc977b83c9f7a94b1e766309e436d05 ""
-  "figuras/rl_heatmaps_comparados.png" 1788438281 153789 10b2d8d3ba97a6b909159418672f5e08 ""
-  "figuras/rl_reward_por_semilla.png" 1788438273 111223 51d74b1eeb44bf34088dd4c7c0093543 ""
-  "figuras/rl_training_curve.png" 1788438271 341574 73e3a9187c9c19e5af02b4d3ddc3dcfe ""
-  "informe.aux" 1788513951 15538 8178242290146c43a0a1e397705681ed "pdflatex"
-  "informe.bbl" 1788513943 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
-  "informe.out" 1788513951 4936 57245de2d0448f8b01c92d7ed18630af "pdflatex"
-  "informe.tex" 1788513932 58699 b05d278c2cac2627b40c3d747dc21b35 ""
-  "informe.toc" 1788513951 3550 3cc3ac0cd50e31f837f36409bdc86f8a "pdflatex"
+  "figuras/rl_training_curve.png" 1788783549 308683 bd6747b161700afcd9648c81cd68cbb2 ""
+  "informe.aux" 1788783685 16498 459821b089b1fbecf9cc9b91447a89b4 "pdflatex"
+  "informe.bbl" 1788783678 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
+  "informe.out" 1788783685 5349 ac7020bc0b65f9116668c8ab3bb330a0 "pdflatex"
+  "informe.tex" 1788783659 64369 44fe2fe994d5fe3d0a2765a39de9dd46 ""
+  "informe.toc" 1788783685 3765 f66c50f1e2f30fb46db144170555f357 "pdflatex"
   (generated)
   "informe.aux"
   "informe.log"
