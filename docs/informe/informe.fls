@@ -215,11 +215,15 @@ INPUT ./figuras/politica_base_snapshots.png
 INPUT ./figuras/politica_base_snapshots.png
 INPUT ./figuras/politica_base_snapshots.png
 INPUT ./figuras/politica_base_snapshots.png
+INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm
+INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
+INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx8.tfm
+INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx6.tfm
 INPUT ./figuras/rl_training_curve.png
 INPUT ./figuras/rl_training_curve.png
 INPUT ./figuras/rl_training_curve.png
@@ -248,6 +252,7 @@ INPUT ./informe.out
 INPUT ./informe.out
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
+INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
 INPUT c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb

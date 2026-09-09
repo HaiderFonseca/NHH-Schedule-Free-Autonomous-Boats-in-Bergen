@@ -160,6 +160,28 @@ agente:
       peso_movimiento: 0.003
       penalizacion_maxima_persona: 1000000.0
       premio_por_persona_entregada: 0.0
+  entrenamiento_n90:
+    # Misma corrida larga de arriba (mismo combo de recompensa C1), pero con
+    # n_steps=90 en vez de 512 -- prueba aparte sobre el largo del rollout, no
+    # sobre la recompensa. 90 = la duracion de UN episodio completo en
+    # escalon_1 (90 pasos de 2 min), asi que con esto PPO actualiza la red
+    # justo al cerrar cada episodio, nunca a mitad de uno -- la alternativa
+    # directa a elegir 512 sin mas justificacion que "funciono en el
+    # diagnostico anterior" (ver modelo_rl/README.md seccion 4). No reemplaza
+    # la corrida de agente.entrenamiento (n_steps=512) -- se guarda aparte y
+    # se comparan las dos.
+    # RESULTADO (ver modelo_rl/README.md seccion 4.1): en entrenamiento da
+    # parecido a n_steps=512, pero en evaluacion (5 semillas) generaliza peor
+    # en todo -- se queda n_steps=512 como el modelo final, esto se documenta
+    # como negativo, no se adopta.
+    escalon_base: "escalon_1"
+    semilla_entrenamiento: 123
+    total_timesteps: 150000
+    n_steps: 90
+    recompensa_overrides:
+      peso_movimiento: 0.003
+      penalizacion_maxima_persona: 1000000.0
+      premio_por_persona_entregada: 0.0
   evaluacion:
     # Semillas fijas, fuera del rango que barre semilla_entrenamiento -- mismas
     # semillas para el agente y la politica base, para comparar en igualdad

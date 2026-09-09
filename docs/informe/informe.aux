@@ -81,47 +81,53 @@
 \newlabel{sec:implementacion}{{7.2}{16}{Implementation, observation, and action}{subsection.7.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Reward function}{17}{subsection.7.3}\protected@file@percent }
 \newlabel{sec:reward-agent}{{7.3}{17}{Reward function}{subsection.7.3}{}}
+\newlabel{eq:penalty-uncapped}{{8}{17}{Reward function}{equation.8}{}}
 \newlabel{eq:reward-agente}{{9}{17}{Reward function}{equation.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Discomfort penalty by surplus, for one person of size 1.}}{17}{table.7}\protected@file@percent }
-\newlabel{tab:reward-magnitudes}{{7}{17}{Discomfort penalty by surplus, for one person of size 1}{table.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Discomfort penalty by surplus, one person, uncapped (Equation~\ref {eq:penalty-uncapped}).}}{17}{table.7}\protected@file@percent }
+\newlabel{tab:reward-magnitudes}{{7}{17}{Discomfort penalty by surplus, one person, uncapped (Equation~\ref {eq:penalty-uncapped})}{table.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Picking $w_{\text  {move}}$: matching scales, not guessing.}{18}{section*.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Reward-shaping experiments}{18}{subsection.7.4}\protected@file@percent }
 \newlabel{sec:experimentos-reward}{{7.4}{18}{Reward-shaping experiments}{subsection.7.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Capped vs. uncapped discomfort (A vs. B).}{18}{section*.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Adding a small movement penalty (C1 vs. C2).}{18}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Capped vs.\ uncapped discomfort (A vs.\ B).}{18}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Adding a small movement penalty (C1 vs.\ C2).}{18}{section*.10}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Reward-shaping experiments: configuration and outcome after 30{,}000 training timesteps, evaluated on five held-out seeds.}}{18}{table.8}\protected@file@percent }
 \newlabel{tab:experimentos-reward}{{8}{18}{Reward-shaping experiments: configuration and outcome after 30{,}000 training timesteps, evaluated on five held-out seeds}{table.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Fresh demand on every reset}{19}{subsection.7.5}\protected@file@percent }
 \newlabel{sec:demanda-fresca}{{7.5}{19}{Fresh demand on every reset}{subsection.7.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.6}Training run}{19}{subsection.7.6}\protected@file@percent }
 \newlabel{sec:entrenamiento}{{7.6}{19}{Training run}{subsection.7.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Episode reward over the course of the 150{,}000-timestep training run (raw reward per episode and a 20-episode rolling mean).}}{20}{figure.9}\protected@file@percent }
-\newlabel{fig:training-curve}{{9}{20}{Episode reward over the course of the 150{,}000-timestep training run (raw reward per episode and a 20-episode rolling mean)}{figure.9}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{20}{section.8}\protected@file@percent }
-\newlabel{sec:comparacion}{{8}{20}{Results: Agent vs.\ Reference Policy}{section.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{20}{subsection.8.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Agent vs.\ reference policy, aggregated over the five evaluation seeds. Reward is computed with the training reward (Section~\ref {sec:experimentos-reward}) for both policies, so that the total is comparable between them.}}{20}{table.9}\protected@file@percent }
-\newlabel{tab:comparacion-agregada}{{9}{20}{Agent vs.\ reference policy, aggregated over the five evaluation seeds. Reward is computed with the training reward (Section~\ref {sec:experimentos-reward}) for both policies, so that the total is comparable between them}{table.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Percent served by origin-destination pair, agent vs.\ reference policy, aggregated over the five evaluation seeds.}}{21}{figure.10}\protected@file@percent }
-\newlabel{fig:comparacion-heatmap}{{10}{21}{Percent served by origin-destination pair, agent vs.\ reference policy, aggregated over the five evaluation seeds}{figure.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{21}{subsection.8.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces People waiting over time, seed 1001: agent (left) vs.\ reference policy (right).}}{22}{figure.11}\protected@file@percent }
-\newlabel{fig:comparacion-perfil-1001}{{11}{22}{People waiting over time, seed 1001: agent (left) vs.\ reference policy (right)}{figure.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Fleet occupancy over time, seed 1001: agent (left) vs.\ reference policy (right).}}{22}{figure.12}\protected@file@percent }
-\newlabel{fig:comparacion-ocupacion-1001}{{12}{22}{Fleet occupancy over time, seed 1001: agent (left) vs.\ reference policy (right)}{figure.12}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Assumptions and Limitations}{22}{section.9}\protected@file@percent }
-\newlabel{sec:limitaciones}{{9}{22}{Assumptions and Limitations}{section.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{No real demand data.}{22}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{No passenger patience, by design.}{22}{section*.11}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Episode reward over the course of the 150{,}000-timestep training run, $n_{\text  {steps}}=512$ (raw reward per episode and a 20-episode rolling mean).}}{20}{figure.9}\protected@file@percent }
+\newlabel{fig:training-curve}{{9}{20}{Episode reward over the course of the 150{,}000-timestep training run, $n_{\text {steps}}=512$ (raw reward per episode and a 20-episode rolling mean)}{figure.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Checking the rollout length: $n_{\text  {steps}}=90$.}{20}{section*.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces $n_{\text  {steps}}=512$ vs.\ $n_{\text  {steps}}=90$, same reward and same training budget, evaluated on the five held-out seeds.}}{20}{table.9}\protected@file@percent }
+\newlabel{tab:n-steps}{{9}{20}{$n_{\text {steps}}=512$ vs.\ $n_{\text {steps}}=90$, same reward and same training budget, evaluated on the five held-out seeds}{table.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{21}{section.8}\protected@file@percent }
+\newlabel{sec:comparacion}{{8}{21}{Results: Agent vs.\ Reference Policy}{section.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why percent served is not the headline metric.}{21}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{21}{subsection.8.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Agent vs.\ reference policy, aggregated over the five evaluation seeds. Reward is computed with the training reward (Section~\ref {sec:experimentos-reward}) for both policies, so that the total is comparable between them.}}{21}{table.10}\protected@file@percent }
+\newlabel{tab:comparacion-agregada}{{10}{21}{Agent vs.\ reference policy, aggregated over the five evaluation seeds. Reward is computed with the training reward (Section~\ref {sec:experimentos-reward}) for both policies, so that the total is comparable between them}{table.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Percent served by origin-destination pair, agent vs.\ reference policy, aggregated over the five evaluation seeds.}}{22}{figure.10}\protected@file@percent }
+\newlabel{fig:comparacion-heatmap}{{10}{22}{Percent served by origin-destination pair, agent vs.\ reference policy, aggregated over the five evaluation seeds}{figure.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{22}{subsection.8.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces People waiting over time, seed 1001: agent (left) vs.\ reference policy (right).}}{23}{figure.11}\protected@file@percent }
+\newlabel{fig:comparacion-perfil-1001}{{11}{23}{People waiting over time, seed 1001: agent (left) vs.\ reference policy (right)}{figure.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Fleet occupancy over time, seed 1001: agent (left) vs.\ reference policy (right).}}{23}{figure.12}\protected@file@percent }
+\newlabel{fig:comparacion-ocupacion-1001}{{12}{23}{Fleet occupancy over time, seed 1001: agent (left) vs.\ reference policy (right)}{figure.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Assumptions and Limitations}{23}{section.9}\protected@file@percent }
+\newlabel{sec:limitaciones}{{9}{23}{Assumptions and Limitations}{section.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{No real demand data.}{23}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{No passenger patience, by design.}{23}{section*.14}\protected@file@percent }
 \bibstyle{plainnat}
 \bibdata{referencias}
 \bibcite{Braathen2024}{{1}{2024}{{Braathen et~al.}}{{Braathen, Goez, and Guajardo}}}
 \bibcite{Brockman2016}{{2}{2016}{{Brockman et~al.}}{{Brockman, Cheung, Pettersson, Schneider, Schulman, Tang, and Zaremba}}}
 \bibcite{Gu2021}{{3}{2021}{{Gu and Wallace}}{{}}}
+\@writefile{toc}{\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{24}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{24}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{24}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{24}{section.10}\protected@file@percent }
 \bibcite{Raffin2021}{{4}{2021}{{Raffin et~al.}}{{Raffin, Hill, Gleave, Kanervisto, Ernestus, and Dormann}}}
-\@writefile{toc}{\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{23}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{23}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{23}{section*.14}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{23}{section.10}\protected@file@percent }
 \bibcite{SanchezMartinez2017}{{5}{2016}{{S{\'a}nchez-Mart{\'i}nez et~al.}}{{S{\'a}nchez-Mart{\'i}nez, Wilson, and Koutsopoulos}}}
 \bibcite{Schulman2017}{{6}{2017}{{Schulman et~al.}}{{Schulman, Wolski, Dhariwal, Radford, and Klimov}}}
-\gdef \@abspage@last{24}
+\gdef \@abspage@last{25}

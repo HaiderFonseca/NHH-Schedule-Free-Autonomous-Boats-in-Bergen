@@ -22,17 +22,18 @@ El notebook importa `simulador/src` (motor), `politica_base/src` (`asignar_flota
 
 ## 2. Comparación agregada (5 semillas)
 
+**Por qué no lideramos con % atendidas.** El simulador no pierde a nadie -- nadie se retira nunca (`simulador/README.md` sección 4.5), así que alguien que no subió a un barco cuando termina la corrida no está "perdido", sigue en cola y se habría atendido si la corrida seguía un rato más. Eso quiere decir que "% atendidas" mezcla dos cosas distintas: qué tan bien despacha la política, y cuánto quedaba de ventana operativa cuando llegó la última gente -- lo segundo es arbitrario, no dice nada de la política. Lo que la recompensa realmente castiga (y lo que de verdad nos importa) es cuánto tiempo pasa la gente en el sistema -- medio y, sobre todo, máximo -- y cuántos movimientos le cuesta a la flota lograrlo. Por eso la tabla de abajo lidera con esas dos cosas, y deja % atendidas al final, solo como referencia.
+
 | Métrica | Agente PPO | Política base | Diferencia |
 |---|---|---|---|
-| % atendidas | 88.0% | 88.0% | 0.0 pp |
-| Espera media | 17.1 min | 16.4 min | +0.6 min |
 | Tiempo en sistema medio | 29.0 min | 26.1 min | +3.0 min |
 | Tiempo en sistema máximo | 60.8 min | 69.7 min | **-9.0 min** |
+| Espera media | 17.1 min | 16.4 min | +0.6 min |
 | Movimientos totales (5 episodios) | 191 | 155 | +36 |
-| Ocupación media | 3.50 | 3.50 | ~0 |
 | Reward total (5 episodios, fórmula RL) | **-3772.0** | -5259.0 | **+1487.0** |
+| % atendidas (referencia, ver arriba) | 88.0% | 88.0% | 0.0 pp |
 
-**El agente iguala exactamente a la base en % atendidas** (748/850 unidades en los dos casos, sobre las 5 semillas combinadas) -- ya no hay brecha de servicio. Gana claramente en el reward que se entrenó a optimizar (-3772 vs. -5259) y en el peor caso de tiempo en sistema (60.8 vs. 69.7 min) -- exactamente el efecto esperado de entrenar sin techo en la penalización (`modelo_rl/README.md` sección 3): el agente aprendió a que dejar a alguien esperar mucho tiempo sigue costando cada vez más, así que prioriza no dejar a nadie en el peor de los casos. El costo de esto es una espera media levemente mayor (17.1 vs. 16.4 min) y bastantes más movimientos (191 vs. 155, 36 de más) -- el agente mueve la flota de forma más activa para lograrlo.
+El agente gana en el peor caso de tiempo en sistema (60.8 vs. 69.7 min) y en el reward que se entrenó a optimizar (-3772 vs. -5259) -- exactamente el efecto esperado de entrenar sin techo en la penalización (`modelo_rl/README.md` sección 3): al agente le sigue costando cada vez más dejar a alguien esperando mucho, así que prioriza no dejar a nadie en el peor de los casos. El costo es una espera media levemente mayor (17.1 vs. 16.4 min) y bastantes más movimientos (191 vs. 155, 36 de más) -- mueve la flota más activamente para lograr eso. Que el % atendidas dé exactamente igual (748/850 los dos) es una curiosidad, no evidencia de nada por sí sola -- ver el párrafo de arriba.
 
 **Por semilla, el resultado no es parejo** (`output/reward_por_semilla.csv`):
 
@@ -60,17 +61,19 @@ Mismo paquete de 5 métricas/gráficas que produce `politica_base/notebooks/01_e
 
 | | Agente | Base |
 |---|---|---|
-| % atendidas (esta semilla) | 81.5% (110/135) | 91.9% (124/135) |
 | Espera media | 17.4 min | 9.4 min |
+| % atendidas, esta semilla (referencia) | 81.5% (110/135) | 91.9% (124/135) |
 | Conservación | OK | OK |
 
-**En esta semilla concreta, la base sirve MÁS gente y con menos espera que el agente** -- lo opuesto de lo que el agregado de la sección 2 podría sugerir a primera vista. Es la razón exacta por la que este detalle importa: el agregado (5 semillas) favorece al agente por el reward (que castiga fuerte el peor caso, sin techo), no porque el agente sirva sistemáticamente mejor semilla por semilla -- la semilla 1001 es una de las 3 donde gana la base (sección 2). Ambas lecturas son correctas a la vez: el agente es mejor "en el peor caso agregado", la base puede ser mejor "en un caso típico concreto" como este.
+**En esta semilla concreta, la base espera bastante menos que el agente** (9.4 vs. 17.4 min) -- lo opuesto de lo que el reward agregado de la sección 2 podría sugerir a primera vista. Es la razón por la que este detalle importa: la semilla 1001 es una de las 3 (de 5) donde el reward de la base le gana al agente -- el agregado favorece al agente porque el reward castiga fuerte el peor caso entre las 5 semillas, no porque el agente sirva sistemáticamente mejor semilla por semilla. Las dos lecturas son correctas a la vez: el agente es mejor "en el peor caso agregado", la base puede ser mejor en un caso típico concreto como este. (El % atendidas se mueve en la misma dirección acá, 124/135 vs. 110/135, pero por lo dicho en la sección 2 no es la razón para preferir una u otra -- la espera sí lo es.)
 
 **Gráficas** (`output/*_semilla1001.html`, agente y base por separado): `wait_profile_{agente,base}_semilla1001.html` (personas esperando en el tiempo), `fleet_occupancy_{agente,base}_semilla1001.html` (ocupación de cada barco), `pct_served_heatmap_comparado_semilla1001.html` (heatmap lado a lado, solo esta semilla), `reward_breakdown_{agente,base}_semilla1001.html` (desglose de recompensa en el tiempo), `backlog_by_pair_{agente,base}_semilla1001.html` (backlog al final).
 
 **Visualización paso a paso:** `animacion_{agente,base}_semilla1001.gif` (los 90 pasos completos), inspector en minutos concretos, y el reproductor interactivo completo -- mismo patrón que `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (botones de paso a paso, **solo funcionan con un kernel de Jupyter vivo**).
 
 ---
+
+**Sobre qué modelo es este:** `n_steps=512` (`modelo_rl/output/modelo_final/`). Se probó también `n_steps=90` (un episodio completo) como alternativa mejor justificada -- generalizó peor en estas mismas 5 semillas pese a entrenar parecido. Ver `modelo_rl/README.md` sección 4.1 para esa comparación completa; no se usa acá.
 
 ## 4. Cómo correr
 

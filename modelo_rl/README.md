@@ -60,7 +60,9 @@ Antes de gastar el único entrenamiento largo del ciclo, se exploró METÓDICAME
 | C1 | 0.003 | inactivo | 52.0% | 23.8 min | 127 |
 | C2 | 0.001 | inactivo | 44.7% | 22.5 min | 95 |
 
-**A vs. B: se confirma la hipótesis** -- quitar el techo mejora las tres métricas (más atendidas, menos espera media, incluso menos movimientos). **C1 vs. C2: el punto de partida (0.003) rinde mejor que el más chico (0.001)** -- C1 prácticamente empata con B en % atendidas mientras mantiene movimiento similar a B (disciplina de movimiento sin perder desempeño); C2, con una penalización aún más chica, no rinde mejor -- no hay evidencia de que 0.001 sea sistemáticamente mejor en ningún eje a esta escala de entrenamiento. **Ganador: C1** (`peso_movimiento: 0.003`, sin techo por persona) -- combo copiado a `agente.entrenamiento.recompensa_overrides` para la corrida final.
+**Nota sobre el % atendidas de esta tabla:** se usa acá solo como un indicador rápido para comparar A/B/C1/C2 ENTRE SÍ, no como la métrica que de verdad importa -- el simulador no pierde a nadie (nadie se retira nunca, `simulador/README.md` sección 4.5), así que "% atendidas" depende en parte de dónde cae el corte de la ventana de la corrida, no solo de qué tan bien despacha la política. Lo que la recompensa realmente penaliza, y lo que se reporta como resultado real en `comparacion/README.md`, es tiempo en sistema (medio y máximo) y movimientos.
+
+**A vs. B: se confirma la hipótesis** -- quitar el techo mejora las tres columnas (más atendidas, menos espera media, incluso menos movimientos). **C1 vs. C2: el punto de partida (0.003) rinde mejor que el más chico (0.001)** -- C1 prácticamente empata con B en % atendidas mientras mantiene movimiento similar a B (disciplina de movimiento sin perder desempeño); C2, con una penalización aún más chica, no rinde mejor -- no hay evidencia de que 0.001 sea sistemáticamente mejor en ningún eje a esta escala de entrenamiento. **Ganador: C1** (`peso_movimiento: 0.003`, sin techo por persona) -- combo copiado a `agente.entrenamiento.recompensa_overrides` para la corrida final.
 
 **Sobre la brecha frente a la política base (88.0% atendidas) en esta secuencia:** ningún experimento se acerca a la base -- son entrenamientos de solo 30 000 pasos (una sola semilla de entrenamiento), pensados exclusivamente para comparar la FORMA de la recompensa entre sí, no para producir un agente competitivo. Ver sección 4 para el resultado de la corrida larga (150 000 pasos, 5x más) con la recompensa ya elegida aquí.
 
@@ -81,11 +83,32 @@ entrenamiento:
     premio_por_persona_entregada: 0.0
 ```
 
-Hiperparámetros de PPO (`agente.hiperparametros`, compartidos con TODOS los experimentos de la sección 3 -- ya validados en una ronda de diagnóstico anterior, no se vuelven a tocar acá): `usar_vecnormalize: true`, `ent_coef: 0.01` (más exploración que el default 0.0 de SB3), `learning_rate: 0.0003`, `n_steps: 512` (actualiza cada ~5-6 episodios de 90 pasos, no ~22 como el default 2048).
+Hiperparámetros de PPO (`agente.hiperparametros`, compartidos con TODOS los experimentos de la sección 3): `usar_vecnormalize: true`, `ent_coef: 0.01` (más exploración que el default 0.0 de SB3), `learning_rate: 0.0003` (el estándar de PPO, 3e-4). `n_steps: 512` viene de una ronda de diagnóstico anterior, elegido más chico que el default de SB3 (2048) para no esperar ~23 episodios entre actualizaciones -- pero 512 en sí no sale de ninguna fórmula ni referencia, es una elección sin más justificación que "funcionó". La alternativa más directa de defender es `n_steps=90`: exactamente un episodio completo de `escalon_1`, así que cada actualización cae justo al cerrar un episodio, nunca a mitad de uno. Sección 4.1 compara las dos.
 
 **El notebook, en orden:** (1) confirma demanda fresca por reset (sección 2); (2) `check_env` de SB3 (chequeo estándar antes de entrenar); (3) envuelve el entorno con `Monitor` + `DummyVecEnv`/`VecNormalize`; (4) entrena `PPO("MlpPolicy", ...)`; (5) guarda el modelo (`output/modelo_final/modelo_ppo.zip`, `vecnormalize.pkl`) y grafica la curva de recompensa por episodio (interactiva, `output/modelo_final/training_curve.html`).
 
 **Resultado de la corrida final (150 000 timesteps, 1666 episodios de 90 pasos, combo C1):** la recompensa media de los primeros 20 episodios fue -24 871.4; la de los últimos 20, -2 832.8 -- una mejora de casi un orden de magnitud. Los últimos 5 episodios individuales: -17 540.6, -1 905.5, -651.3, -1 007.3, -958.0 -- la mayoría ya estabilizados en un rango bajo, con episodios ocasionales peores (demanda más pesada según la semilla de ese episodio, dentro de lo esperable con demanda fresca en cada `reset`). Curva completa (interactiva) en `output/modelo_final/training_curve.html`. Ver `comparacion/README.md` para el resultado de este modelo comparado contra la política base.
+
+### 4.1 `n_steps=90` en vez de 512 -- se probó, empeoró en evaluación
+
+512 no salía de ninguna cuenta (sección 2) -- la alternativa que sí se puede defender con un argumento es `n_steps=90`, exactamente un episodio de `escalon_1`, así que cada actualización de PPO cae justo al cerrar un episodio. Se corrió la misma corrida larga (150 000 timesteps, mismo combo C1) cambiando solo eso -- guardada aparte en `output/modelo_final_n90/`, sin pisar el modelo de arriba.
+
+**En entrenamiento se ven parecidos:** recompensa media de los últimos 20 episodios, -2 832.8 (n_steps=512) vs. -2 956.2 (n_steps=90) -- la curva sola no diría cuál es mejor. **En evaluación (5 semillas, mismas de siempre) se separan mucho:**
+
+| | n_steps=512 | n_steps=90 | Política base |
+|---|---|---|---|
+| Tiempo en sistema medio | 29.0 min | 30.2 min | 26.1 min |
+| Tiempo en sistema máximo | 60.8 min | **73.7 min** | 69.7 min |
+| Espera media | 17.1 min | 19.9 min | 16.4 min |
+| Movimientos (5 episodios) | 191 | 179 | 155 |
+| Reward (5 episodios) | -3772.0 | **-28082.5** | -5259.0 |
+| % atendidas (referencia) | 88.0% | 77.5% | 88.0% |
+
+`n_steps=90` pierde en todo, incluido el peor caso -- 73.7 min, peor que la propia política base (69.7). El reward de evaluación (-28082) está en el rango de los primeros episodios de entrenamiento del otro modelo, no cerca de donde terminó. O sea: entrenó bien (la curva sube) pero generalizó mal a las semillas de evaluación.
+
+**¿Por qué?** Con `n_steps=90`, el buffer de PPO junta exactamente UN episodio antes de actualizar, así que en la misma corrida hace ~1666 actualizaciones (una por episodio) en vez de ~293 con n_steps=512 -- cada una con muchos menos datos. Actualizar tan seguido con lotes tan chicos hace que cada paso de gradiente sea más ruidoso y esté más pegado a la demanda particular de ESE episodio -- puede parecer que mejora durante el entrenamiento (la curva sube) sin que la política se vuelva más robusta a demanda que no vio. `n_steps=512` termina dándole a cada actualización una muestra más ancha y menos ruidosa de experiencia, y eso pesa más que alinear las actualizaciones con el cierre de cada episodio.
+
+**Se queda con `n_steps=512`.** El modelo que se usa en `comparacion/` es el de `output/modelo_final/` -- `n_steps=90` queda documentado como un resultado real que se probó y no funcionó mejor, no como el modelo final.
 
 ---
 

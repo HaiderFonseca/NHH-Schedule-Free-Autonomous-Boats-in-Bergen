@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex informe"] 1788783678.27317 "informe.aux" "informe.bbl" "informe" 1788783686.02415 0
+["bibtex informe"] 1788953940.80193 "informe.aux" "informe.bbl" "informe" 1788953945.97448 0
   "./referencias.bib" 1788438605 1917 efc69dc8ba687af89f8a4a6cfcdef2f0 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/bibtex/bst/natbib/plainnat.bst" 1748957407 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "informe.aux" 1788783685 16498 459821b089b1fbecf9cc9b91447a89b4 "pdflatex"
+  "informe.aux" 1788953945 17526 2b66b8a092aa17df159c769a997b8f5c "pdflatex"
   (generated)
   "informe.bbl"
   "informe.blg"
   (rewritten before read)
-["pdflatex"] 1788783678.39449 "informe.tex" "informe.pdf" "informe" 1788783686.0256 0
+["pdflatex"] 1788953940.88855 "informe.tex" "informe.pdf" "informe" 1788953945.97507 0
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1748957413 1004 54797486969f23fa377b128694d548df ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1748957413 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex9.tfm" 1748957413 996 a18840b13b499c08ac2de96a99eda4bc ""
@@ -19,6 +19,8 @@
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm" 1748957413 940 228d6584342e91276bf566bcf9716b83 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm" 1748957413 1328 c834bbb027764024c09d3d2bf908b5f0 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1748957413 1324 c910af8c371558dc20f2d7822f66fe64 ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx6.tfm" 1748957413 1344 8a0be4fe4d376203000810ad4dc81558 ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx8.tfm" 1748957413 1332 1fde11373e221473104d6cc5993f046e ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmex10.tfm" 1748957413 992 662f679a0b3d2d53c1b94050fdaa3f50 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmmi10.tfm" 1748957413 1528 abec98dbc43e172678c11b3b9031252a ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm" 1748957413 1524 4414a8315f39513458b80dfc63bff03a ""
@@ -37,8 +39,10 @@
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmsy9.tfm" 1748957413 1116 25a7bf822c58caf309a702ef79f4afbb ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmti10.tfm" 1748957413 1480 aa8e34af0eb6a2941b776984cf1dfdc4 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm" 1748957413 768 1321e9409b4137d6fb428ac9dc956269 ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm" 1748957413 768 d7b9a2629a0c353102ad947dc9221d49 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb" 1748957417 34811 78b52f49e893bcba91bd7581cdc144c0 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb" 1748957417 32080 340ef9bf63678554ee606688e7b5339d ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb" 1748957417 32166 b0c356b15f19587482a9217ce1d8fa67 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb" 1748957417 30251 6afa5cb1d0204815a708a080681d4674 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb" 1748957417 36299 5f9df58c2139e7edcf37c8fca4bd384d ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb" 1748957417 37166 8ab3487cbe3ab49ebce74c29ea2418db ""
@@ -124,11 +128,11 @@
   "figuras/politica_base_perfil_espera.png" 1788438258 194273 fd95b9119bd655f72c892e932d589dbc ""
   "figuras/politica_base_snapshots.png" 1788438333 409022 abc977b83c9f7a94b1e766309e436d05 ""
   "figuras/rl_training_curve.png" 1788783549 308683 bd6747b161700afcd9648c81cd68cbb2 ""
-  "informe.aux" 1788783685 16498 459821b089b1fbecf9cc9b91447a89b4 "pdflatex"
-  "informe.bbl" 1788783678 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
-  "informe.out" 1788783685 5349 ac7020bc0b65f9116668c8ab3bb330a0 "pdflatex"
-  "informe.tex" 1788783659 64369 44fe2fe994d5fe3d0a2765a39de9dd46 ""
-  "informe.toc" 1788783685 3765 f66c50f1e2f30fb46db144170555f357 "pdflatex"
+  "informe.aux" 1788953945 17526 2b66b8a092aa17df159c769a997b8f5c "pdflatex"
+  "informe.bbl" 1788953940 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
+  "informe.out" 1788953945 5349 ac7020bc0b65f9116668c8ab3bb330a0 "pdflatex"
+  "informe.tex" 1788953923 69448 2dcbf179386967024386f04fa645e2e3 ""
+  "informe.toc" 1788953945 4062 10a22d434b000173a24ed71c890e9a35 "pdflatex"
   (generated)
   "informe.aux"
   "informe.log"

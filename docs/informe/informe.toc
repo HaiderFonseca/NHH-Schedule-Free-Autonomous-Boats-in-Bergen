@@ -27,18 +27,21 @@
 \contentsline {subsection}{\numberline {7.1}Method}{16}{subsection.7.1}%
 \contentsline {subsection}{\numberline {7.2}Implementation, observation, and action}{16}{subsection.7.2}%
 \contentsline {subsection}{\numberline {7.3}Reward function}{17}{subsection.7.3}%
+\contentsline {paragraph}{Picking $w_{\text {move}}$: matching scales, not guessing.}{18}{section*.8}%
 \contentsline {subsection}{\numberline {7.4}Reward-shaping experiments}{18}{subsection.7.4}%
-\contentsline {paragraph}{Capped vs. uncapped discomfort (A vs. B).}{18}{section*.8}%
-\contentsline {paragraph}{Adding a small movement penalty (C1 vs. C2).}{18}{section*.9}%
+\contentsline {paragraph}{Capped vs.\ uncapped discomfort (A vs.\ B).}{18}{section*.9}%
+\contentsline {paragraph}{Adding a small movement penalty (C1 vs.\ C2).}{18}{section*.10}%
 \contentsline {subsection}{\numberline {7.5}Fresh demand on every reset}{19}{subsection.7.5}%
 \contentsline {subsection}{\numberline {7.6}Training run}{19}{subsection.7.6}%
-\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{20}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{20}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{21}{subsection.8.2}%
-\contentsline {section}{\numberline {9}Assumptions and Limitations}{22}{section.9}%
-\contentsline {paragraph}{No real demand data.}{22}{section*.10}%
-\contentsline {paragraph}{No passenger patience, by design.}{22}{section*.11}%
-\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{23}{section*.12}%
-\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{23}{section*.13}%
-\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{23}{section*.14}%
-\contentsline {section}{\numberline {10}Conclusion}{23}{section.10}%
+\contentsline {paragraph}{Checking the rollout length: $n_{\text {steps}}=90$.}{20}{section*.11}%
+\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{21}{section.8}%
+\contentsline {paragraph}{Why percent served is not the headline metric.}{21}{section*.12}%
+\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{21}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{22}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Assumptions and Limitations}{23}{section.9}%
+\contentsline {paragraph}{No real demand data.}{23}{section*.13}%
+\contentsline {paragraph}{No passenger patience, by design.}{23}{section*.14}%
+\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{24}{section*.15}%
+\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{24}{section*.16}%
+\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{24}{section*.17}%
+\contentsline {section}{\numberline {10}Conclusion}{24}{section.10}%
