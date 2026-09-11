@@ -1,0 +1,9 @@
+{
+  "experimento": "A",
+  "total_timesteps": 30000,
+  "n_steps": 512,
+  "actualizaciones_ppo": 58,
+  "tiempo_entrenamiento_s": 138.4102840423584,
+  "tiempo_entrenamiento_min": 2.30683806737264,
+  "pasos_por_segundo": 216.7469000411772
+}

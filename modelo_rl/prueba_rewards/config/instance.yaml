@@ -1,0 +1,90 @@
+# Config propio de modelo_rl/prueba_rewards/ -- SOLO lo que esta subcarpeta
+# decide por sí misma (la definición de las 4 recompensas A/B/C/D y sus
+# parámetros, timesteps de entrenamiento). Todo lo demás (instancia
+# escalon_1, hiperparámetros de PPO ya validados, semillas de evaluación)
+# se LEE de ../../simulador/config/instance.yaml, nunca se copia -- misma
+# regla de siempre en este proyecto.
+
+# ---------------------------------------------------------------------------
+# Fuentes externas.
+# ---------------------------------------------------------------------------
+fuentes_externas:
+  simulador_config: "../../simulador/config/instance.yaml"
+
+# ---------------------------------------------------------------------------
+# Las 4 recompensas. Ver README.md para la teoría detrás de cada una.
+#
+# B y D reusan calcular_recompensa() de simulador/src/recompensa.py TAL
+# CUAL (misma fórmula, solo cambia el cfg) -- por eso sus parámetros tienen
+# los mismos nombres que simulador/config/instance.yaml -> recompensa.
+# A y C son fórmulas nuevas (recompensas_alternativas.py) con sus propios
+# parámetros.
+# ---------------------------------------------------------------------------
+recompensas:
+  A:
+    nombre: "Objetivo puro (identidad de Little)"
+    descripcion: >
+      Lineal en tiempo activo: penaliza cada persona activa por tamaño x
+      duración del paso, sin tolerancia, sin técho, sin cuadrado. Es el
+      objetivo real (minimizar tiempo total en sistema) repartido paso a
+      paso, sin pasar por ninguna curva de castigo.
+    peso_movimiento: 0.006   # lambda ~= 0.003 * paso_tiempo_min (2 min) -- ver README
+
+  B:
+    nombre: "Ponderada convexa con tolerancia, sin techo"
+    descripcion: >
+      La formula ya usada en el resto de modelo_rl/ (ganadora C1 de la
+      secuencia A/B/C1/C2 ya cerrada) -- referencia conocida, sin techo por
+      persona, penalizacion de movimiento chica.
+    tolerancia_incomodidad_min: 12
+    sobrante_normalizador_min: 18
+    penalizacion_maxima_persona: 1000000.0   # techo efectivamente infinito
+    peso_movimiento: 0.003
+    premio_por_persona_entregada: 0.0
+
+  C:
+    nombre: "B + potential-based shaping (Ng, Harada & Russell 1999)"
+    descripcion: >
+      Mismos parametros que B, mas un termino potencial gamma*Phi(s')-Phi(s)
+      con Phi(s) = -eta * N(s) (N(s) = personas activas, ponderadas por
+      tamano). Da senal densa por reducir la cola sin cambiar la politica
+      optima (teorema de invariancia de PBRS) -- ver README.
+    tolerancia_incomodidad_min: 12
+    sobrante_normalizador_min: 18
+    penalizacion_maxima_persona: 1000000.0
+    peso_movimiento: 0.003
+    premio_por_persona_entregada: 0.0
+    eta_potencial: 0.05
+
+  D:
+    nombre: "con premio d eentrega y 0.001 movimiento (parametros de produccion)"
+    descripcion: >
+      calcular_recompensa() con los valores de PRODUCCION tal cual viven
+      hoy en simulador/config/instance.yaml -> recompensa (tecno activo,
+      peso_movimiento alto) -- nunca antes entrenados con RL. Sirve de
+      contraste "mal escalado" sin inventar una quinta variante -- ver
+      README, seccion D.
+    tolerancia_incomodidad_min: 12
+    sobrante_normalizador_min: 18
+    penalizacion_maxima_persona: 1000000.0
+    peso_movimiento: 0.001
+    premio_por_persona_entregada: 0.5
+
+# ---------------------------------------------------------------------------
+# Entrenamiento -- mismos hiperparametros de PPO para las 4 (se leen de
+# simulador/config/instance.yaml -> agente.hiperparametros, no se redefinen
+# aca), mismo total_timesteps y misma semilla_entrenamiento -- lo UNICO que
+# cambia entre las 4 corridas es la recompensa.
+# ---------------------------------------------------------------------------
+entrenamiento:
+  escalon_base: "escalon_1"      # de simulador/config/instance.yaml -> escalones
+  semilla_entrenamiento: 123
+  total_timesteps: 150000         # corto, para iterar -- igual que la secuencia A/B/C1/C2 ya cerrada
+
+# ---------------------------------------------------------------------------
+# Evaluacion -- mismas 5 semillas de siempre (fuera del rango de
+# semilla_entrenamiento), leidas tambien de simulador/config/instance.yaml
+# -> agente.evaluacion.semillas para no duplicar el numero aca.
+# ---------------------------------------------------------------------------
+evaluacion:
+  usar_semillas_de: "agente.evaluacion.semillas"   # documentacion; el notebook lee el valor real de simulador/config

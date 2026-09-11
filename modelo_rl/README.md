@@ -110,6 +110,25 @@ Hiperparámetros de PPO (`agente.hiperparametros`, compartidos con TODOS los exp
 
 **Se queda con `n_steps=512`.** El modelo que se usa en `comparacion/` es el de `output/modelo_final/` -- `n_steps=90` queda documentado como un resultado real que se probó y no funcionó mejor, no como el modelo final.
 
+### 4.2 Tiempos de entrenamiento (medidos, no estimados)
+
+Cada corrida guarda su propio `metadata_entrenamiento.json` (`output/modelo_final/`, `output/modelo_final_n90/`, y uno por experimento en `prueba_rewards/output/modelos/{A,B,C,D}/`) con el tiempo real medido (`time.time()` alrededor de `model.learn(...)`), no una estimación -- así este dato queda fijo, sin depender de volver a correr nada para saberlo.
+
+| Corrida | `total_timesteps` | `n_steps` | Actualizaciones de PPO (`total_timesteps // n_steps`) | Tiempo medido | Pasos/seg |
+|---|---|---|---|---|---|
+| Final (`modelo_final/`) | 150 000 | 512 | **292** | 12.7 min (761 s) | 197 |
+| Prueba `n_steps=90` (`modelo_final_n90/`) | 150 000 | 90 | **1666** | 13.8 min (828 s) | 181 |
+| Experimentos A/B/C1/C2 (`../output/experimentos/`, cerrados) | 30 000 c/u | 512 | **58** c/u | 2.1-2.3 min c/u | 217-236 |
+| `prueba_rewards/` A/B/C/D | 30 000 c/u | 512 | **58** c/u | 2.1-3.8 min c/u (varía con la carga de la máquina en el momento) | 132-237 |
+
+**La cuenta que importa no es el tiempo de reloj, es cuántas actualizaciones de la red hace PPO.** Con `n_steps=512`, cada actualización consume 512 pasos de simulación; `total_timesteps // n_steps` da el número de veces que la red (política + valor) realmente se ajusta durante toda la corrida:
+- 30 000 timesteps → **58 actualizaciones**.
+- 150 000 timesteps → **292 actualizaciones** -- 5 veces más.
+
+El tiempo de reloj en sí es barato (2-4 min para 30 000 pasos, ~13 min para 150 000, en esta máquina) -- lo que de verdad falta en las corridas de 30 000 no es tiempo, son **actualizaciones**: 58 rondas de gradiente no alcanzan para que la red converja a una política competente, y por eso el % de gente atendida en TODOS los experimentos cortos (secuencia A/B/C1/C2, `prueba_rewards/`) queda muy por debajo de la política base (40-52% contra el 88% de la base, ver `prueba_rewards/README.md` sección 5) -- no es que la recompensa esté mal, es que 58 actualizaciones es, para este problema, un presupuesto de entrenamiento genuinamente corto. El agente final (`modelo_final/`, 292 actualizaciones) es el que sí iguala a la base.
+
+**Aclaración sobre `n_steps=90`:** no es lo mismo que "58 actualizaciones" -- son dos números distintos que se pueden confundir. `n_steps` es cuántos pasos de simulación entran en CADA actualización (el tamaño del lote); las 58 actualizaciones de la tabla salen de `n_steps=512`. Si se usara `n_steps=90` con 30 000 timesteps, saldrían MÁS actualizaciones (30000/90≈333), no menos -- lotes más chicos, pero más frecuentes. De hecho ya se probó `n_steps=90` con el presupuesto largo (150 000 pasos, sección 4.1): da 1666 actualizaciones (5.7x más que las 292 de `n_steps=512`) y aun así generaliza PEOR -- más actualizaciones no es automáticamente mejor si cada una ve muy poca experiencia (ver la explicación completa en 4.1). La causa de que las corridas de 30 000 anden mal es la combinación de POCAS actualizaciones (58) Y presupuesto corto en general, no `n_steps` por sí solo.
+
 ---
 
 ## 5. Cómo correr
