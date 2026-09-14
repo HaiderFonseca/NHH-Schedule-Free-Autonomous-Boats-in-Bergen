@@ -148,7 +148,7 @@ agente:
     # modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb.
     escalon_base: "escalon_1"      # de donde saca horas/porcentaje_poblacion_dia/num_barcos
     semilla_entrenamiento: 123     # semilla RAIZ de la secuencia de demandas de entrenamiento (reproducible)
-    total_timesteps: 150000        # ~1666 episodios de 90 pasos, 292 actualizaciones de PPO (150000/512) -- medido: 12.7 min
+    total_timesteps: 300000        # ~1666 episodios de 90 pasos, 292 actualizaciones de PPO (150000/512) -- medido: 12.7 min
                                     # (761s, ~197 pasos/seg), ver modelo_rl/output/modelo_final/metadata_entrenamiento.json
                                     # y modelo_rl/README.md seccion 4.2
     # Overrides de recompensa SOLO para entrenar/evaluar el agente -- NO tocan la seccion

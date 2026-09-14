@@ -64,7 +64,7 @@ Antes de gastar el único entrenamiento largo del ciclo, se exploró METÓDICAME
 
 **A vs. B: se confirma la hipótesis** -- quitar el techo mejora las tres columnas (más atendidas, menos espera media, incluso menos movimientos). **C1 vs. C2: el punto de partida (0.003) rinde mejor que el más chico (0.001)** -- C1 prácticamente empata con B en % atendidas mientras mantiene movimiento similar a B (disciplina de movimiento sin perder desempeño); C2, con una penalización aún más chica, no rinde mejor -- no hay evidencia de que 0.001 sea sistemáticamente mejor en ningún eje a esta escala de entrenamiento. **Ganador: C1** (`peso_movimiento: 0.003`, sin techo por persona) -- combo copiado a `agente.entrenamiento.recompensa_overrides` para la corrida final.
 
-**Sobre la brecha frente a la política base (88.0% atendidas) en esta secuencia:** ningún experimento se acerca a la base -- son entrenamientos de solo 30 000 pasos (una sola semilla de entrenamiento), pensados exclusivamente para comparar la FORMA de la recompensa entre sí, no para producir un agente competitivo. Ver sección 4 para el resultado de la corrida larga (150 000 pasos, 5x más) con la recompensa ya elegida aquí.
+**Sobre la brecha frente a la política base (88.0% atendidas) en esta secuencia:** ningún experimento se acerca a la base -- son entrenamientos de solo 30 000 pasos (una sola semilla de entrenamiento), pensados exclusivamente para comparar la FORMA de la recompensa entre sí, no para producir un agente competitivo. Ver sección 4 para el resultado de la corrida larga (300 000 pasos, 10x más) con la recompensa ya elegida aquí.
 
 ---
 
@@ -76,7 +76,7 @@ Antes de gastar el único entrenamiento largo del ciclo, se exploró METÓDICAME
 entrenamiento:
   escalon_base: "escalon_1"
   semilla_entrenamiento: 123     # raíz de la secuencia de demandas de entrenamiento
-  total_timesteps: 150000        # ~1666 episodios de 90 pasos
+  total_timesteps: 300000        # ~3333 episodios de 90 pasos -- subido desde 150000, ver seccion 4.2
   recompensa_overrides:          # combo ganador de la secuencia de experimentos (sección 3)
     peso_movimiento: 0.003
     penalizacion_maxima_persona: 1000000.0
@@ -87,7 +87,7 @@ Hiperparámetros de PPO (`agente.hiperparametros`, compartidos con TODOS los exp
 
 **El notebook, en orden:** (1) confirma demanda fresca por reset (sección 2); (2) `check_env` de SB3 (chequeo estándar antes de entrenar); (3) envuelve el entorno con `Monitor` + `DummyVecEnv`/`VecNormalize`; (4) entrena `PPO("MlpPolicy", ...)`; (5) guarda el modelo (`output/modelo_final/modelo_ppo.zip`, `vecnormalize.pkl`) y grafica la curva de recompensa por episodio (interactiva, `output/modelo_final/training_curve.html`).
 
-**Resultado de la corrida final (150 000 timesteps, 1666 episodios de 90 pasos, combo C1):** la recompensa media de los primeros 20 episodios fue -24 871.4; la de los últimos 20, -2 832.8 -- una mejora de casi un orden de magnitud. Los últimos 5 episodios individuales: -17 540.6, -1 905.5, -651.3, -1 007.3, -958.0 -- la mayoría ya estabilizados en un rango bajo, con episodios ocasionales peores (demanda más pesada según la semilla de ese episodio, dentro de lo esperable con demanda fresca en cada `reset`). Curva completa (interactiva) en `output/modelo_final/training_curve.html`. Ver `comparacion/README.md` para el resultado de este modelo comparado contra la política base.
+**Resultado de la corrida final (300 000 timesteps, 3333 episodios de 90 pasos, combo C1) -- subida desde 150 000, ver sección 4.2 para el porqué:** la recompensa media de los primeros 20 episodios fue -24 871.4 (idéntica a la corrida de 150k: misma semilla, mismo arranque); la de los últimos 20, -1 797.8 -- mejor que los -2 832.8 de la corrida de 150k, consistente con seguir entrenando. Los últimos 5 episodios individuales: -744.9, -1 887.7, -277.5, -4 533.3, -1 323.1 -- en el mismo rango bajo que antes, con la misma variabilidad esperada por la demanda fresca en cada `reset`. Curva completa (interactiva) en `output/modelo_final/training_curve.html`. Ver `comparacion/README.md` para el resultado de este modelo comparado contra la política base -- con más entrenamiento, el agente ya casi empata a la base en tiempo medio y espera media, y le saca ventaja clara en los percentiles altos (p95 de espera: 11 min menos que la base).
 
 ### 4.1 `n_steps=90` en vez de 512 -- se probó, empeoró en evaluación
 
@@ -116,7 +116,8 @@ Cada corrida guarda su propio `metadata_entrenamiento.json` (`output/modelo_fina
 
 | Corrida | `total_timesteps` | `n_steps` | Actualizaciones de PPO (`total_timesteps // n_steps`) | Tiempo medido | Pasos/seg |
 |---|---|---|---|---|---|
-| Final (`modelo_final/`) | 150 000 | 512 | **292** | 12.7 min (761 s) | 197 |
+| Final (`modelo_final/`), actual | 300 000 | 512 | **585** | 29.3 min (1760 s) | 170 |
+| Final (`modelo_final/`), versión anterior (150 000) | 150 000 | 512 | 292 | 12.7 min (761 s) | 197 |
 | Prueba `n_steps=90` (`modelo_final_n90/`) | 150 000 | 90 | **1666** | 13.8 min (828 s) | 181 |
 | Experimentos A/B/C1/C2 (`../output/experimentos/`, cerrados) | 30 000 c/u | 512 | **58** c/u | 2.1-2.3 min c/u | 217-236 |
 | `prueba_rewards/` A/B/C/D | 30 000 c/u | 512 | **58** c/u | 2.1-3.8 min c/u (varía con la carga de la máquina en el momento) | 132-237 |
@@ -125,9 +126,9 @@ Cada corrida guarda su propio `metadata_entrenamiento.json` (`output/modelo_fina
 - 30 000 timesteps → **58 actualizaciones**.
 - 150 000 timesteps → **292 actualizaciones** -- 5 veces más.
 
-El tiempo de reloj en sí es barato (2-4 min para 30 000 pasos, ~13 min para 150 000, en esta máquina) -- lo que de verdad falta en las corridas de 30 000 no es tiempo, son **actualizaciones**: 58 rondas de gradiente no alcanzan para que la red converja a una política competente, y por eso el % de gente atendida en TODOS los experimentos cortos (secuencia A/B/C1/C2, `prueba_rewards/`) queda muy por debajo de la política base (40-52% contra el 88% de la base, ver `prueba_rewards/README.md` sección 5) -- no es que la recompensa esté mal, es que 58 actualizaciones es, para este problema, un presupuesto de entrenamiento genuinamente corto. El agente final (`modelo_final/`, 292 actualizaciones) es el que sí iguala a la base.
+El tiempo de reloj en sí es barato (2-4 min para 30 000 pasos, ~13 min para 150 000, ~29 min para 300 000, en esta máquina) -- lo que de verdad falta en las corridas de 30 000 no es tiempo, son **actualizaciones**: 58 rondas de gradiente no alcanzan para que la red converja a una política competente, y por eso el % de gente atendida en TODOS los experimentos cortos (secuencia A/B/C1/C2, `prueba_rewards/`) queda muy por debajo de la política base (40-52% contra el 88% de la base, ver `prueba_rewards/README.md` sección 5) -- no es que la recompensa esté mal, es que 58 actualizaciones es, para este problema, un presupuesto de entrenamiento genuinamente corto. El agente final (`modelo_final/`, hoy 585 actualizaciones, antes 292) es el que sí iguala a la base -- y con las 585 de la corrida actual, además de igualarla en promedio, ya le saca ventaja clara en los percentiles altos (`comparacion/README.md` sección 2.1).
 
-**Aclaración sobre `n_steps=90`:** no es lo mismo que "58 actualizaciones" -- son dos números distintos que se pueden confundir. `n_steps` es cuántos pasos de simulación entran en CADA actualización (el tamaño del lote); las 58 actualizaciones de la tabla salen de `n_steps=512`. Si se usara `n_steps=90` con 30 000 timesteps, saldrían MÁS actualizaciones (30000/90≈333), no menos -- lotes más chicos, pero más frecuentes. De hecho ya se probó `n_steps=90` con el presupuesto largo (150 000 pasos, sección 4.1): da 1666 actualizaciones (5.7x más que las 292 de `n_steps=512`) y aun así generaliza PEOR -- más actualizaciones no es automáticamente mejor si cada una ve muy poca experiencia (ver la explicación completa en 4.1). La causa de que las corridas de 30 000 anden mal es la combinación de POCAS actualizaciones (58) Y presupuesto corto en general, no `n_steps` por sí solo.
+**Aclaración sobre `n_steps=90`:** no es lo mismo que "58 actualizaciones" -- son dos números distintos que se pueden confundir. `n_steps` es cuántos pasos de simulación entran en CADA actualización (el tamaño del lote); las 58 actualizaciones de la tabla salen de `n_steps=512`. Si se usara `n_steps=90` con 30 000 timesteps, saldrían MÁS actualizaciones (30000/90≈333), no menos -- lotes más chicos, pero más frecuentes. De hecho ya se probó `n_steps=90` con un presupuesto largo (150 000 pasos, sección 4.1, ANTES de subir el modelo final a 300 000 -- esa comparación puntual no se repitió al presupuesto nuevo): da 1666 actualizaciones (5.7x más que las 292 que tenía `n_steps=512` a ese mismo presupuesto) y aun así generaliza PEOR -- más actualizaciones no es automáticamente mejor si cada una ve muy poca experiencia (ver la explicación completa en 4.1). La causa de que las corridas de 30 000 anden mal es la combinación de POCAS actualizaciones (58) Y presupuesto corto en general, no `n_steps` por sí solo.
 
 ---
 

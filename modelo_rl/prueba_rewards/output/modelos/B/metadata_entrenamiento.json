@@ -1,0 +1,11 @@
+{
+  "tipo_recompensa": "B",
+  "total_timesteps": 150000,
+  "n_steps": 512,
+  "actualizaciones_ppo": 292,
+  "tiempo_entrenamiento_s": 895.6841716766357,
+  "tiempo_entrenamiento_min": 14.92806952794393,
+  "episodios": 1666,
+  "pasos_por_segundo": 167.46974518843427,
+  "semilla_entrenamiento": 123
+}

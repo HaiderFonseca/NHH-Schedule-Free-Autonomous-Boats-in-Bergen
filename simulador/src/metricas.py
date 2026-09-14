@@ -245,23 +245,48 @@ def decisiones_por_barco(env) -> pd.DataFrame:
     Cruza `log_eventos` (tipo `"decision"`) con el frame de `historial_estados`
     vigente en el momento de esa decisión. Como una decisión se loguea ANTES
     de que el paso avance el reloj (`env.py`, `step()`), el frame relevante es
-    el ÚLTIMO ya construido -- se reconstruye avanzando un puntero cada vez
-    que el `minuto` de la decisión cambia respecto a la anterior (sube en una
-    corrida normal, o baja al empezar el siguiente episodio de una corrida
-    combinada -- funciona igual en los dos casos, sin necesitar saber de
-    antemano dónde están los límites de episodio).
+    el ÚLTIMO ya construido.
+
+    **Reconstruir el frame correcto, sin asumir que cada decisión nueva es
+    exactamente un paso más tarde que la anterior.** Si en algún paso los DOS
+    barcos están ocupados (en tránsito) no se loguea ninguna decisión ese
+    paso -- avanzar el puntero de a 1 por cada "salto de minuto" (como hacía
+    una versión anterior de esta función) se queda corto exactamente esos
+    pasos saltados, y el error se ACUMULA para el resto de la corrida: el
+    frame que se termina leyendo es cada vez más viejo que el real, y puede
+    mostrar demanda que YA fue recogida antes de que la decisión ocurriera de
+    verdad -- eso es lo que hacía ver "esperó con demanda local" en casos que
+    en realidad no lo eran (confirmado con un caso concreto: una racha de
+    decisiones en el mismo nodo, minuto a minuto, mostraba demanda_local>0 en
+    cada una, algo que la regla de la política -- SIEMPRE recoge si hay
+    demanda local -- no permite si el frame es el correcto).
+
+    En vez de contar saltos, se recalcula el índice directo: dentro de una
+    misma corrida, el frame `k` corresponde a `minuto_inicio + k*paso_tiempo_min`
+    (frame 0 = el estado justo después de `reset()`) -- así que el minuto de
+    la decisión ubica el frame exacto sin importar cuántos pasos se hayan
+    saltado sin loguear nada. Para una corrida combinada (`combinar_corridas`,
+    varios episodios concatenados) se usa `limites_episodio` para saber dónde
+    empieza cada episodio y detectar el salto al siguiente (el reloj baja).
     """
     decisiones = [e for e in env.log_eventos if e["tipo"] == "decision"]
     frames = env.historial_estados
+    paso_tiempo_min = env.paso_tiempo_min
+    limites_episodio = getattr(env, "limites_episodio", [len(frames)])
 
     frame_de_decision: list[dict | None] = []
-    idx_frame = 0
+    episodio_actual = 0
+    offset_episodio = 0
     minuto_anterior = None
     for d in decisiones:
-        if minuto_anterior is not None and d["minuto"] != minuto_anterior:
-            idx_frame += 1
-        frame_de_decision.append(frames[idx_frame] if idx_frame < len(frames) else None)
+        if minuto_anterior is not None and d["minuto"] < minuto_anterior:
+            offset_episodio += limites_episodio[episodio_actual]
+            episodio_actual += 1
         minuto_anterior = d["minuto"]
+
+        minuto_inicio_episodio = frames[offset_episodio]["tiempo"]["minuto_del_dia"]
+        idx_frame = offset_episodio + round((d["minuto"] - minuto_inicio_episodio) / paso_tiempo_min)
+        frame_de_decision.append(frames[idx_frame] if 0 <= idx_frame < len(frames) else None)
 
     filas = []
     for barco_idx in range(env.num_barcos):
