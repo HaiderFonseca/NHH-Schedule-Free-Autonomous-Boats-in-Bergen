@@ -94,8 +94,8 @@ paso_tiempo_min: 2
 recompensa:
   tolerancia_incomodidad_min: 12       # ruta directa mas larga (Kleppestø-Bryggen navegable, ~11.5 min a 30 km/h)
   sobrante_normalizador_min: 18        # ancho de la curva -- constante fija para todos (antes: paciencia - tolerancia, por unidad)
-  penalizacion_maxima_persona: 1.0     # techo de (sobrante/normalizador)^2 por persona -- evita que alguien muy retrasado domine la recompensa
-  peso_movimiento: 0.1                 # penalizacion por barco navegando en el paso
+  penalizacion_maxima_persona: 100000     # techo de (sobrante/normalizador)^2 por persona -- evita que alguien muy retrasado domine la recompensa
+  peso_movimiento: 0.003                 # penalizacion por barco navegando en el paso
   # Premio positivo por cada persona entregada a destino este paso (ver recompensa.py,
   # calcular_recompensa, parametro entregas_este_paso). Default 0.0: sin esto, escalones
   # 1-3 y politica base no cambian de comportamiento -- el termino es aditivo. Los
