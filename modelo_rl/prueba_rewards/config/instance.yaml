@@ -57,18 +57,18 @@ recompensas:
     eta_potencial: 0.05
 
   D:
-    nombre: "con premio d eentrega y 0.001 movimiento (parametros de produccion)"
+    nombre: "sin tolerancia  (parametros de produccion)"
     descripcion: >
       calcular_recompensa() con los valores de PRODUCCION tal cual viven
       hoy en simulador/config/instance.yaml -> recompensa (tecno activo,
       peso_movimiento alto) -- nunca antes entrenados con RL. Sirve de
       contraste "mal escalado" sin inventar una quinta variante -- ver
       README, seccion D.
-    tolerancia_incomodidad_min: 12
-    sobrante_normalizador_min: 18
-    penalizacion_maxima_persona: 1000000.0
-    peso_movimiento: 0.001
-    premio_por_persona_entregada: 0.5
+    tolerancia_incomodidad_min: 0
+    sobrante_normalizador_min: 12
+    penalizacion_maxima_persona: 100000000000.0
+    peso_movimiento: 0
+    premio_por_persona_entregada: 0
 
 # ---------------------------------------------------------------------------
 # Entrenamiento -- mismos hiperparametros de PPO para las 4 (se leen de

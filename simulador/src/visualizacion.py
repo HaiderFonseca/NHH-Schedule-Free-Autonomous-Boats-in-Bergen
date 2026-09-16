@@ -452,7 +452,7 @@ def inspeccionar(minuto: float, env, gdf_nodos, gdf_rutas, matriz_tiempos, fondo
     return fig
 
 
-def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int = 4, fondo=None):
+def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int = 3, fondo=None):
     """Reproductor tipo video de la corrida completa: botón de
     reproducir/pausar, barra de tiempo para saltar a cualquier paso (hacia
     adelante o atrás), mapa animado, y un panel de texto con el estado
@@ -468,9 +468,24 @@ def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int 
     corriendo, así que los botones no van a responder ahí ni yo te lo
     puedo mostrar funcionando. Para inspeccionar un paso puntual sin
     depender de un kernel vivo, usar `inspeccionar(minuto, ...)`.
+
+    **Si igual se queda "cargando" mucho tiempo con un kernel vivo:** lo más
+    probable es haber arrastrado la barra de tiempo con el mouse en vez de
+    soltarla en el paso deseado -- de por sí, `IntSlider` dispara una
+    actualización por CADA posición intermedia mientras se arrastra (no solo
+    al soltar), y cada una vuelve a dibujar el mapa; arrastrar rápido de
+    principio a fin de la corrida puede encolar decenas de redibujados que
+    tardan minutos en drenarse, aunque el cómputo de cada uno individual sea
+    rápido (~35 ms medido, ver `dibujar_frame`). Se corrigió acá
+    (`continuous_update=False`): la barra solo actualiza al SOLTAR el mouse,
+    no en cada pixel de por medio -- para ir paso a paso, usar los botones
+    "◀"/"▶" o soltar la barra directamente donde se quiere mirar, no
+    arrastrarla despacio.
     """
+    import io
+
     import ipywidgets as widgets
-    from IPython.display import clear_output, display
+    from IPython.display import Image, clear_output, display
 
     historial = env.historial_estados
     n_pasos = len(historial)
@@ -483,7 +498,11 @@ def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int 
     out_mapa = widgets.Output()
     out_texto = widgets.Output(layout=widgets.Layout(width="380px", border="1px solid #ccc", padding="8px"))
 
-    slider = widgets.IntSlider(min=0, max=n_pasos - 1, step=1, description="Paso", continuous_update=True)
+    # `continuous_update=False`: ver nota de la funcion. `play` sigue
+    # funcionando igual -- avanza el valor de `slider` un tick a la vez via
+    # `jslink` (no es un arrastre de mouse), asi que no se ve afectado por
+    # esta bandera.
+    slider = widgets.IntSlider(min=0, max=n_pasos - 1, step=1, description="Paso", continuous_update=False)
     play = widgets.Play(min=0, max=n_pasos - 1, step=1, interval=int(1000 / fps), description="Reproducir")
     widgets.jslink((play, "value"), (slider, "value"))
 
@@ -493,10 +512,17 @@ def reproductor_interactivo(env, gdf_nodos, gdf_rutas, matriz_tiempos, fps: int 
     def _actualizar(change):
         i = slider.value
         frame = historial[i]
+        dibujar_frame(ax, frame, gdf_nodos, gdf_rutas, matriz_tiempos, env.capacidad_barco, fondo=fondo)
         with out_mapa:
             clear_output(wait=True)
-            dibujar_frame(ax, frame, gdf_nodos, gdf_rutas, matriz_tiempos, env.capacidad_barco, fondo=fondo)
-            display(fig)
+            # Se renderiza a PNG explicito (`savefig` + `Image`) en vez de
+            # `display(fig)` directo -- un paso mas predecible y mas liviano
+            # que el protocolo de "rich display" por defecto de matplotlib,
+            # que en notebooks remotos/VS Code puede acumular overhead al
+            # repetirse decenas de veces seguidas durante la reproduccion.
+            buf = io.BytesIO()
+            fig.savefig(buf, format="png", dpi=90, bbox_inches="tight")
+            display(Image(data=buf.getvalue()))
         with out_texto:
             clear_output(wait=True)
             print(_texto_estado(env, frame))

@@ -87,35 +87,36 @@ Con el fix, casi todos los casos "sin explicación" desaparecen (verificado caso
 
 ---
 
-## 3. Detalle completo, semilla 1001
+## 3. Detalle completo, dos semillas (1001 y 1004)
 
-Mismo paquete de 5 métricas/gráficas que produce `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (`simulador/README.md` sección 5), corrido para las dos políticas sobre la semilla 1001 -- para ver el comportamiento CONCRETO de un caso, no solo el agregado.
+Mismo paquete de 5 métricas/gráficas que produce `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (`simulador/README.md` sección 5), corrido para las dos políticas sobre DOS semillas concretas -- no solo una -- elegidas porque son casos opuestos: 1001 es una de las semillas donde gana la base, 1004 es donde el agente gana por más margen (sección 2). Todo esto vive en una sola función (`mostrar_detalle_semilla`, `05_comparacion_agente_vs_base.ipynb`), llamada una vez por semilla, para no duplicar treinta celdas por cada una.
 
-| | Agente | Base |
-|---|---|---|
-| Espera media | 11.8 min | 9.4 min |
-| % atendidas, esta semilla (referencia) | 85.2% (115/135) | 91.9% (124/135) |
-| Conservación | OK | OK |
+| | Semilla 1001 -- Agente | Semilla 1001 -- Base | Semilla 1004 -- Agente | Semilla 1004 -- Base |
+|---|---|---|---|---|
+| Espera media | 11.8 min | 9.4 min | **18.2 min** | 27.7 min |
+| % atendidas (referencia) | 85.2% (115/135) | 91.9% (124/135) | **91.7%** (198/216) | 84.3% (182/216) |
+| Conservación | OK | OK | OK | OK |
 
-**En esta semilla concreta, la base espera un poco menos que el agente** (9.4 vs. 11.8 min) -- lo opuesto de lo que el reward agregado de la sección 2 podría sugerir a primera vista, aunque la brecha ya es mucho más chica que con el modelo anterior (antes era 9.4 vs. 17.4 min). Es la razón por la que este detalle importa: la semilla 1001 es una de las 4 (de 5) donde el reward de la base le gana al agente -- el agregado favorece al agente porque el reward castiga fuerte el peor caso entre las 5 semillas, no porque el agente sirva sistemáticamente mejor semilla por semilla. Las dos lecturas son correctas a la vez: el agente es mejor "en el peor caso agregado", la base puede ser mejor en un caso típico concreto como este.
+**Las dos semillas cuentan historias opuestas, a propósito.** En 1001 la base espera menos (9.4 vs. 11.8 min) -- uno de los 4 casos (de 5) donde el reward agregado le da la razón a la base (sección 2). En 1004 pasa lo contrario, y por mucho: el agente espera 18.2 min contra 27.7 de la base, y atiende más gente (91.7% vs 84.3%) -- es la semilla donde la base tiene su peor corrida de las diez (reward -4091, sección 2), y acá se ve por qué: a minuto 460 la cola `K->B` de la base tiene 33 personas esperando hace **37.9 minutos**, contra un backlog más repartido del lado del agente en el mismo instante (`output/percentiles_semilla1004.csv`, `output/percentiles_semilla1001.csv`).
 
-**Percentiles, esta misma semilla** (`output/percentiles_semilla1001.csv`):
+**Percentiles, cada semilla por separado:**
 
-| Métrica | Percentil | Agente | Base |
-|---|---|---|---|
-| Espera | p50 | 11.3 min | 8.5 min |
-| Espera | p90 | 26.4 min | 20.3 min |
-| Espera | p95 / máx | 28.3 min | 25.3 min |
-| Sistema | p50 | 20.1 min | 16.5 min |
-| Sistema | p90 | 36.3 min | 28.3 min |
-| Sistema | p95 | 36.3 min | 31.3 min |
-| Sistema | máx | 38.4 min | 31.3 min |
+| Métrica | Percentil | 1001 -- Agente | 1001 -- Base | 1004 -- Agente | 1004 -- Base |
+|---|---|---|---|---|---|
+| Espera | p50 | 11.3 min | 8.5 min | 14.3 min | 23.5 min |
+| Espera | p90 | 26.4 min | 20.3 min | 33.7 min | 52.8 min |
+| Espera | p95 | 28.3 min | 25.3 min | **37.3 min** | **59.2 min** |
+| Sistema | p95 | 36.3 min | 31.3 min | **49.3 min** | **69.2 min** |
+| Sistema | máx | 38.4 min | 31.3 min | 66.8 min | 69.7 min |
 
-Acá SÍ gana la base en toda la tabla, en esta semilla puntual -- consistente con que 1001 es una de las semillas donde el reward le da la razón a la base (sección 2). Es la contraparte necesaria de la sección 2.1: el agregado de 5 semillas favorece al agente en la cola de la distribución, pero en una corrida concreta cualquiera de las dos puede ganar -- por eso se muestran las dos vistas, no solo el agregado.
+En 1004, el agente le saca a la base casi **22 minutos en p95 de tiempo en sistema** (49.3 vs. 69.2) -- la misma ventaja de cola de distribución que se ve en el agregado (sección 2.1), pero en una corrida concreta, no como promedio de cinco.
 
-**Gráficas** (`output/*_semilla1001.html`, agente y base por separado): `wait_profile_{agente,base}_semilla1001.html` (personas esperando en el tiempo), `fleet_occupancy_{agente,base}_semilla1001.html` (ocupación de cada barco), `pct_served_heatmap_comparado_semilla1001.html` (heatmap lado a lado, solo esta semilla), `reward_breakdown_{agente,base}_semilla1001.html` (desglose de recompensa en el tiempo), `backlog_by_pair_{agente,base}_semilla1001.html` (backlog al final).
+**Gráficas** (`output/*_semilla{1001,1004}.html`, agente y base por separado): `wait_profile_*`, `fleet_occupancy_*`, `pct_served_heatmap_comparado_*`, `reward_breakdown_*`, `backlog_by_pair_*` -- mismos nombres de archivo que antes, con el número de semilla al final.
 
-**Visualización paso a paso:** `animacion_{agente,base}_semilla1001.gif` (los 90 pasos completos), inspector en minutos concretos, y el reproductor interactivo completo -- mismo patrón que `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (botones de paso a paso, **solo funcionan con un kernel de Jupyter vivo**).
+**Visualización paso a paso:** `animacion_{agente,base}_semilla{1001,1004}.gif` (los pasos completos de cada corrida), inspector en minutos concretos, y el reproductor interactivo completo.
+
+- **Inspector -- bug corregido.** Los minutos que se piden son RELATIVOS al inicio de la corrida (`hora_ini_min + 40`, `hora_ini_min + 100` -- 400 y 460 para `escalon_1`), no minutos absolutos del día. Antes se pedían `inspeccionar(40, ...)` / `inspeccionar(100, ...)` a secas -- como `escalon_1` arranca en el minuto 360 (06:00), los dos caían muy antes de que la corrida empezara, y el inspector siempre mostraba el mismo primer frame (minuto 360) sin importar cuál de los dos se pidiera -- parecía que "no mostraba nada". Con los minutos corregidos, cada llamada muestra un instante real y distinto de la corrida (ver la salida del notebook, cada una con barcos, colas y recompensa reales, distintas entre sí).
+- **Reproductor -- por qué se quedaba cargando mucho tiempo.** El cómputo de cada frame es rápido (~35 ms medido), así que no era la causa. La causa más probable: `IntSlider` (la barra de tiempo) dispara una actualización por CADA posición intermedia mientras se arrastra con el mouse, no solo al soltar -- arrastrar rápido de punta a punta de la corrida puede encolar decenas de redibujados, y aunque cada uno sea rápido, la cola tarda minutos en drenarse. Se corrigió (`simulador/src/visualizacion.py`, `reproductor_interactivo`): la barra ahora solo actualiza al SOLTAR el mouse (`continuous_update=False`) -- el botón `▶` de reproducción automática no se ve afectado (avanza un paso a la vez con su propio temporizador, no por arrastre). Además, el mapa ahora se renderiza a PNG explícito en vez de con el protocolo de "rich display" por defecto de matplotlib, más liviano y predecible en notebooks remotos. **Solo funciona con un kernel de Jupyter vivo** -- un notebook ya ejecutado y guardado (como los que produce `nbconvert`, que es como se corrieron los de este proyecto) no tiene kernel corriendo, así que ahí los botones no van a responder.
 
 ---
 
