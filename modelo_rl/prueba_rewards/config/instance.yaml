@@ -25,10 +25,15 @@ recompensas:
     nombre: "Objetivo puro (identidad de Little)"
     descripcion: >
       Lineal en tiempo activo: penaliza cada persona activa por tamaño x
-      duración del paso, sin tolerancia, sin técho, sin cuadrado. Es el
-      objetivo real (minimizar tiempo total en sistema) repartido paso a
-      paso, sin pasar por ninguna curva de castigo.
-    peso_movimiento: 0.006   # lambda ~= 0.003 * paso_tiempo_min (2 min) -- ver README
+      duración del paso, sin tolerancia, sin técho, sin cuadrado, SIN
+      MOVIMIENTO. Es el objetivo real (minimizar tiempo total en sistema)
+      repartido paso a paso, sin pasar por ninguna curva de castigo ni
+      ningún otro término.
+      Corregido 2026-09-17: hasta esa fecha esta config traía
+      `peso_movimiento: 0.006`, usado por calcular_recompensa_A para sumar
+      un término de movimiento que NUNCA estuvo en la fórmula documentada
+      -- un desajuste real entre código y documentación (no una variante
+      intencional). Se quitó el parámetro y el término; A se reentrenó.
 
   B:
     nombre: "Ponderada convexa con tolerancia, sin techo"
@@ -69,6 +74,70 @@ recompensas:
     penalizacion_maxima_persona: 100000000000.0
     peso_movimiento: 0
     premio_por_persona_entregada: 0
+
+  # ---------------------------------------------------------------------
+  # E, F, G, H -- agregadas DESPUES de A/B/C/D, sin tocarlas. Ver
+  # README.md seccion 2 para la teoria y las formulas completas de cada
+  # una. Ninguna usa tolerancia/normalizador/techo (a diferencia de
+  # B/C/D) -- son formulaciones "puras" del tiempo en sistema, a proposito.
+  # ---------------------------------------------------------------------
+  E:
+    nombre: "Tiempo lineal puro (sin normalizar, sin movimiento)"
+    descripcion: >
+      R = -sum(T_i), T_i = tiempo TOTAL en sistema de cada persona activa
+      en este instante (no un costo fijo por paso, como A) -- sin
+      tolerancia, sin normalizador, sin techo, sin termino de movimiento.
+      calcular_recompensa_E en recompensas_alternativas.py.
+
+  F:
+    nombre: "Tiempo cuadratico puro (sin normalizar, sin movimiento)"
+    descripcion: >
+      R = -sum(T_i^2), sin dividir por ningun normalizador (a diferencia
+      de D, que es (T_i/12)^2) -- version cruda, para ver si normalizar
+      importa una vez VecNormalize ya esta activo. Sin movimiento.
+      calcular_recompensa_F en recompensas_alternativas.py.
+
+  G:
+    nombre: "Tiempo incremental (delta T por paso)"
+    descripcion: >
+      R_t = -sum(deltaT_i), el INCREMENTO de tiempo en sistema ocurrido
+      durante este paso de 2 min -- no el tiempo acumulado total (como E).
+      Maneja correctamente llegadas a mitad de paso y entregas en el
+      mismo paso, sin doble conteo -- ver README seccion 2.G para la
+      derivacion. calcular_recompensa_G en recompensas_alternativas.py.
+
+  H:
+    nombre: "Multiobjetivo 95% tiempo cuadratico + 5% movimiento (SIN normalizar)"
+    descripcion: >
+      R = -[peso_tiempo * sum(T_i^2) + peso_movimiento * barcos_en_movimiento],
+      combinacion ponderada explicita (no los pesos internos de
+      calcular_recompensa) -- mismo J_T sin normalizar que F, mismo costo
+      de movimiento (conteo de barcos navegando) que ya usan A/B/C/D. Ver
+      README seccion 2.H para el problema de escala entre los dos
+      terminos con estos pesos -- documentado, no corregido a mano. Esta
+      version se conserva TAL CUAL (no se reentrena, no se borra) como el
+      registro original del problema de escala -- ver H_normalizada abajo
+      para la version corregida, guardada aparte.
+    peso_tiempo: 0.95
+    peso_movimiento: 0.05
+
+  H_normalizada:
+    nombre: "Multiobjetivo 95% tiempo cuadratico + 5% movimiento (normalizado)"
+    descripcion: >
+      Igual que H, pero J_T y J_M se dividen por una referencia FIJA antes
+      de aplicar los pesos -- R = -[peso_tiempo*(J_T/j_tiempo_ref) +
+      peso_movimiento*(J_M/j_movimiento_ref)]. La referencia se calculo UNA
+      sola vez corriendo la politica BASE (nunca una politica RL, nunca H
+      misma) sobre las 5 semillas de evaluacion estandar (1001-1005), en
+      escalon_1 -- la MEDIANA por paso de J_T/J_M sobre esos 450 pasos (no
+      el promedio: J_T varia demasiado entre semillas, una sola domina el
+      promedio). Ver output/comparacion/referencia_H_normalizada.json para
+      el detalle completo del calculo. calcular_recompensa_H_normalizada
+      en recompensas_alternativas.py.
+    peso_tiempo: 0.95
+    peso_movimiento: 0.05
+    j_tiempo_ref: 3473.192450393365
+    j_movimiento_ref: 2.0
 
 # ---------------------------------------------------------------------------
 # Entrenamiento -- mismos hiperparametros de PPO para las 4 (se leen de

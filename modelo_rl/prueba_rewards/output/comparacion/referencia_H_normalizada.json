@@ -1,0 +1,48 @@
+{
+  "descripcion": "Referencia FIJA para normalizar H (recompensa 'H_normalizada') -- calculada UNA sola vez con la politica base (nunca con una politica RL), escalon_1, 5 semillas de evaluacion estandar (1001-1005), mismas condiciones (demanda/flota/capacidad/horizonte) que el entrenamiento de H_normalizada. Metodo: mediana por paso de J_T/J_M, pooled sobre los 450 pasos (5 semillas x 90 pasos) -- se usa mediana y no promedio porque J_T tiene varianza muy alta entre semillas (una semilla atipica domina el promedio).",
+  "j_tiempo_ref": 3473.192450000003,
+  "j_movimiento_ref": 2.0,
+  "j_tiempo_promedio_no_usado": 9930.33915888889,
+  "j_movimiento_promedio_no_usado": 1.36,
+  "semillas_usadas": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "total_pasos": 450,
+  "por_semilla": [
+    {
+      "semilla": 1001,
+      "n_pasos": 90,
+      "jt_promedio": 2550.744487777776,
+      "jm_promedio": 1.0666666666666667
+    },
+    {
+      "semilla": 1002,
+      "n_pasos": 90,
+      "jt_promedio": 7243.497687777774,
+      "jm_promedio": 1.3333333333333333
+    },
+    {
+      "semilla": 1003,
+      "n_pasos": 90,
+      "jt_promedio": 5486.492295555556,
+      "jm_promedio": 1.5555555555555556
+    },
+    {
+      "semilla": 1004,
+      "n_pasos": 90,
+      "jt_promedio": 31487.416363333337,
+      "jm_promedio": 1.4555555555555555
+    },
+    {
+      "semilla": 1005,
+      "n_pasos": 90,
+      "jt_promedio": 2883.544960000001,
+      "jm_promedio": 1.3888888888888888
+    }
+  ],
+  "nota_jm": "j_movimiento_ref (mediana) coincide con el maximo teorico posible por paso (num_barcos=2 en escalon_1) -- dos justificaciones independientes llegan al mismo numero."
+}

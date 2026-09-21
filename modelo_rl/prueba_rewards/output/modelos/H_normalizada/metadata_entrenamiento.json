@@ -1,0 +1,11 @@
+{
+  "tipo_recompensa": "H_normalizada",
+  "total_timesteps": 150000,
+  "n_steps": 512,
+  "actualizaciones_ppo": 292,
+  "tiempo_entrenamiento_s": 630.5671281814575,
+  "tiempo_entrenamiento_min": 10.509452136357625,
+  "episodios": 1666,
+  "pasos_por_segundo": 237.88109670828683,
+  "semilla_entrenamiento": 123
+}

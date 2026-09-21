@@ -131,10 +131,10 @@ agente:
     timesteps_exploracion: 30000    # ~7 min por experimento a ~73 pasos/seg en esta maquina
     A:
       descripcion: "Solo penalizacion de tiempo, CON techo por persona (el default de produccion)"
-      recompensa_overrides: {peso_movimiento: 0.0, premio_por_persona_entregada: 0.0}
+      recompensa_overrides: {tolerancia_incomodidad_min: 0,sobrante_normalizador_min: 1, peso_movimiento: 0.0, premio_por_persona_entregada: 0.0, penalizacion_maxima_persona: 1000000.0}
     B:
       descripcion: "Solo penalizacion de tiempo, SIN techo por persona -- hipotesis: mejor que A, porque sin techo el agente siente mas la urgencia de atender primero a quien lleva mas tiempo esperando (35 min y 50 min ya no penalizan igual)"
-      recompensa_overrides: {peso_movimiento: 0.0, premio_por_persona_entregada: 0.0, penalizacion_maxima_persona: 1000000.0}
+      recompensa_overrides: {tolerancia_incomodidad_min: 12,sobrante_normalizador_min: 1, peso_movimiento: 0.0, premio_por_persona_entregada: 0.0, penalizacion_maxima_persona: 1000000.0}
     C1:
       descripcion: "Sobre el ganador de A/B, penalizacion de movimiento pequena (0.003) -- una persona con ~13 min de espera penaliza (1/18)^2 = 0.003 con el normalizador de 18, asi que 0.003 es apenas del mismo orden: el punto de partida mas chico razonable a probar"
       recompensa_overrides: {peso_movimiento: 0.003, premio_por_persona_entregada: 0.0}   # penalizacion_maxima_persona: se copia la del ganador de A/B, no fija aqui
@@ -142,26 +142,35 @@ agente:
       descripcion: "Igual que C1, pero peso_movimiento=0.001 -- mas chico todavia, para ver si a esta escala el agente deja de moverse/explorar por costarle casi nada, o si sigue moviendose igual de bien que C1"
       recompensa_overrides: {peso_movimiento: 0.001, premio_por_persona_entregada: 0.0}
   entrenamiento:
-    # Corrida LARGA final, UNA sola vez, con el combo ganador de agente.experimentos.
-    # recompensa_overrides se actualiza a mano con el resultado de la secuencia de
-    # experimentos antes de correr esta celda -- ver
-    # modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb.
+    # Corrida LARGA final, UNA sola vez. HASTA 2026-09-17 esto era el combo
+    # ganador de agente.experimentos (C1, ver 02_secuencia_experimentos_reward.ipynb)
+    # a 300000 timesteps -- ver `modelo_rl/README.md` para esos resultados
+    # historicos, todavia documentados y no borrados. A partir de acá, la
+    # recompensa "final" pasa a ser D (tiempo cuadratico puro, sin tolerancia
+    # -- ver `modelo_rl/prueba_rewards/README.md` seccion 2.D), que en la
+    # comparacion de `prueba_rewards/` (8 formulaciones, sobre las mismas 5
+    # semillas de evaluacion) dio mejor tiempo medio Y maximo en sistema que
+    # el combo C1 -- ver `modelo_rl/prueba_rewards/README.md` seccion 5.
+    # `total_timesteps` se probo brevemente en 150000 (mismo presupuesto que
+    # `prueba_rewards/`) y se volvio a 300000 -- el presupuesto grande de
+    # siempre para EL modelo final, la reduccion fue un error de instruccion,
+    # corregido el mismo dia.
     escalon_base: "escalon_1"      # de donde saca horas/porcentaje_poblacion_dia/num_barcos
     semilla_entrenamiento: 123     # semilla RAIZ de la secuencia de demandas de entrenamiento (reproducible)
-    total_timesteps: 300000        # ~1666 episodios de 90 pasos, 292 actualizaciones de PPO (150000/512) -- medido: 12.7 min
-                                    # (761s, ~197 pasos/seg), ver modelo_rl/output/modelo_final/metadata_entrenamiento.json
-                                    # y modelo_rl/README.md seccion 4.2
+    total_timesteps: 300000        # presupuesto grande para EL modelo final (no 150000 -- eso solo lo usan
+                                    # prueba_rewards/ y el experimento n_steps=90 de abajo, aparte)
     # Overrides de recompensa SOLO para entrenar/evaluar el agente -- NO tocan la seccion
     # `recompensa:` de arriba (esa sigue gobernando escalones 1-3 y la politica base tal
-    # cual, sin cambios). Combo ganador de la secuencia de experimentos (C1, ver
-    # modelo_rl/notebooks/02_secuencia_experimentos_reward.ipynb, narrativa final):
-    # sin techo por persona (gana B sobre A) + penalizacion de movimiento chica 0.003
-    # (gana C1 sobre C2), practicamente empatado con B en % atendidas pero con
-    # disciplina de movimiento.
+    # cual, sin cambios). Config D completa (los 5 campos, no un override parcial sobre
+    # `recompensa:` de arriba -- D es una formulacion propia, no una variacion de la de
+    # produccion) -- misma fuente que `modelo_rl/prueba_rewards/config/instance.yaml`
+    # -> recompensas.D, copiada a mano acá porque este archivo no puede importar el otro.
     recompensa_overrides:
-      peso_movimiento: 0.003
-      penalizacion_maxima_persona: 1000000.0
-      premio_por_persona_entregada: 0.0
+      tolerancia_incomodidad_min: 0
+      sobrante_normalizador_min: 12
+      penalizacion_maxima_persona: 100000000000.0
+      peso_movimiento: 0
+      premio_por_persona_entregada: 0
   entrenamiento_n90:
     # Misma corrida larga de arriba (mismo combo de recompensa C1), pero con
     # n_steps=90 en vez de 512 -- prueba aparte sobre el largo del rollout, no

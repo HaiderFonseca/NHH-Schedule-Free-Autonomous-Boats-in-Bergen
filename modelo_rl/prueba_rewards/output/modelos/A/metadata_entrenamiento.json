@@ -3,9 +3,9 @@
   "total_timesteps": 150000,
   "n_steps": 512,
   "actualizaciones_ppo": 292,
-  "tiempo_entrenamiento_s": 880.3401284217834,
-  "tiempo_entrenamiento_min": 14.672335473696391,
+  "tiempo_entrenamiento_s": 645.2315897941589,
+  "tiempo_entrenamiento_min": 10.753859829902648,
   "episodios": 1666,
-  "pasos_por_segundo": 170.38868859574794,
+  "pasos_por_segundo": 232.47466858814653,
   "semilla_entrenamiento": 123
 }
