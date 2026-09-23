@@ -72,6 +72,22 @@ escalones:
     porcentaje_poblacion_dia: 0.05
     num_barcos: 1
     nodos: ["bryggen", "kleppesto"]
+  escalon_dia_10pct:
+    # Dia completo a la escala OFICIAL de demanda (demand/config/instance.yaml,
+    # porcentaje_poblacion_dia=0.10 -- el mismo valor, repetido aqui solo para
+    # trazabilidad, no una calibracion nueva). Fase heuristica fuerte (H0 vs H1,
+    # politica_base/src/politica_h1.py) -- ver politica_base/notebooks/04_fleet_sweep_h0_h1.ipynb.
+    # ~7994 pasajeros/dia esperados (79943 hab. de las 4 zonas x 0.10), numero
+    # exacto reportado por semilla al generar (Poisson + Binomial, no determinista).
+    descripcion: "Dia completo, demanda oficial (10% poblacion) -- estudio de flota H0 vs H1"
+    horas: [6, 24]
+    porcentaje_poblacion_dia: 0.10
+    # Sin num_barcos fijo: el sweep de flota (subconjunto de
+    # bergen-boats/config/instance.yaml -> flota.num_barcos_barrido) lo pasa
+    # explicito por corrida, no se lee de aqui. Extendido a 10/12 (ademas de
+    # 4/6/8) para ver si los rendimientos decrecientes de la curva de
+    # servicio siguen bajando o ya se aplanan del todo.
+    num_barcos_barrido: [4, 6, 8, 10, 12]
 
 escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
 

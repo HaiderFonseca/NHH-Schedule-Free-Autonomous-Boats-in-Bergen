@@ -72,8 +72,16 @@ calibracion:
 # ---------------------------------------------------------------------------
 flota:
   num_barcos: 5
-  num_barcos_barrido: [3, 4, 5, 6, 7, 8]
-  capacidad_pasajeros: 20
+  num_barcos_barrido: [3, 4, 5, 6, 7, 8, 10, 12]
+  # Subido de 20 a 30 (fase heurística fuerte / H1, ver politica_base/src/politica_h1.py)
+  # -- sigue siendo un PARAMETRO (pasado a SimuladorBarcosBergen(capacidad_barco=...),
+  # nunca hardcodeado en el motor), no una constante fija en el código. OJO: los
+  # modelos ya entrenados en modelo_rl/output/ y las comparaciones en comparacion/
+  # se entrenaron/corrieron contra capacidad=20 -- si se vuelven a ejecutar esos
+  # notebooks despues de este cambio, el entorno usara 30 y los resultados ya no
+  # seran comparables 1:1 con lo reportado antes, a menos que ese notebook pase
+  # su propio capacidad_barco=20 explicito.
+  capacidad_pasajeros: 30
   nodo_inicial: bryggen
   tiempo_atraque_min: 1.5
 
