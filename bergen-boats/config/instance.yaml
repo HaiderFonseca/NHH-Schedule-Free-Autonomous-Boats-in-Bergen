@@ -1,4 +1,4 @@
-# Instancia base — Sistema de barcos a demanda en Bergen (tesis NHH)
+# Instancia base - Sistema de barcos a demanda en Bergen (tesis NHH)
 #
 # Única fuente de verdad para los parámetros de la instancia de juguete (v1).
 # Todo lo que cambie con el tiempo (nodos, velocidad, flota, demanda, garantía)
@@ -72,7 +72,7 @@ calibracion:
 # ---------------------------------------------------------------------------
 flota:
   num_barcos: 5
-  num_barcos_barrido: [3, 4, 5, 6, 7, 8, 10, 12]
+  num_barcos_barrido: [3, 4, 5, 6, 7, 8, 10, 12, 14, 16]
   # Subido de 20 a 30 (fase heurística fuerte / H1, ver politica_base/src/politica_h1.py)
   # -- sigue siendo un PARAMETRO (pasado a SimuladorBarcosBergen(capacidad_barco=...),
   # nunca hardcodeado en el motor), no una constante fija en el código. OJO: los

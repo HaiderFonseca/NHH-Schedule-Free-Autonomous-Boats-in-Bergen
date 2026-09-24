@@ -56,7 +56,7 @@ Todo el diseño se reduce a elegir bien $c_t$.
 
 ---
 
-## 3. RECOMPENSA A — la que sigue el objetivo (derivada de Little)
+## 3. RECOMPENSA A - la que sigue el objetivo (derivada de Little)
 
 ### 3.1 La identidad (demostración)
 
@@ -109,11 +109,11 @@ $$
 c_t^{A}=(1+1+1)\cdot 2 + 0.5\cdot 1 = 6.5,\qquad r_t^{A}=-6.5.
 $$
 
-Si esos 3 esperan durante 5 pasos (10 min) antes de ser recogidos, acumulan $3\cdot 10=30$ de penalización de tiempo — que es justo la suma de sus tiempos en el sistema. Nada arbitrario.
+Si esos 3 esperan durante 5 pasos (10 min) antes de ser recogidos, acumulan $3\cdot 10=30$ de penalización de tiempo - que es justo la suma de sus tiempos en el sistema. Nada arbitrario.
 
 ---
 
-## 4. RECOMPENSA B — suma ponderada bien escalada (estándar de despacho)
+## 4. RECOMPENSA B - suma ponderada bien escalada (estándar de despacho)
 
 La recompensa A es pura pero "plana" (cada minuto de espera pesa igual). La práctica en despacho de flotas usa una **suma ponderada de objetivos** [6] (AdaPool) y a veo penaliza de forma **no lineal** para dar urgencia. Formalizamos y, sobre todo, **escalamos con cuidado** [7] (anti-hacking).
 
@@ -156,7 +156,7 @@ $$
 \boxed{\;\beta_{\text{mov}} \lesssim 0.003\;}\quad(\text{probar } 0.001 \text{ y } 0.003),\qquad \beta_{\text{time}}=1.
 $$
 
-**Contraste con el error original:** el peso de movimiento estaba en $\beta_{\text{mov}}=0.1$. Un viaje Kleppestø–Bryggen (11.5 min ≈ 6 pasos de 2 min) costaba $6\times0.1=0.6$ — casi lo mismo que una persona al máximo de molestia (1.0). Eso hacía que **mover un barco costara como abandonar a una persona**, y el agente aprendió a quedarse quieto (la política degenerada observada). Con $\beta_{\text{mov}}=0.003$, ese viaje cuesta $\approx0.018$: un empujón suave, no una barrera.
+**Contraste con el error original:** el peso de movimiento estaba en $\beta_{\text{mov}}=0.1$. Un viaje Kleppestø–Bryggen (11.5 min ≈ 6 pasos de 2 min) costaba $6\times0.1=0.6$ - casi lo mismo que una persona al máximo de molestia (1.0). Eso hacía que **mover un barco costara como abandonar a una persona**, y el agente aprendió a quedarse quieto (la política degenerada observada). Con $\beta_{\text{mov}}=0.003$, ese viaje cuesta $\approx0.018$: un empujón suave, no una barrera.
 
 ### 4.3 Sobre el techo
 
@@ -164,7 +164,7 @@ El techo por persona $\min(1,\,g(\tau))$ hace que $\tau=30$ y $\tau=50$ penalice
 
 ---
 
-## 5. RECOMPENSA C — shaping potencial que preserva el óptimo (Ng, Harada & Russell)
+## 5. RECOMPENSA C - shaping potencial que preserva el óptimo (Ng, Harada & Russell)
 
 ### 5.1 La teoría
 
@@ -197,7 +197,7 @@ $$
 F=-\big(12-20\big)=+8.
 $$
 
-Recibe una **señal positiva de +8** por reducir la cola en 8 — exactamente el "premio por entrega" que ya intuíamos, pero ahora **con la garantía teórica de que no cambia el óptimo**, solo acelera el aprendizaje. Si en cambio la cola crece (llega gente y no la atiende, $N$ sube), $F$ es negativo. Es una guía densa y correcta.
+Recibe una **señal positiva de +8** por reducir la cola en 8 - exactamente el "premio por entrega" que ya intuíamos, pero ahora **con la garantía teórica de que no cambia el óptimo**, solo acelera el aprendizaje. Si en cambio la cola crece (llega gente y no la atiende, $N$ sube), $F$ es negativo. Es una guía densa y correcta.
 
 ### 5.3 La recompensa C
 
@@ -229,10 +229,10 @@ con $\tau$ = tiempo en sistema, tolerancia $\theta=12$, normalizador $\kappa=18$
 
 | | Fórmula | Qué prueba | Escala clave |
 |---|---|---|---|
-| **A** — objetivo puro | ec. (5): $-\sum_i s_i\Delta t-\lambda\sum m$ | la derivada exacta del objetivo (Little) | $\lambda\lesssim 0.003\cdot\Delta t$ |
-| **B** — ponderada convexa | ec. (6)–(7) | tolerancia + urgencia cuadrática, sin techo | $\beta_{\text{mov}}\lesssim0.003$ |
-| **C** — A + shaping potencial | ec. (9) | aprender más rápido sin cambiar el óptimo | $\eta$ moderado |
-| **actual** | ec. (10) | línea de partida (con techo y $\beta_{\text{mov}}=0.1$) | — |
+| **A** - objetivo puro | ec. (5): $-\sum_i s_i\Delta t-\lambda\sum m$ | la derivada exacta del objetivo (Little) | $\lambda\lesssim 0.003\cdot\Delta t$ |
+| **B** - ponderada convexa | ec. (6)–(7) | tolerancia + urgencia cuadrática, sin techo | $\beta_{\text{mov}}\lesssim0.003$ |
+| **C** - A + shaping potencial | ec. (9) | aprender más rápido sin cambiar el óptimo | $\eta$ moderado |
+| **actual** | ec. (10) | línea de partida (con techo y $\beta_{\text{mov}}=0.1$) | - |
 
 **Regla de validación (anti-Goodhart) [7][9]:** todas se comparan **contra las métricas reales** (tiempo total en sistema, % atendidos), NO contra su propia recompensa. Un agente con "buena recompensa" pero peor tiempo real está haciendo reward hacking.
 
@@ -240,12 +240,12 @@ con $\tau$ = tiempo en sistema, tolerancia $\theta=12$, normalizador $\kappa=18$
 
 ## 8. Referencias (con enlaces verificables)
 
-1. **Sutton, R. & Barto, A. (2018).** *Reinforcement Learning: An Introduction.* — El agente maximiza la recompensa descontada esperada. http://incompleteideas.net/book/the-book-2nd.html
+1. **Sutton, R. & Barto, A. (2018).** *Reinforcement Learning: An Introduction.* - El agente maximiza la recompensa descontada esperada. http://incompleteideas.net/book/the-book-2nd.html
 2. **Little, J. D. C. & Graves, S. C. (2008).** *Little's Law.* (capítulo, prueba por área) https://web.eng.ucsd.edu/~massimo/ECE158A/Handouts_files/Little.pdf
 3. **Sigman, K. (2009).** *Notes on Little's Law (L = λW).* Columbia. http://www.columbia.edu/~ks20/stochastic-I/stochastic-I-LL.pdf
 4. **Whitt / Columbia (2015).** *Notes on Little's Law* (demostración detallada). https://www.columbia.edu/~ww2040/4615S15/LittlesLawNotes012715.pdf
-5. **Little's Law — Wolfram MathWorld.** https://mathworld.wolfram.com/LittlesLaw.html
-6. **AdaPool (2021).** *A Diurnal-Adaptive Fleet Management Framework using Model-Free Deep RL.* — recompensa multi-objetivo de suma ponderada en despacho. https://arxiv.org/pdf/2104.00203
-7. **RAST-MoE-RL (2025).** *Regime-Aware Spatio-Temporal MoE for Deep RL in Ride-Hailing* — "Anti-Hacking Reward Design": costos incrementales y modos de falla (sobre-penalizar → inacción/miopía). https://arxiv.org/pdf/2512.13727
-8. **Ng, A., Harada, D. & Russell, S. (1999).** *Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping.* ICML. — PBRS y la garantía de invariancia. Texto y teorema reproducidos en: https://arxiv.org/pdf/2501.00989 (Teorema 1) y original: http://luthuli.cs.uiuc.edu/~daf/courses/games/AIpapers/ng99policy.pdf
-9. **Multi-Objective Vehicle Rebalancing for Ridehailing (2020).** — combinación convexa de espera + millas vacías, marco SMDP; validación contra métricas reales. https://arxiv.org/pdf/2007.06801
+5. **Little's Law - Wolfram MathWorld.** https://mathworld.wolfram.com/LittlesLaw.html
+6. **AdaPool (2021).** *A Diurnal-Adaptive Fleet Management Framework using Model-Free Deep RL.* - recompensa multi-objetivo de suma ponderada en despacho. https://arxiv.org/pdf/2104.00203
+7. **RAST-MoE-RL (2025).** *Regime-Aware Spatio-Temporal MoE for Deep RL in Ride-Hailing* - "Anti-Hacking Reward Design": costos incrementales y modos de falla (sobre-penalizar → inacción/miopía). https://arxiv.org/pdf/2512.13727
+8. **Ng, A., Harada, D. & Russell, S. (1999).** *Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping.* ICML. - PBRS y la garantía de invariancia. Texto y teorema reproducidos en: https://arxiv.org/pdf/2501.00989 (Teorema 1) y original: http://luthuli.cs.uiuc.edu/~daf/courses/games/AIpapers/ng99policy.pdf
+9. **Multi-Objective Vehicle Rebalancing for Ridehailing (2020).** - combinación convexa de espera + millas vacías, marco SMDP; validación contra métricas reales. https://arxiv.org/pdf/2007.06801

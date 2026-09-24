@@ -7,15 +7,15 @@ Adapta el método multiplicativo de Braathen, Goez & Guajardo (2024) §4.1
 
 con 4 puntajes de popularidad puestos a criterio (uno por estación, el mismo
 si la estación juega de origen o de destino). Nuestro aporte: sustituir esos
-puntajes de estación por masas reales de SSB (Tareas 0-2) — población si el
+puntajes de estación por masas reales de SSB (Tareas 0-2) - población si el
 nodo juega de origen, empleo si juega de destino (o al revés, según la
-franja) — y agregar un factor de distancia decreciente que el paper no tiene
+franja) - y agregar un factor de distancia decreciente que el paper no tiene
 en esta fórmula (§4.1 no pondera por distancia; sí la usa después para filtrar
 "rutas realistas", que es un problema distinto).
 
 Es importante para la trazabilidad: la fórmula multiplicativa es préstamo
 metodológico del paper; los puntajes de estación NO lo son (el paper no
-publica una tabla de puntajes) — se derivan de SSB, que es aporte propio de
+publica una tabla de puntajes) - se derivan de SSB, que es aporte propio de
 esta tesis.
 """
 from __future__ import annotations
@@ -27,7 +27,7 @@ import pandas as pd
 
 
 def cargar_matriz_tiempos(cfg: dict, base_dir: Path) -> pd.DataFrame:
-    """Lee la matriz de tiempos navegables (bergen-boats paso 02) — no se
+    """Lee la matriz de tiempos navegables (bergen-boats paso 02) - no se
     recalculan tiempos de viaje aquí, se reusa esa fuente única.
     """
     path = (base_dir / cfg["fuentes_externas"]["matriz_tiempos_min"]).resolve()
@@ -70,7 +70,7 @@ def construir_intensidad_od(cfg: dict, masas_norm: pd.DataFrame, matriz_tiempos:
 
     intensidad = peso_origen * peso_destino * factor_distancia * factor_volumen_franja
 
-    (el factor de día de semana NO se aplica aquí — es un escalar del día
+    (el factor de día de semana NO se aplica aquí - es un escalar del día
     completo, se aplica en la etapa de llegadas, Tarea 4)
     """
     tau_min = cfg["factor_distancia"]["tau_min"]
@@ -109,7 +109,7 @@ def construir_intensidad_od(cfg: dict, masas_norm: pd.DataFrame, matriz_tiempos:
 
 def resumen_direccion_bryggen(intensidad_od: pd.DataFrame, franja_id: str, nodo_hub: str = "bryggen") -> dict:
     """Para una franja dada, compara la intensidad total hacia `nodo_hub` vs.
-    la intensidad total saliendo de `nodo_hub` — para verificar (no forzar) si
+    la intensidad total saliendo de `nodo_hub` - para verificar (no forzar) si
     aparece la asimetría direccional esperada (p. ej. mañana hacia Bryggen).
     """
     sub = intensidad_od[intensidad_od["franja"] == franja_id]

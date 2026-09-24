@@ -8,7 +8,7 @@ cuántos grupos llegan esa hora (Poisson) y se reparte cada uno en un minuto
 al azar dentro de la hora.
 
 La escala total de pasajeros/día se deriva como un PORCENTAJE de la
-población real de las 4 zonas (Tarea 1 v2), no un número fijo inventado —
+población real de las 4 zonas (Tarea 1 v2), no un número fijo inventado -
 ver `config/instance.yaml` (`demanda.porcentaje_poblacion_dia`) y
 `demand/README.md` para cómo se escogió ese porcentaje cruzando dos papers
 de referencia contra la población.
@@ -25,7 +25,7 @@ import pandas as pd
 
 def expandir_intensidad_a_horas(intensidad_od: pd.DataFrame) -> pd.DataFrame:
     """Expande la intensidad por franja (Tarea 3) a una fila por hora del día
-    (cada hora hereda la intensidad de su franja — la tasa es constante a
+    (cada hora hereda la intensidad de su franja - la tasa es constante a
     trozos dentro de cada franja, no una curva suavizada hora a hora).
     """
     filas = []

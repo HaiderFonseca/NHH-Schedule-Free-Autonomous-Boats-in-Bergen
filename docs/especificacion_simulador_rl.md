@@ -1,4 +1,4 @@
-# Especificación del simulador — barcos autónomos on-demand en Bergen
+# Especificación del simulador - barcos autónomos on-demand en Bergen
 
 *Diseño cerrado del entorno (environment) para el agente de aprendizaje por refuerzo. Este documento es la fuente única para construir el simulador y para presentar el diseño a Julio.*
 
@@ -14,7 +14,7 @@ Primero se construye el simulador y se controla con una **política tonta de ref
 
 ## 2. El mundo
 
-- **Nodos (paradas):** 4 — Kleppestø, Laksevåg, Bryggen, Sandviken.
+- **Nodos (paradas):** 4 - Kleppestø, Laksevåg, Bryggen, Sandviken.
 - **Tiempos de viaje:** matriz náutica real ya calculada (ruteo sobre agua, rodeando tierra), a 30 km/h. No se recalcula aquí; se carga del paso de ruteo.
 - **Demanda:** grupos de pasajeros que van llegando en el tiempo, generados por el modelo de gravedad + SSB ya construido. Cada grupo tiene origen, destino, minuto de llegada, tamaño y paciencia.
 
@@ -36,18 +36,18 @@ Se eligió paso fijo de 2 min (en lugar de eventos puros) por simplicidad y porq
 
 El estado es una foto del mundo en el paso actual. Tiene tres partes:
 
-**A. Los barcos** — un bloque por barco:
+**A. Los barcos** - un bloque por barco:
 - posición: nodo de origen y nodo de destino (si está quieto, son el mismo)
 - minutos que faltan para llegar (0 si está quieto)
 - ocupación (personas a bordo)
 - libre (sí/no)
 
-**B. La demanda esperando** — agregada por par origen-destino (dimensión fija):
+**B. La demanda esperando** - agregada por par origen-destino (dimensión fija):
 - para cada uno de los 12 pares: cuántas personas esperan y hace cuánto espera el grupo más antiguo
 
 > El detalle por grupo (id, tamaño, tiempo) vive **dentro del simulador** para manejar capacidad y recogida; al agente se le pasa el resumen agregado, que es de tamaño fijo y es lo que la red necesita.
 
-**C. El tiempo** — minuto del día (0–1439) y día de la semana (0–6), para que el agente pueda anticipar los patrones por su cuenta sin cortes de franja impuestos.
+**C. El tiempo** - minuto del día (0–1439) y día de la semana (0–6), para que el agente pueda anticipar los patrones por su cuenta sin cortes de franja impuestos.
 
 **Ejemplo de estado (2 barcos):**
 ```
@@ -103,7 +103,7 @@ Al ejecutar la acción, el simulador:
 
 **Reglas físicas (todas viven en el simulador):**
 - Capacidad del barco (ej. 20). Grupos **indivisibles**: si no cabe entero, espera al siguiente barco.
-- Un grupo se pierde si su espera supera su **paciencia** (15 min en conexiones fuertes, 30 en el resto — dato de la demanda).
+- Un grupo se pierde si su espera supera su **paciencia** (15 min en conexiones fuertes, 30 en el resto - dato de la demanda).
 
 ---
 
@@ -121,7 +121,7 @@ penalización_pasajero = (sobrante / sobrante_máx)²
 
 Dentro de los 12 min → 0 (zona libre). Justo al borde de perderse → 1. Así toda penalización de pasajero vive en una **escala fija y comparable** (0 = perfecto, 1 = a punto de irse). Crece de forma acelerada (cuadrática). Se suma sobre todos los pasajeros en el sistema, en cada paso. Un pasajero sin atender aparece paso tras paso con sobrante mayor → cuesta cada vez más → presiona a atenderlo.
 
-**b) Pérdida (comparable en la misma escala).** Por cada grupo que agotó su paciencia y se fue en este intervalo: penalización fija `P_perdido` por grupo, un poco mayor que 1 (ej. **1.3**). Como un pasajero al borde vale 1, esto significa que **perder penaliza ~30% más que tenerlo al límite** — comparable y expresable como porcentaje, y suficiente para que perder nunca sea "preferible" a atender.
+**b) Pérdida (comparable en la misma escala).** Por cada grupo que agotó su paciencia y se fue en este intervalo: penalización fija `P_perdido` por grupo, un poco mayor que 1 (ej. **1.3**). Como un pasajero al borde vale 1, esto significa que **perder penaliza ~30% más que tenerlo al límite** - comparable y expresable como porcentaje, y suficiente para que perder nunca sea "preferible" a atender.
 
 **c) Movimiento.** `0.1` por cada barco que está navegando en este paso. Desalienta mover barcos sin necesidad → en horas de baja demanda el agente aprende a no usar toda la flota.
 
@@ -150,7 +150,7 @@ Regla fija tipo **"nearest-available"**: cuando un barco queda libre, se le mand
 ## 10. Parámetros configurables (y para barrer)
 
 Todo en un archivo de config, nada fijo en el código:
-- tolerancia de incomodidad (12 min) — define la zona libre y el sobrante
+- tolerancia de incomodidad (12 min) - define la zona libre y el sobrante
 - peso de pérdida `P_perdido` (≈ 1.3, comparable a la escala 0–1 del pasajero)
 - peso de movimiento (0.1)
 - factor de descuento gamma (≈ 0.99, para el agente)
@@ -180,7 +180,7 @@ El aporte de la tesis está en el paso 4: una política aprendida en tiempo real
 
 ---
 
-## Ajuste posterior — demanda por personas, no por grupos
+## Ajuste posterior - demanda por personas, no por grupos
 
 Cambia la unidad de demanda de grupos a personas individuales. Cada persona es una solicitud independiente con: origen, destino, minuto de llegada a la parada, y paciencia (15 min conexiones fuertes / 30 resto). Esto simplifica capacidad y recogida.
 

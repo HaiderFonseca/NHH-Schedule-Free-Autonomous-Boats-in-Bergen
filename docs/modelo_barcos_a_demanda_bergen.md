@@ -1,4 +1,4 @@
-# Sistema de barcos a demanda en Bergen — planteamiento del modelo
+# Sistema de barcos a demanda en Bergen - planteamiento del modelo
 
 *Documento de trabajo para la reunión con Julio y Stein. Resume la lógica de la operación tal como la plantearon en la reunión.*
 
@@ -48,8 +48,8 @@ En cada instante de decisión (por ejemplo cada pocos minutos), para cada barco 
 
 El objetivo es **dar buen servicio de forma eficiente**. Se plantea de dos formas equivalentes, elige una como principal:
 
-- **Forma A — fijar la garantía, minimizar recursos:** garantizo que nadie espere más de *X* minutos (ej. 15) y minimizo el número de barcos / el costo de operación necesario para lograrlo.
-- **Forma B — fijar la flota, medir el servicio:** dado un número fijo de barcos, ¿qué garantías de espera/llegada puedo ofrecer en cada conexión?
+- **Forma A - fijar la garantía, minimizar recursos:** garantizo que nadie espere más de *X* minutos (ej. 15) y minimizo el número de barcos / el costo de operación necesario para lograrlo.
+- **Forma B - fijar la flota, medir el servicio:** dado un número fijo de barcos, ¿qué garantías de espera/llegada puedo ofrecer en cada conexión?
 
 Métricas de servicio que entran en el objetivo: tiempo de espera del pasajero, tiempo total de viaje, y **cumplimiento de las garantías** (sobre todo en las conexiones importantes, las de ida/vuelta al trabajo).
 
@@ -65,7 +65,7 @@ La demanda **no es un pronóstico clásico**; es un **patrón espacio-temporal**
 - Otras conexiones son más balanceadas (~50/50).
 - Ese patrón se puede **aprender y actualizar** con el tiempo (aquí entra el ML), pero eso es una fase posterior.
 
-**Por qué la demanda es imprescindible — el efecto cola (*tail effect*):**
+**Por qué la demanda es imprescindible - el efecto cola (*tail effect*):**
 
 Si optimizas solo para la gente que espera **ahora**, como si el mundo se acabara en este instante, mandas todos los barcos a atender esa demanda inmediata. Cinco minutos después todos los barcos quedaron en el lugar equivocado y no puedes atender a los nuevos pasajeros. Es como un problema de inventario que se vacía al final porque "ya no importa".
 
@@ -131,7 +131,7 @@ Con eso ya llegas con algo empezado.
 ## Preguntas abiertas para llevar a la reunión
 
 - ¿El horizonte de decisión es "rolling" (cada X minutos re-optimizo) o de otro tipo?
-- ¿Cómo formalizamos la "garantía" — como restricción dura (nadie espera más de 15 min) o penalización blanda en el objetivo?
+- ¿Cómo formalizamos la "garantía" - como restricción dura (nadie espera más de 15 min) o penalización blanda en el objetivo?
 - ¿La mirada al futuro entra como un modelo de dos etapas / estocástico (Stein), o como una penalización de reposicionamiento?
 - Para la métrica de servicio, ¿priorizamos espera del pasajero, tiempo total, o cumplimiento de garantías por conexión?
 - ¿Vale la pena la reformulación cónica de Julio en alguna parte (ej. velocidad/consumo), o eso es más de la capa fija?

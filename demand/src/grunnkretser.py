@@ -4,13 +4,13 @@ al círculo de captación fijo.
 Un círculo de radio fijo no respeta el uso real del suelo: para Laksevåg
 captura bastante agua/vegetación, y para Bryggen (denso, urbano) el mismo
 radio concentra desproporcionadamente la masa. Las grunnkretser son la unidad
-administrativa/estadística real que usa SSB — dejar que el equipo elija a
+administrativa/estadística real que usa SSB - dejar que el equipo elija a
 mano qué grunnkretser le corresponden a cada nodo es más defendible que un
 círculo arbitrario igual para los 4.
 
 Fuente: Kartverket, WFS "Statistiske enheter grunnkretser"
 (https://kartkatalog.geonorge.no/metadata/statistiske-enheter-grunnkretser/cc7ded0b-7d34-4db6-8fdb-c5a7682b6836),
-capa `Grunnkrets`, licencia CC BY 4.0, CRS nativo EPSG:4258 (ETRS89 — para
+capa `Grunnkrets`, licencia CC BY 4.0, CRS nativo EPSG:4258 (ETRS89 - para
 efectos prácticos intercambiable con WGS84 en esta escala).
 
 Kommunenummer relevantes: Bergen = 4601, Askøy = 4627 (Kleppestø).
@@ -35,7 +35,7 @@ def descargar_grunnkretser(cache_path: Path, forzar: bool = False) -> gpd.GeoDat
     WFS de Kartverket, reproyectadas a EPSG:32633.
 
     Nota técnica: en Windows, GDAL necesita `PYTHONUTF8=1` para no romperse
-    con los nombres con letras noruegas (å/æ/ø) que trae el WFS — si esta
+    con los nombres con letras noruegas (å/æ/ø) que trae el WFS - si esta
     función falla con UnicodeDecodeError, es por eso.
     """
     if cache_path.exists() and not forzar:
@@ -58,7 +58,7 @@ def grunnkretser_bergen_askoy(gdf_norge: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 def cargar_areas_estudio(path: Path, nodos_utm: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Carga las 4 áreas dibujadas a mano (QGIS, `data/Areas_estudio.gpkg`,
     sin atributos) y les asigna el nodo correspondiente por cercanía del
-    centroide — con las 4 áreas y los 4 nodos, la distancia al nodo correcto
+    centroide - con las 4 áreas y los 4 nodos, la distancia al nodo correcto
     es un orden de magnitud menor que a cualquier otro, así que no hay
     ambigüedad real (se verifica explícitamente en el notebook, no solo aquí).
     """
@@ -136,7 +136,7 @@ def resolver_duplicados(seleccion_por_nodo: dict, areas: gpd.GeoDataFrame) -> di
 def nodo_mas_cercano(gdf_grunnkretser: gpd.GeoDataFrame, nodos_utm: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Agrega columnas `nodo_mas_cercano` / `distancia_nodo_mas_cercano_m`
     (solo SUGERENCIA, no asignación definitiva) con el nodo cuyo centro está
-    más cerca del centroide de cada grunnkrets — para orientar la elección
+    más cerca del centroide de cada grunnkrets - para orientar la elección
     manual, no para reemplazarla.
     """
     import numpy as np

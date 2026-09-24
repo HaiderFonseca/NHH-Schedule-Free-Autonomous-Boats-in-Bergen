@@ -95,6 +95,11 @@ def fila_metricas(env, politica: str, num_barcos: int, semilla: int) -> dict:
     usr = met.metricas_por_usuario(env)
     por_barco = met.metricas_por_barco(env)
     backlog = met.sin_atender_al_final_por_par(env)
+
+    movs = [e for e in env.log_eventos if e["tipo"] == "movimiento"]
+    movimientos_vacios = sum(1 for m in movs if m["ocupacion"] == 0)
+    viajes = list(met._tiempos_viaje_por_unidad(env).values())
+
     return {
         "politica": politica, "num_barcos": num_barcos, "semilla": semilla,
         "generadas": cons["generadas"], "atendidas": cons["atendidas"],
@@ -104,13 +109,34 @@ def fila_metricas(env, politica: str, num_barcos: int, semilla: int) -> dict:
         "espera_media_min": glob["espera_media_min"],
         "espera_p50_min": usr["espera_min"]["p50"], "espera_p95_min": usr["espera_min"]["p95"],
         "espera_max_min": usr["espera_min"]["max"],
+        "viaje_medio_min": float(np.mean(viajes)) if viajes else float("nan"),
         "sistema_medio_min": glob["sistema_medio_min"],
         "sistema_p50_min": usr["sistema_min"]["p50"], "sistema_p95_min": usr["sistema_min"]["p95"],
         "sistema_max_min": usr["sistema_min"]["max"],
         "movimientos_totales": int(por_barco["movimientos"].sum()),
+        "movimientos_vacios": movimientos_vacios,
+        "movimientos_con_carga": len(movs) - movimientos_vacios,
         "ocupacion_media_flota": float(por_barco["ocupacion_media"].mean()),
+        "ocupacion_pct_capacidad": float(por_barco["ocupacion_media"].mean()) / capacidad * 100.0,
         "pct_esperando_flota": float(por_barco["pct_esperando"].mean()),
     }
+
+
+def serie_movimiento(env) -> pd.DataFrame:
+    """Cuantos barcos estan en movimiento vs. quietos (libres) en CADA paso
+    -- de `env.historial_estados`, sin volver a correr nada. Sirve para ver
+    si, en horas valle, la flota completa realmente hace falta o gran parte
+    queda ociosa (mientras que en hora pico casi todos estan en movimiento).
+    """
+    filas = []
+    for frame in env.historial_estados:
+        n_moviendo = sum(1 for b in frame["barcos"] if not b["libre"])
+        filas.append({
+            "minuto_del_dia": frame["tiempo"]["minuto_del_dia"],
+            "n_moviendo": n_moviendo,
+            "n_quieto": len(frame["barcos"]) - n_moviendo,
+        })
+    return pd.DataFrame(filas)
 
 
 def main():
@@ -121,7 +147,9 @@ def main():
     for semilla, g in grupos_por_semilla.items():
         print(f"  semilla {semilla}: {len(g)} grupos, {g['tamano_grupo'].sum()} personas (reusada de politica_base/output/escalon_dia_10pct/)")
 
+    semilla_series = SEMILLAS_EVAL[0]  # unica semilla usada para la serie minuto a minuto (evita 7x mas de I/O)
     filas = []
+    series_por_flota: dict[tuple[str, int], pd.DataFrame] = {}
     t0 = time.time()
     total = 4 * len(FLOTAS) * len(SEMILLAS_EVAL)
     i = 0
@@ -131,9 +159,20 @@ def main():
                 i += 1
                 env = correr(grupos, num_barcos, politica)
                 filas.append(fila_metricas(env, politica, num_barcos, semilla))
+                if semilla == semilla_series:
+                    series_por_flota[(politica, num_barcos)] = serie_movimiento(env)
                 print(f"  [{i}/{total}] {politica} x {num_barcos} barcos x semilla {semilla} -- "
                       f"espera media {filas[-1]['espera_media_min']:.2f} min "
                       f"({time.time()-t0:.0f}s acumulados)")
+
+    series_concat = []
+    for (politica, num_barcos), df in series_por_flota.items():
+        df = df.copy()
+        df["politica"] = politica
+        df["num_barcos"] = num_barcos
+        series_concat.append(df)
+    pd.concat(series_concat, ignore_index=True).to_csv(
+        OUT_DIR / f"serie_movimiento_semilla{semilla_series}.csv", index=False)
 
     resultados = pd.DataFrame(filas)
     resultados.to_csv(OUT_DIR / "resultados_h0_h1_h2_h3.csv", index=False)

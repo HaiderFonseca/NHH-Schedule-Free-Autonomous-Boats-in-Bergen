@@ -1,4 +1,4 @@
-# Parámetros de la instancia base — barcos a demanda en Bergen
+# Parámetros de la instancia base - barcos a demanda en Bergen
 
 *Primer conjunto de parámetros para arrancar la simulación y la optimización. Todo lo marcado como **[estimado]** o **[a confirmar]** se refina después con datos AIS o con Julio/Stein.*
 
@@ -23,7 +23,7 @@ Las cuatro paradas reales del caso (nodos de demanda), con coordenadas reales:
 
 ## 2. Matriz de tiempos de viaje
 
-**Cómo se calcula la distancia — dos métodos, dos carpetas:**
+**Cómo se calcula la distancia - dos métodos, dos carpetas:**
 - `bergen-boats/01_tiempos_distancias/`: línea recta sobre el agua (fórmula de Haversine). Rápido, pero para las conexiones que tocan Bryggen cruza tierra (ver más abajo).
 - `bergen-boats/02_ruteo_navegable/`: ruta real navegable, calculada con un grafo sobre una malla de píxeles de agua (~4.7 m/píxel en Bergen) y Dijkstra. **Esta es la que se usa de aquí en adelante.**
 
@@ -31,32 +31,32 @@ Las cuatro paradas reales del caso (nodos de demanda), con coordenadas reales:
 único dato real disponible (ruta 490 Askøybåten, Kleppestø–Bryggen: 5.36 km en línea recta /
 5.75 km navegable, 14 min reales → 23–24.65 km/h según el método), pero el equipo decidió que
 la flota nueva de barcos pequeños a demanda no tiene por qué heredar la velocidad de ese ferry
-existente. 30 km/h es una suposición de diseño, no una calibración — se puede volver a barrer
+existente. 30 km/h es una suposición de diseño, no una calibración - se puede volver a barrer
 como parámetro de sensibilidad más adelante.
 
 **Tiempos en línea recta (minutos, `01_tiempos_distancias/`, a 30 km/h), con las coordenadas confirmadas de Laksevåg (Gravdal) y Sandviken (BSI Padling):**
 
 | desde \ hacia | Kleppestø | Laksevåg | Bryggen | Sandviken |
 |---|---|---|---|---|
-| **Kleppestø** | — | 4.9 | 10.7 | 8.7 |
-| **Laksevåg** | 4.9 | — | 7.0 | 8.1 |
-| **Bryggen** | 10.7 | 7.0 | — | 6.3 |
-| **Sandviken** | 8.7 | 8.1 | 6.3 | — |
+| **Kleppestø** | - | 4.9 | 10.7 | 8.7 |
+| **Laksevåg** | 4.9 | - | 7.0 | 8.1 |
+| **Bryggen** | 10.7 | 7.0 | - | 6.3 |
+| **Sandviken** | 8.7 | 8.1 | 6.3 | - |
 
-**Tiempos navegables — la matriz a usar (minutos, `02_ruteo_navegable/`, a 30 km/h):**
+**Tiempos navegables - la matriz a usar (minutos, `02_ruteo_navegable/`, a 30 km/h):**
 
 | desde \ hacia | Kleppestø | Laksevåg | Bryggen | Sandviken |
 |---|---|---|---|---|
-| **Kleppestø** | — | 5.3 | 11.5 | 9.6 |
-| **Laksevåg** | 5.3 | — | 8.6 | 8.6 |
-| **Bryggen** | 11.5 | 8.6 | — | 6.8 |
-| **Sandviken** | 9.6 | 8.6 | 6.8 | — |
+| **Kleppestø** | - | 5.3 | 11.5 | 9.6 |
+| **Laksevåg** | 5.3 | - | 8.6 | 8.6 |
+| **Bryggen** | 11.5 | 8.6 | - | 6.8 |
+| **Sandviken** | 9.6 | 8.6 | 6.8 | - |
 
 > **Sobre el paper:** el artículo de Gu & Wallace está detrás de pago y no publica abiertamente su matriz exacta de tiempos. Por eso la estimamos desde coordenadas. Para afinarla de verdad se baja un tramo AIS (Kystverket/BarentsWatch) de la ruta 490 y se mide la velocidad real.
 >
-> **Resuelto (ver `bergen-boats/02_ruteo_navegable/`):** se confirmó visualmente que las líneas rectas que tocan **Bryggen** cruzan tierra (Bryggen↔Sandviken corta por el centro de Bergen; Bryggen↔Kleppestø y Bryggen↔Laksevåg pasan por encima de la península de Nordnes). Se corrigió con un módulo de ruteo sobre una malla de agua real (clasificación de píxeles agua/tierra + grafo + Dijkstra), que calcula el camino más corto que no cruza tierra — el método completo, con la explicación de la resolución del píxel y de cómo funciona Dijkstra, está documentado en `bergen-boats/02_ruteo_navegable/README.md`.
+> **Resuelto (ver `bergen-boats/02_ruteo_navegable/`):** se confirmó visualmente que las líneas rectas que tocan **Bryggen** cruzan tierra (Bryggen↔Sandviken corta por el centro de Bergen; Bryggen↔Kleppestø y Bryggen↔Laksevåg pasan por encima de la península de Nordnes). Se corrigió con un módulo de ruteo sobre una malla de agua real (clasificación de píxeles agua/tierra + grafo + Dijkstra), que calcula el camino más corto que no cruza tierra - el método completo, con la explicación de la resolución del píxel y de cómo funciona Dijkstra, está documentado en `bergen-boats/02_ruteo_navegable/README.md`.
 >
-> **Hegreneset como waypoint (opcional, no nodo de demanda):** sigue sin ser una parada; se guarda solo como referencia geométrica. Con las coordenadas nuevas de Sandviken ya no queda tan "en medio" del tramo Bryggen-Sandviken como antes — si se necesita como waypoint real para alguna ruta, hay que revisar su utilidad de nuevo.
+> **Hegreneset como waypoint (opcional, no nodo de demanda):** sigue sin ser una parada; se guarda solo como referencia geométrica. Con las coordenadas nuevas de Sandviken ya no queda tan "en medio" del tramo Bryggen-Sandviken como antes - si se necesita como waypoint real para alguna ruta, hay que revisar su utilidad de nuevo.
 
 ---
 
@@ -66,7 +66,7 @@ como parámetro de sensibilidad más adelante.
 |---|---|---|
 | Número de barcos | **5** [a barrer: 3–8] | La pregunta central es cuántos hacen falta para la garantía. |
 | Tamaño / capacidad | **todos iguales, 20 pasajeros** [estimado] | Empezar homogéneo: cualquier barco sirve para cualquier viaje. |
-| Velocidad efectiva | **30 km/h (fija, decisión de diseño)** | Ver §2 — no es una velocidad calibrada de un ferry existente, es una suposición de diseño para la flota nueva. Después se puede volver variable (optimización de velocidad) o barrer como parámetro de sensibilidad. |
+| Velocidad efectiva | **30 km/h (fija, decisión de diseño)** | Ver §2 - no es una velocidad calibrada de un ferry existente, es una suposición de diseño para la flota nueva. Después se puede volver variable (optimización de velocidad) o barrer como parámetro de sensibilidad. |
 | Posición inicial | todos en Bryggen | Punto de partida neutro; se puede cambiar. |
 
 ---
@@ -91,8 +91,8 @@ como parámetro de sensibilidad más adelante.
 | Conexiones débiles (aceptan escala) | la de baja demanda entre las paradas restantes (ej. Kleppestø↔Sandviken) | Garantía más blanda; puede haber transbordo (posiblemente vía Bryggen). |
 
 **Objetivo (elegir uno como principal):**
-- **A** — fijar garantía (15 min) y **minimizar el número de barcos / costo de operar**.
-- **B** — fijar la flota (5 barcos) y **medir qué garantía se puede cumplir** en cada conexión.
+- **A** - fijar garantía (15 min) y **minimizar el número de barcos / costo de operar**.
+- **B** - fijar la flota (5 barcos) y **medir qué garantía se puede cumplir** en cada conexión.
 
 Recuerda: **no se modela ingreso ni ganancia.** El objetivo es servicio eficiente.
 

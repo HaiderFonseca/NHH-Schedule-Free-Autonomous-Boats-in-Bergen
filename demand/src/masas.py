@@ -101,7 +101,7 @@ def celdas_en_radio(grilla: gpd.GeoDataFrame, centro: Point, radio_m: float) -> 
 def celdas_en_zona(grilla: gpd.GeoDataFrame, zona_geom) -> gpd.GeoDataFrame:
     """Igual que `celdas_en_radio` pero con una zona arbitraria (p. ej. la
     unión de las grunnkretser elegidas a mano para un nodo) en vez de un
-    círculo — mismo criterio de "centro adentro", para que el método sea
+    círculo - mismo criterio de "centro adentro", para que el método sea
     comparable con el de la Tarea 1 original.
     """
     centroides = grilla.geometry.centroid

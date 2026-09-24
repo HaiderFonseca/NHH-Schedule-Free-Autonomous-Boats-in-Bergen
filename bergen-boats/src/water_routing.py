@@ -25,7 +25,7 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components, dijkstra
 
-RADIO_TIERRA_KM = 6371.0088  # radio medio terrestre (IUGG) — usar para distancias reales
+RADIO_TIERRA_KM = 6371.0088  # radio medio terrestre (IUGG) - usar para distancias reales
 
 # Web Mercator (EPSG:3857, el que usan los tiles XYZ) asume una ESFERA de
 # radio 6378137.0 m (el semieje mayor de WGS84), no el radio medio. Usar el
@@ -53,7 +53,7 @@ def descargar_mascara_agua(
 
     `water_mask` es un array booleano (H, W): True = agua navegable.
     `ext` es (xmin, xmax, ymin, ymax) en EPSG:3857 (metros), tal como lo
-    devuelve contextily — necesario para pasar de píxel a lon/lat y viceversa.
+    devuelve contextily - necesario para pasar de píxel a lon/lat y viceversa.
     """
     import contextily as cx
 

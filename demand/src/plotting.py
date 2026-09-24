@@ -47,7 +47,7 @@ def mapa_captacion_nodo(nombre_nodo, centro_utm, radio_m, celdas_pop, celdas_emp
 
     cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs="EPSG:32633", attribution_size=6)
     ax.set_axis_off()
-    ax.set_title(titulo or f"Radio de captación — {nombre_nodo} ({radio_m:.0f} m)", fontsize=12)
+    ax.set_title(titulo or f"Radio de captación - {nombre_nodo} ({radio_m:.0f} m)", fontsize=12)
 
     leyenda = [
         Line2D([0], [0], marker="o", color="none", markerfacecolor=COLOR_POBLACION, alpha=0.55, markersize=12, label="Celdas de población capturadas"),

@@ -1,8 +1,8 @@
 # bergen-boats
 
-Implementación de la tesis: simulación + optimización de un servicio de barcos pequeños **a demanda** para Bergen, Noruega. El servicio no existe todavía — este repo construye la lógica de cómo operaría.
+Implementación de la tesis: simulación + optimización de un servicio de barcos pequeños **a demanda** para Bergen, Noruega. El servicio no existe todavía - este repo construye la lógica de cómo operaría.
 
-El contexto completo del proyecto (motivación, decisiones de diseño, respuestas de Julio/Stein) vive en [`../docs/`](../docs/) — léelo antes de tocar código, empezando por `../docs/CLAUDE.md`.
+El contexto completo del proyecto (motivación, decisiones de diseño, respuestas de Julio/Stein) vive en [`../docs/`](../docs/) - léelo antes de tocar código, empezando por `../docs/CLAUDE.md`.
 
 ## Cómo está organizado
 
@@ -16,16 +16,16 @@ bergen-boats/
 ├── src/
 │   ├── geo.py                     # funciones compartidas: Haversine, matrices, calibración
 │   └── water_routing.py           # ruteo sobre agua: malla navegable, Dijkstra, evita cruzar tierra
-├── 01_tiempos_distancias/         # PASO 1 — matriz de distancias/tiempos en línea recta (Haversine)
+├── 01_tiempos_distancias/         # PASO 1 - matriz de distancias/tiempos en línea recta (Haversine)
 │   ├── README.md
 │   ├── notebook.ipynb
 │   └── output/
-├── 02_ruteo_navegable/            # PASO 2 — corrige el paso 1: rutas reales que no cruzan tierra
+├── 02_ruteo_navegable/            # PASO 2 - corrige el paso 1: rutas reales que no cruzan tierra
 │   ├── README.md
 │   ├── notebook.ipynb
 │   └── output/
-├── 03_demanda/                    # PASO 3 (próximo) — generación de solicitudes Poisson por franja
-├── 04_simulacion_despacho/        # PASO 4 (futuro) — rolling-horizon + política de despacho
+├── 03_demanda/                    # PASO 3 (próximo) - generación de solicitudes Poisson por franja
+├── 04_simulacion_despacho/        # PASO 4 (futuro) - rolling-horizon + política de despacho
 └── ...
 ```
 
@@ -51,11 +51,11 @@ jupyter nbconvert --to notebook --execute --inplace 01_tiempos_distancias/notebo
 
 ## Los 4 nodos de demanda
 
-Kleppestø, Laksevåg (Gravdal), Bryggen y Sandviken (BSI Padling) son las paradas reales (donde la gente sube/baja). **Hegreneset no es una parada** — es un punto de referencia sin demanda propia que se guarda solo como *waypoint* para el ruteo. Ver `config/instance.yaml` (sección `waypoints`) y `../docs/parametros_instancia_base_bergen.md`.
+Kleppestø, Laksevåg (Gravdal), Bryggen y Sandviken (BSI Padling) son las paradas reales (donde la gente sube/baja). **Hegreneset no es una parada** - es un punto de referencia sin demanda propia que se guarda solo como *waypoint* para el ruteo. Ver `config/instance.yaml` (sección `waypoints`) y `../docs/parametros_instancia_base_bergen.md`.
 
 ## Estado
 
-- [x] **01 — Tiempos y distancias**: matriz Haversine (línea recta). Al revisarla visualmente, las líneas que tocan Bryggen resultaron cruzar tierra (península de Nordnes) — ver paso 2.
-- [x] **02 — Ruteo navegable**: corrige el paso 1 con un módulo de ruteo sobre una malla de agua real (~4.7 m/píxel en Bergen, Dijkstra, sin cruzar tierra). Velocidad de diseño fija: **30 km/h** (decisión, no calibrada). **`02_ruteo_navegable/output/matriz_tiempos_min.csv` es la matriz a usar de aquí en adelante**, no la del paso 1.
-- [ ] **03 — Demanda**: generador de solicitudes Poisson por franja horaria.
-- [ ] **04 — Simulación + despacho**: rolling-horizon cada 3 min, política de asignación de barcos.
+- [x] **01 - Tiempos y distancias**: matriz Haversine (línea recta). Al revisarla visualmente, las líneas que tocan Bryggen resultaron cruzar tierra (península de Nordnes) - ver paso 2.
+- [x] **02 - Ruteo navegable**: corrige el paso 1 con un módulo de ruteo sobre una malla de agua real (~4.7 m/píxel en Bergen, Dijkstra, sin cruzar tierra). Velocidad de diseño fija: **30 km/h** (decisión, no calibrada). **`02_ruteo_navegable/output/matriz_tiempos_min.csv` es la matriz a usar de aquí en adelante**, no la del paso 1.
+- [ ] **03 - Demanda**: generador de solicitudes Poisson por franja horaria.
+- [ ] **04 - Simulación + despacho**: rolling-horizon cada 3 min, política de asignación de barcos.

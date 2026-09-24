@@ -1,4 +1,4 @@
-# H2 — heurística corregida (diagnóstico + fix sobre H1)
+# H2 - heurística corregida (diagnóstico + fix sobre H1)
 
 **Qué es esto, en una frase:** H1 (`politica_base/src/politica_h1.py`) tenía un defecto real en su
 función de costo, confirmado con datos, no solo sospechado. H2 es la corrección: mismo algoritmo de
@@ -18,7 +18,7 @@ del hub** (`bryggen`):
 | bryggen -> laksevag | 8.6 | 10.85 | 15.28 | +41% |
 | bryggen -> kleppesto | 11.5 | 9.66 | 16.32 | +69% |
 
-**Mientras más largo el viaje, peor le fue a ese par bajo H1c** — y son justo las tres "conexiones
+**Mientras más largo el viaje, peor le fue a ese par bajo H1c** - y son justo las tres "conexiones
 fuertes" que `bergen-boats/config/instance.yaml -> garantia.conexiones_fuertes` marca como las que
 más necesitan servicio garantizado. No es ruido de una sola semilla: el patrón es monótono en las
 tres rutas, ordenado exactamente por tiempo de viaje.

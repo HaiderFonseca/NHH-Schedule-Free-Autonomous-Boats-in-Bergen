@@ -14,7 +14,7 @@ Una **simulación + optimización** de un servicio de barcos pequeños **a deman
 ## Contexto académico
 
 - Maestría en NHH (Bergen). Asesor principal: **Julio Goez** (optimización cónica/entera-mixta). También **Stein W. Wallace** (programación estocástica; coautor del paper base de water-taxis).
-- Paper base: Gu & Wallace (2021), *Operational benefits of autonomous vessels in logistics — A case of autonomous water-taxis in Bergen*, TR-E 154:102456. Es un modelo **estático** de localización + flota + ruteo. **Nuestra diferencia:** operación en **tiempo real** (despacho minuto a minuto, garantías, anticipación de demanda).
+- Paper base: Gu & Wallace (2021), *Operational benefits of autonomous vessels in logistics - A case of autonomous water-taxis in Bergen*, TR-E 154:102456. Es un modelo **estático** de localización + flota + ruteo. **Nuestra diferencia:** operación en **tiempo real** (despacho minuto a minuto, garantías, anticipación de demanda).
 - El ángulo de ML/IA (fase posterior): aprender el patrón de demanda; y/o resolver la política de despacho con aprendizaje por refuerzo.
 
 ## Los datos de la instancia base
@@ -29,7 +29,7 @@ Una **simulación + optimización** de un servicio de barcos pequeños **a deman
 
 (Laksevåg es coordenada aproximada, a confirmar con Julio.)
 
-**Nota importante — Hegreneset NO es una parada.** Es un punto intermedio entre Sandviken y Bryggen, no un nodo de demanda: nadie sube ni baja ahí. Solo se conserva como punto de referencia / waypoint opcional para el ruteo (útil si más adelante se quiere modelar la geometría de la costa o una escala física en una ruta con conexión). Sus coordenadas (60.4185, 5.3125) se mantienen en el histórico por si se necesita como waypoint, pero **no entra en la matriz de demanda ni en la lista de nodos donde los barcos recogen/dejan pasajeros**.
+**Nota importante - Hegreneset NO es una parada.** Es un punto intermedio entre Sandviken y Bryggen, no un nodo de demanda: nadie sube ni baja ahí. Solo se conserva como punto de referencia / waypoint opcional para el ruteo (útil si más adelante se quiere modelar la geometría de la costa o una escala física en una ruta con conexión). Sus coordenadas (60.4185, 5.3125) se mantienen en el histórico por si se necesita como waypoint, pero **no entra en la matriz de demanda ni en la lista de nodos donde los barcos recogen/dejan pasajeros**.
 
 ### Cómo se construye la matriz de tiempos (reproducir en código)
 1. **Distancia:** fórmula de **Haversine** entre coordenadas (distancia en línea recta sobre el agua, en km).
@@ -40,10 +40,10 @@ Una **simulación + optimización** de un servicio de barcos pequeños **a deman
 Matriz de tiempos resultante (min) entre las 4 paradas reales, como referencia para tests:
 ```
               Kleppestø  Laksevåg  Bryggen  Sandviken
-Kleppestø         —        9.3      14.0      13.5
-Laksevåg         9.3        —        5.0       6.2
-Bryggen         14.0       5.0        —        3.6
-Sandviken       13.5       6.2       3.6        —
+Kleppestø         -        9.3      14.0      13.5
+Laksevåg         9.3        -        5.0       6.2
+Bryggen         14.0       5.0        -        3.6
+Sandviken       13.5       6.2       3.6        -
 ```
 > Nota: algunas rectas podrían cruzar tierra (revisar Laksevåg↔Sandviken). Para v1 se acepta la aproximación; después se refina con AIS (Kystverket/BarentsWatch) o rodeando la costa.
 

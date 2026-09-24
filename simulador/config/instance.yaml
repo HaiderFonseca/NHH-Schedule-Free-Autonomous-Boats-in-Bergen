@@ -1,4 +1,4 @@
-# Instancia de simulación — Entorno Gymnasium de despacho de barcos (tesis NHH)
+# Instancia de simulación - Entorno Gymnasium de despacho de barcos (tesis NHH)
 #
 # Única fuente de verdad de los parámetros compartidos por los 4 bloques del
 # proyecto (simulador/, politica_base/, modelo_rl/, comparacion/ -- ver
@@ -84,10 +84,10 @@ escalones:
     porcentaje_poblacion_dia: 0.10
     # Sin num_barcos fijo: el sweep de flota (subconjunto de
     # bergen-boats/config/instance.yaml -> flota.num_barcos_barrido) lo pasa
-    # explicito por corrida, no se lee de aqui. Extendido a 10/12 (ademas de
-    # 4/6/8) para ver si los rendimientos decrecientes de la curva de
-    # servicio siguen bajando o ya se aplanan del todo.
-    num_barcos_barrido: [4, 6, 8, 10, 12]
+    # explicito por corrida, no se lee de aqui. Extendido a 14/16 para
+    # confirmar si la curva de servicio se aplana (saturacion) o sigue
+    # bajando con esta demanda.
+    num_barcos_barrido: [4, 6, 8, 10, 12, 14, 16]
 
 escalon_activo: "escalon_1"   # cual usan los notebooks por defecto
 
