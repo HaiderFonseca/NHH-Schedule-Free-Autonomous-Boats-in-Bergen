@@ -2,7 +2,7 @@
 
 **Qué es esto, en una frase:** la fase de heurísticas fuertes (sin RL) del proyecto de barcos a demanda en Bergen - cuatro políticas de despacho, cada una construida como una extensión estricta de la anterior, auditadas y validadas con casos controlados antes de compararlas en un experimento completo.
 
-**Por qué existe una carpeta `heuristicas/` separada de `politica_base/`:** las primeras versiones de estas ideas (`politica_base/src/politica_h1.py`, `politica_h2/`, `politica_h3/`, `politica_h0c/`) se probaron, no superaron consistentemente a la política base, y una auditoría encontró por qué (una función de costo con un término mal puesto). Esas carpetas se conservan tal cual, como registro histórico del proceso - **no se borra nada** - pero la definición vigente, auditada y validada, es la de aquí.
+**Por qué existe una carpeta `heuristicas/` separada de `politica_base/`:** las primeras versiones de estas ideas (`politica_base/src/politica_h1.py`, `politica_h2/`, `politica_h3/`, `politica_h0c/`) se probaron, no superaron consistentemente a la política base, y una auditoría encontró por qué (una función de costo con un término mal puesto). Esas carpetas ya no existen en el repo -- se limpiaron una vez que quedó claro que la definición vigente, auditada y validada, es la de aquí. `politica_base/` ahora contiene únicamente `politica_base.py` (H0, la referencia) y la demanda generada (`output/escalon_dia_10pct/grupos_seed*.csv`) que las 4 políticas de aquí reusan.
 
 ---
 
@@ -168,7 +168,7 @@ heuristicas/
 ├── h1_reserva/src/politica_h1.py
 ├── h2_costo_local/src/politica_h2.py
 ├── h3_costo_global/src/politica_h3.py
-├── experimento_fleet_sweep.py         -- barrido de flota standalone (reusado por el notebook 03)
+├── experimento_fleet_sweep.py         -- barrido de flota standalone (misma logica que el notebook 03, para correr sin Jupyter)
 ├── notebooks/
 │   ├── 01_metodologia_heuristicas.ipynb   -- reglas de cada política + los 5 casos controlados, ejecutados en vivo
 │   ├── 02_experimentos_heuristicas.ipynb  -- H0/H1/H2/H3 bajo condiciones idénticas (1 flota, 1 semilla), gráficas interactivas
@@ -176,7 +176,8 @@ heuristicas/
 │   └── 04_visualizacion_heuristicas.ipynb -- animación 2h, mapa real, reservas explícitas, inspector de decisión paso a paso
 └── outputs/
     ├── resultados/  -- CSVs (por corrida, agregados, y serie de movimiento por minuto)
-    └── figuras/     -- PNGs y GIFs
+    └── figuras/     -- GIFs (individuales por politica + combinado); las graficas de servicio y flota
+                        son interactivas (Plotly) y viven solo dentro de los notebooks 02/03, no se exportan a archivo
 ```
 
 ## 9. Qué NO hace ninguna de las 4 (restricciones respetadas en todas)
