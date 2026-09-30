@@ -1,7 +1,7 @@
 \contentsline {section}{\numberline {1}Introduction and Motivation}{3}{section.1}%
 \contentsline {paragraph}{Scope of this report.}{3}{section*.2}%
 \contentsline {section}{\numberline {2}Related Work}{3}{section.2}%
-\contentsline {section}{\numberline {3}Navigable Routing}{3}{section.3}%
+\contentsline {section}{\numberline {3}Navigable Routing}{4}{section.3}%
 \contentsline {paragraph}{Water/land classification.}{4}{section*.3}%
 \contentsline {paragraph}{Graph and shortest paths.}{4}{section*.4}%
 \contentsline {paragraph}{Design speed and resulting matrix.}{4}{section*.5}%
@@ -10,38 +10,56 @@
 \contentsline {subsection}{\numberline {4.2}From population and employment to origin-destination intensity}{6}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}From intensity to Poisson arrival rates}{7}{subsection.4.3}%
 \contentsline {subsection}{\numberline {4.4}Arrivals and group sizes}{8}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}Persons vs.\ groups}{9}{subsection.4.5}%
-\contentsline {section}{\numberline {5}Simulation Environment}{9}{section.5}%
-\contentsline {paragraph}{This is a first, simple iteration.}{9}{section*.6}%
-\contentsline {subsection}{\numberline {5.1}State}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {4.5}Persons vs.\ groups}{10}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Simulation Environment}{10}{section.5}%
+\contentsline {paragraph}{This is a first, simple iteration.}{10}{section*.6}%
+\contentsline {subsection}{\numberline {5.1}State}{10}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Actions}{10}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Transition}{10}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Reward}{10}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Reference Dispatch Policy}{11}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Decision rule}{11}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Coordinating several free boats at once}{11}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Verification at three scales}{12}{subsection.6.3}%
-\contentsline {paragraph}{Conservation check.}{12}{section*.7}%
-\contentsline {subsection}{\numberline {6.4}Known limitations}{15}{subsection.6.4}%
-\contentsline {section}{\numberline {7}Reinforcement Learning Agent}{15}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Method}{16}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Implementation, observation, and action}{16}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Reward function}{17}{subsection.7.3}%
-\contentsline {paragraph}{Picking $w_{\text {move}}$: matching scales, not guessing.}{18}{section*.8}%
-\contentsline {subsection}{\numberline {7.4}Reward-shaping experiments}{18}{subsection.7.4}%
-\contentsline {paragraph}{Capped vs.\ uncapped discomfort (A vs.\ B).}{18}{section*.9}%
-\contentsline {paragraph}{Adding a small movement penalty (C1 vs.\ C2).}{18}{section*.10}%
-\contentsline {subsection}{\numberline {7.5}Fresh demand on every reset}{19}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}Training run}{19}{subsection.7.6}%
-\contentsline {paragraph}{Checking the rollout length: $n_{\text {steps}}=90$.}{20}{section*.11}%
-\contentsline {section}{\numberline {8}Results: Agent vs.\ Reference Policy}{21}{section.8}%
-\contentsline {paragraph}{Why percent served is not the headline metric.}{21}{section*.12}%
-\contentsline {subsection}{\numberline {8.1}Aggregate comparison, five seeds}{21}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Detailed comparison on a single seed}{22}{subsection.8.2}%
-\contentsline {section}{\numberline {9}Assumptions and Limitations}{23}{section.9}%
-\contentsline {paragraph}{No real demand data.}{23}{section*.13}%
-\contentsline {paragraph}{No passenger patience, by design.}{23}{section*.14}%
-\contentsline {paragraph}{The reference policy is local-first and myopic (Section~\ref {sec:limitaciones-politica-base}).}{24}{section*.15}%
-\contentsline {paragraph}{The agent is trained and evaluated on a single, small instance.}{24}{section*.16}%
-\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{24}{section*.17}%
-\contentsline {section}{\numberline {10}Conclusion}{24}{section.10}%
+\contentsline {subsection}{\numberline {5.3}Transition}{11}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Reward}{11}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Dispatch Heuristics: H0 to H3}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}H0: the nearest-available rule}{11}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Coordinating several free boats at once}{12}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Verification at three scales}{13}{subsection.6.3}%
+\contentsline {paragraph}{Conservation check.}{13}{section*.7}%
+\contentsline {subsection}{\numberline {6.4}Known limitations of H0}{16}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}A second coordination gap: claims that outlive a single step}{16}{subsection.6.5}%
+\contentsline {subsection}{\numberline {6.6}H1: adding a reservation that survives the trip}{16}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}H2: a cost function, but only where H0 already looks}{17}{subsection.6.7}%
+\contentsline {subsection}{\numberline {6.8}H3: one cost, no separate tiers}{18}{subsection.6.8}%
+\contentsline {subsection}{\numberline {6.9}How the four rules compare}{18}{subsection.6.9}%
+\contentsline {section}{\numberline {7}Fleet-Size Sensitivity}{19}{section.7}%
+\contentsline {section}{\numberline {8}Reinforcement Learning Agent}{20}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Method}{20}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Implementation, observation, and action}{20}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Reward function}{21}{subsection.8.3}%
+\contentsline {paragraph}{Picking $w_{\text {move}}$: matching scales, not guessing.}{22}{section*.8}%
+\contentsline {subsection}{\numberline {8.4}Reward-shaping experiments}{22}{subsection.8.4}%
+\contentsline {paragraph}{Capped vs.\ uncapped discomfort (A vs.\ B).}{22}{section*.9}%
+\contentsline {paragraph}{Adding a small movement penalty (C1 vs.\ C2).}{23}{section*.10}%
+\contentsline {subsection}{\numberline {8.5}A fuller search: eight reward formulas at full training budget}{23}{subsection.8.5}%
+\contentsline {paragraph}{A scale check on H's weighting.}{25}{section*.11}%
+\contentsline {paragraph}{A correctness finding, caught before it could spread further.}{25}{section*.12}%
+\contentsline {subsection}{\numberline {8.6}Fresh demand on every reset}{26}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}Training run}{26}{subsection.8.7}%
+\contentsline {paragraph}{Checking the rollout length: $n_{\text {steps}}=90$.}{27}{section*.13}%
+\contentsline {subsection}{\numberline {8.8}Scaling up: training at the full instance}{28}{subsection.8.8}%
+\contentsline {section}{\numberline {9}Results: Agent vs.\ Reference Policy at Small Scale}{29}{section.9}%
+\contentsline {paragraph}{Why percent served is not the headline metric.}{29}{section*.14}%
+\contentsline {subsection}{\numberline {9.1}Aggregate comparison, five seeds}{29}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Detailed comparison on a single seed}{30}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Results: Full-Day Comparison}{31}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Aggregate result, five seeds}{32}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Reading the result honestly}{33}{subsection.10.2}%
+\contentsline {section}{\numberline {11}Assumptions and Limitations}{33}{section.11}%
+\contentsline {paragraph}{No real demand data.}{34}{section*.15}%
+\contentsline {paragraph}{No passenger patience, by design.}{34}{section*.16}%
+\contentsline {paragraph}{None of the four heuristics is an optimizer.}{34}{section*.17}%
+\contentsline {paragraph}{The reward search and the rollout-length check were only ever done at the small, two-boat scale.}{34}{section*.18}%
+\contentsline {paragraph}{The full-scale training run was attempted once.}{34}{section*.19}%
+\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{34}{section*.20}%
+\contentsline {section}{\numberline {12}Conclusion}{34}{section.12}%
+\contentsline {section}{\numberline {A}Where Everything Lives in This Project}{35}{appendix.A}%
+\contentsline {paragraph}{The overall layout.}{35}{section*.21}%
+\contentsline {paragraph}{A shared rule.}{36}{section*.22}%
+\contentsline {paragraph}{Finding a specific result.}{36}{section*.23}%

@@ -128,7 +128,7 @@ def dibujar_frame(ax, frame: dict, gdf_nodos: gpd.GeoDataFrame, gdf_rutas: gpd.G
         espera = demanda_por_nodo[nid]
         if espera > 0:
             ax.annotate(
-                f"esperan: {espera}", xy=(row.geometry.x, row.geometry.y), xytext=(9, 8),
+                f"waiting: {espera}", xy=(row.geometry.x, row.geometry.y), xytext=(9, 8),
                 textcoords="offset points", fontsize=10, fontweight="bold", color=COLOR_COLA,
                 zorder=5, path_effects=[pe.withStroke(linewidth=3, foreground="white")],
             )
@@ -164,7 +164,7 @@ def dibujar_frame(ax, frame: dict, gdf_nodos: gpd.GeoDataFrame, gdf_rutas: gpd.G
 
     ax.set_axis_off()
     hh, mm = divmod(int(frame["tiempo"]["minuto_del_dia"]), 60)
-    ax.set_title(f"Despacho de barcos -- {hh:02d}:{mm:02d}", fontsize=13)
+    ax.set_title(f"Boat dispatch -- {hh:02d}:{mm:02d}", fontsize=13)
 
 
 def animar_corrida(historial: list[dict], gdf_nodos, gdf_rutas, matriz_tiempos, capacidad_barco: int, out_path, fps: int = 6, fondo=None):

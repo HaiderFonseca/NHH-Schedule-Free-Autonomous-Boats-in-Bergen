@@ -18,7 +18,7 @@
 
 \begin{abstract}
 \noindent
-This report documents the design of the real-time dispatch logic for a small-boat, on-demand water transport service in Bergen, Norway. The service does not exist yet: rather than optimizing an existing system, the project builds a model of how such a service would operate, replacing fixed timetables with a dispatch policy that recomputes itself every few minutes. Six pieces are covered: a navigable routing module that computes real, coastline-respecting travel times between the four candidate stops; a synthetic demand model anchored in official Norwegian population and employment data; a simulation environment, implemented to the Gymnasium interface standard, that hosts the dispatch policy; a fixed, rule-based reference policy, including the fleet-coordination logic needed to run it with more than one boat, verified against that environment at three increasing scales; a reinforcement-learning agent trained with proximal policy optimization to learn a dispatch policy directly, including the sequence of reward-shaping experiments that determined how the agent is trained; and a final comparison of the trained agent against the reference policy, aggregated over held-out evaluation seeds and examined in detail on one of them.
+This report documents the design of the real-time dispatch logic for a small-boat, on-demand water transport service in Bergen, Norway. The service does not exist yet: rather than optimizing an existing system, the project builds a model of how such a service would operate, replacing fixed timetables with a dispatch policy that recomputes itself every few minutes. The pieces covered are, in order: a navigable routing module that computes real, coastline-respecting travel times between the four candidate stops; a synthetic demand model anchored in official Norwegian population and employment data; a simulation environment, implemented to the Gymnasium interface standard, that hosts the dispatch problem; four fixed, rule-based dispatch heuristics, built one on top of the previous, each verified by hand-built controlled cases and then compared against the others across seven fleet sizes; a reinforcement-learning agent trained with proximal policy optimization to learn a dispatch policy directly, including a search over twelve different reward formulas that determined how the agent is trained and a discussion of a software bug found and fixed during that search; and a final, full-scale comparison of the trained agent against the strongest of the four heuristics, on the same twelve-boat, full-day instance and the same held-out evaluation seeds used throughout. At that full scale, the trained agent does not outperform the heuristics, and this report says so plainly rather than only reporting the smaller-scale result where it did.
 \end{abstract}
 
 \tableofcontents
@@ -32,7 +32,7 @@ Bergen is a coastal city whose public transport network is structured as a hub-a
 
 This project explores a small-boat, on-demand water transport service as a complementary mode. Two principles guide its design. First, the service is not modeled as a profit-making venture (public transport of this kind is rarely self-financing, and its justification is environmental and related to congestion relief, not revenue); the objective is to deliver a good level of service efficiently, not to maximize income. Second, the flexible layer of the service has no fixed timetable: a passenger requests a trip and a boat is dispatched to serve it, subject to a waiting-time guarantee, and the dispatch policy is recomputed at short, regular intervals rather than following a pre-published schedule. Section 2 situates this "schedule-free" operating philosophy, and the static water-taxi model it builds on, within the closely related literature.
 
-\paragraph{Scope of this report.} It covers the routing and demand modeling that feed the project (Sections 3 and 4), the simulation environment that hosts the dispatch problem (Section 5), a fixed reference dispatch policy verified against that environment (Section 6), a reinforcement-learning agent trained to learn a dispatch policy directly (Section 7), and a final comparison between the two (Section 8). The environment is intentionally simple (four stops, direct point-to-point trips, a small set of rules), chosen so that its mechanics could be verified before adding complexity to the model of how boats and passengers behave. Section 9 states this and the project's other simplifying choices explicitly, together, rather than leaving them implicit.
+\paragraph{Scope of this report.} It covers the routing and demand modeling that feed the project (Sections 3 and 4), the simulation environment that hosts the dispatch problem (Section 5), four fixed dispatch heuristics built one on top of the previous and verified against that environment (Section 6), how those four heuristics compare once the fleet size is allowed to vary (Section 7), a reinforcement-learning agent trained to learn a dispatch policy directly (Section 8), a first comparison of that agent against the reference policy at a small, two-boat scale (Section 9), and the project's main result, a full-scale comparison of the agent against the strongest heuristic on the twelve-boat, full-day instance the rest of the project is built around (Section 10). The environment is intentionally simple (four stops, direct point-to-point trips, a small set of rules), chosen so that its mechanics could be verified before adding complexity to the model of how boats and passengers behave. Section 11 states this and the project's other simplifying choices explicitly, together, rather than leaving them implicit, and an appendix at the end maps every piece of this report to where it lives in the project's own repository.
 
 % =====================================================================
 \section{Related Work}
@@ -48,6 +48,7 @@ Three papers anchor the modeling choices described in this report.
 
 % =====================================================================
 \section{Navigable Routing}
+\label{sec:ruteo}
 % =====================================================================
 
 Travel times between the four stops are computed from a navigable-routing module rather than from straight-line (Haversine) distances. An earlier, straight-line version of the travel-time matrix was found, on visual inspection, to draw lines that cross land near Bryggen, which sits inside the Vågen bay next to the Nordnes peninsula (straight-line distances are therefore not usable directly and are corrected here).
@@ -114,7 +115,7 @@ Population and employment are read from official Statistics Norway (SSB) 250-met
 
 \begin{table}[H]
 \centering
-\caption{Catchment area, population, and employment by node (SSB grids, 2026).}
+\caption{Catchment area, population, and employment by node (SSB grids, 2025).}
 \label{tab:masas}
 \begin{tabular}{lrrrr}
 \toprule
@@ -242,13 +243,13 @@ Each step executes, in order: (1) apply the chosen action to every free boat, bo
 The reward returned at every 2-minute step is a single negative scalar that penalizes letting people wait or travel beyond a tolerance and, more lightly, sending a boat under way. This scalar plays no role in the reference dispatch policy of Section~\ref{sec:politica-base}, which follows a fixed rule and never consults it; it exists purely to give the environment a well-defined objective for a policy that has to learn from experience. Because the reward is meaningful chiefly in that training context, and because its exact shape (in particular, whether the discomfort term is capped, and how strongly movement is penalized) is itself a design choice explored deliberately rather than fixed in advance, its full definition and the reasoning behind each term are given together in Section~\ref{sec:reward-agent}, next to the experiments it is meant to explain.
 
 % =====================================================================
-\section{Reference Dispatch Policy}
+\section{Dispatch Heuristics: H0 to H3}
 \label{sec:politica-base}
 % =====================================================================
 
-Before any policy is asked to learn, it is useful to have a simple, fixed rule that can be verified by hand and used as a point of comparison. This section describes that rule, a coordination problem that surfaced only once several boats used it together, and the results of running it on three test instances of increasing size.
+Before any policy is asked to learn, it is useful to have a simple, fixed rule that can be verified by hand and used as a point of comparison. This section builds four such rules, one after another. Each one keeps everything the one before it already does and changes exactly one thing, so that any gain (or loss) can be traced back to that one change. H0 is the starting rule: serve local demand first, and only reposition when there is nothing to serve where the boat already is. H1 keeps that same rule but fixes a coordination gap between boats and adds a reservation that survives across simulation steps. H2 adds a cost function, but only inside the choice H1 already makes. H3 goes one step further and removes the local first rule altogether, letting any queue in the system compete on the same footing. The section ends with a side by side comparison of the four rules and the fleet coordination problem that applies to all of them equally.
 
-\subsection{Decision rule}
+\subsection{H0: the nearest-available rule}
 
 The reference policy, referred to here as nearest-available, decides one free boat at a time and follows a single principle: serve the demand waiting at the boat's own current stop before ever considering a trip to reposition toward demand elsewhere. Concretely, when boat $b$ is free at node $A$, the policy first looks at the twelve pair queues (Section 5.1) restricted to those leaving $A$; if any of them holds someone waiting, the boat is sent to the destination whose queue has been waiting longest, without regard to how many people are in it. Only when no one at all is waiting to leave $A$ does the policy consider repositioning: it looks across every other pair queue in the system and sends the boat, empty, toward the origin node of whichever queue has waited longest, so that the boat can pick that demand up once it arrives.
 
@@ -339,10 +340,119 @@ Step 2, despite carrying 5.5 times the demand of Step 1 with only one additional
 
 Figure~\ref{fig:politica-base-heatmap} breaks the aggregate percent-served figure down by origin-destination pair and confirms that every one of the twelve pairs reaches 100\% in Step 2, not just the total. Figure~\ref{fig:politica-base-ocupacion} and Figure~\ref{fig:politica-base-perfil} show, respectively, how full each boat runs and how many people are waiting system-wide as the day unfolds; both track the two commute peaks of the demand model closely, which is the expected behavior of a policy that reacts to demand rather than anticipating it. Figure~\ref{fig:politica-base-snapshots} gives a static sense of the fleet in motion; the underlying tool can also produce an animated, minute-by-minute version and a version that can be stepped through one decision at a time, both used during development to visually confirm the fleet-assignment fix of Section~\ref{sec:asignar-flota}, but neither reproduces meaningfully on a printed page.
 
-\subsection{Known limitations}
+\subsection{Known limitations of H0}
 \label{sec:limitaciones-politica-base}
 
-Three limitations of this policy are worth stating explicitly rather than leaving implicit. First, the strict local-before-remote priority described above means a lightly connected pair can in principle wait indefinitely while a busier pair keeps the fleet occupied; this did not occur in the three runs reported here, but nothing in the rule itself prevents it, and a busier or more imbalanced instance could expose it. Second, fleet assignment (Section~\ref{sec:asignar-flota}) prevents two boats from claiming the same destination in the same step, but it still assigns boats one at a time, in a fixed order, rather than searching over every possible joint assignment for the one that would serve the most people; it removes the worst failure mode without claiming to be optimal. Third, repositioning is myopic by construction, evaluating only the immediate move rather than the pickup and delivery as a planned pair, so a boat can occasionally reposition toward demand that a different, better-timed choice would have served faster.
+Three limitations of this policy are worth stating explicitly rather than leaving implicit. First, the strict local-before-remote priority described above means a lightly connected pair can in principle wait indefinitely while a busier pair keeps the fleet occupied; this did not occur in the three runs reported here, but nothing in the rule itself prevents it, and a busier or more imbalanced instance could expose it. Second, fleet assignment (Section~\ref{sec:asignar-flota}) prevents two boats from claiming the same destination in the same step, but it still assigns boats one at a time, in a fixed order, rather than searching over every possible joint assignment for the one that would serve the most people; it removes the worst failure mode without claiming to be optimal. Third, repositioning is myopic by construction, evaluating only the immediate move rather than the pickup and delivery as a planned pair, so a boat can occasionally reposition toward demand that a different, better-timed choice would have served faster. The first and third of these limitations are exactly what the next three heuristics try to reduce, and the results at the end of this section show whether each attempt actually helps.
+
+\subsection{A second coordination gap: claims that outlive a single step}
+\label{sec:h1-motivacion}
+
+Fleet assignment (Section~\ref{sec:asignar-flota}) only looks at one simulation step at a time. It stops two boats from picking the same destination in the very same step, because it can see both decisions being made together and can discount the queue in between. It cannot do anything about a claim that stretches across several steps, and repositioning trips almost always do: a boat ordered to reposition can take many two-minute steps to arrive, and during all of that travel time the queue it is heading toward looks, to any other boat that becomes free in a later step, exactly like a queue nobody has claimed yet.
+
+This was confirmed directly, not just argued for, with a small controlled case, run and checked step by step in the notebook that documents each heuristic's methodology (Appendix~\ref{sec:apendice-repo}): at minute 100, two boats are free, one at Bryggen and one at Sandviken, and neither has any local demand. A single remote queue, Laksevåg to Kleppestø, has five people who have each been waiting 12 minutes. Both boats independently apply H0's rule to the same snapshot and both decide the same thing: go to Laksevåg. The five people are, of course, only enough to fill one boat; the second boat makes the same trip for nothing. This is not the same bug that fleet assignment already fixed (Section~\ref{sec:asignar-flota}), because fleet assignment discounts the queue attached to the destination a boat is ordered toward, not the specific remote queue the boat is actually travelling to serve. Two boats repositioning toward the same node for the same reason slip past that check entirely, since from fleet assignment's point of view they are each just "going somewhere", not "claiming this particular queue".
+
+\subsection{H1: adding a reservation that survives the trip}
+\label{sec:h1}
+
+H1 keeps H0's decision rule exactly as it is: local demand first, and only when there is none does a boat reposition toward the queue that has waited longest, with ties broken by the shorter travel time. Nothing about how a single boat decides changes. What H1 adds is a small dictionary, kept outside the policy by the control loop that runs it, that records which boat is currently committed to which queue:
+
+\begin{equation}
+\texttt{reservas}: \text{boat id} \rightarrow (\text{origin}, \text{destination}).
+\end{equation}
+
+A reservation is created only when a boat repositions, never when it serves local demand, because a local pickup happens immediately and leaves nothing pending to protect. As a concrete example: at minute 100 a boat B1, free at Bryggen with no local demand, decides to reposition to Laksevåg because three people are waiting there for a trip to Kleppestø. This creates the entry $\texttt{reservas}[\text{B1}] = (\text{laksevåg}, \text{kleppestø})$. While B1 is still travelling, every other boat sees the effective size of that queue reduced by the boat's own capacity, not by however many people happen to be in it: with a capacity of 30, a queue of fewer than 30 people that already has a reservation against it looks, to any other free boat, like it has nobody waiting at all. New arrivals to that same queue while B1 is en route are still covered, since the discount is by capacity, not by a fixed headcount taken at the moment the reservation was made. A reservation is released the moment its boat becomes free again, since a boat that is already travelling can never be redirected mid-trip and there is no separate cancellation rule to account for; this is the only event that can end a reservation, checked automatically at the start of every decision.
+
+The reservation only matters when several boats are free in the same step, so H1 also changes how that case is resolved. H0 processes free boats in whatever order they happen to appear in a list, which is exactly what produces the failure case above. H1 instead lets every free boat propose its best option under H0's own rule, and commits the single proposal with the longest wait among all of them first, discounts the queue it draws from, and repeats for the remaining boats. Re-running the exact scenario above through H1 gives $\{\text{B1}: \text{laksevåg}, \text{B2}: \texttt{None}\}$: one boat goes, the other correctly waits, and the reservation created for B1 is what keeps a third free boat from repeating the mistake several steps later, while B1 is still travelling. This persistence was checked directly, not assumed: the same reservation dictionary was fed into two separate calls to the policy several steps apart, once right after it was created and once again after four more people had joined the same queue, and it came back byte for byte identical both times, confirming that nothing inside the policy quietly forgets or rewrites a commitment it did not just make.
+
+\subsection{H2: a cost function, but only where H0 already looks}
+\label{sec:h2}
+
+H2 keeps H1's reservation mechanism and its urgency-based ordering between boats unchanged. What it adds is a way to choose more carefully among several remote candidates, instead of only comparing them by whoever has waited longest with travel time as a tie-breaker. For a boat $b$ considering a queue $q$, define
+
+\begin{equation}
+C(b,q) = T_{\text{pickup}}(b,q) - W_{\max}(q),
+\end{equation}
+
+where $T_{\text{pickup}}(b,q)$ is how many minutes it would take boat $b$ to reach the origin of queue $q$ (zero if it is already there), and $W_{\max}(q)$ is how long the oldest person in that queue has already waited. A lower $C$ is better: it rewards a queue that has waited long and penalizes one that is far away, in the same currency, minutes.
+
+H2 still keeps H0's original split between local and remote demand. For any local candidate, travel time is zero, so $C = -W_{\max}(q)$, and choosing the lowest $C$ among local candidates is exactly the same as choosing the longest wait, which is precisely H0's rule; the cost function changes nothing there; the code for this branch is, in fact, reused from H1 unchanged. The cost function only changes anything inside the remote branch, once there is no local demand left to serve: instead of always chasing whoever has waited longest, a queue that is a little less urgent but much closer can now be preferred over one that is more urgent but far away, a genuine trade-off that H0 and H1 cannot make at all. What the cost function never does, at this stage, is let a remote queue outrank a local one. This was checked directly with a queue of five people waiting three minutes at the boat's own node against a queue of five people waiting remotely, sweeping the remote wait up to 200 minutes: the local queue is chosen every single time, no matter how long the remote one has been waiting, because the two are still never compared against each other.
+
+\subsection{H3: one cost, no separate tiers}
+\label{sec:h3}
+
+H3 uses the exact same cost function as H2. The one thing it removes is the split between local and remote demand that every earlier rule, including H2, still respects. Instead of first checking whether anything local exists and only considering remote queues if it does not, H3 treats every queue in the system, local and remote alike, as a candidate, and searches directly for the single cheapest boat and queue pair among all of them, committing that one, discounting it, and repeating for whichever boats are still free. A local candidate still has $T_{\text{pickup}}=0$ and the same cost as before, but here it sits on equal footing against every remote candidate instead of being shielded from comparison. This is what lets a remote queue win outright when it is urgent enough. Substituting into the cost function gives the exact condition under which that happens, for a boat with a local wait of $W_{\text{local}}$ facing a remote alternative with pickup time $T_{\text{pickup}}$ and wait $W_{\text{remoto}}$:
+
+\begin{equation}
+W_{\text{remoto}} > T_{\text{pickup}} + W_{\text{local}}.
+\end{equation}
+
+In words, the remote queue only wins once its extra wait is larger than the whole cost of going to fetch it, never for a small or accidental difference. This threshold was verified to the minute, not just derived on paper: with a Bryggen to Kleppestø pickup of 11.5 minutes and a local wait of 3 minutes, the formula above predicts the switch at 14.5 minutes of remote wait, and stepping the remote wait up one minute at a time shows H3 staying with the local queue at 14 minutes and switching to the remote one at 15, exactly where the formula says it should. This is the one heuristic among the four that lets a demand far from the boat outcompete a demand right next to it, which is the specific weakness of H0 stated in Section~\ref{sec:limitaciones-politica-base}: a boat that always finishes whatever is local first, no matter how small, can in principle leave a far more urgent case waiting indefinitely elsewhere. H3 is built to close exactly that gap.
+
+\subsection{How the four rules compare}
+\label{sec:comparacion-heuristicas}
+
+Table~\ref{tab:comparacion-heuristicas-reglas} lays out what changes and what stays the same across the four rules. None of them adds a weight that would need calibrating, none of them anticipates demand that has not arrived yet, and none of them allows a single trip to serve more than one destination; the only things that ever change are how a boat picks among candidates and how several free boats are kept from stepping on each other.
+
+\begin{table}[H]
+\centering
+\caption{The four dispatch heuristics, side by side.}
+\label{tab:comparacion-heuristicas-reglas}
+\scriptsize
+\begin{tabular}{p{2.7cm}p{2.3cm}p{2.3cm}p{2.9cm}p{3.1cm}}
+\toprule
+ & H0 & H1 & H2 & H3 \\
+\midrule
+Per-boat rule & local, then remote & same as H0 & same split, cost inside each tier & one global cost, no split \\
+Coordinating free boats & list order & by urgency & by urgency & by lowest cost, globally \\
+Reservation across steps & no & yes & yes & yes \\
+Cost function & none & none & $C=T_{\text{pickup}}-W_{\max}$, remote only & $C=T_{\text{pickup}}-W_{\max}$, all queues \\
+Can remote beat local? & never & never & never & when $W_{\text{remoto}} > T_{\text{pickup}}+W_{\text{local}}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Section~\ref{sec:sensibilidad-flota} compares all four directly against each other, across seven fleet sizes and the same five evaluation seeds, and is where it becomes clear which of these three changes over H0 actually pays off in practice.
+
+% =====================================================================
+\section{Fleet-Size Sensitivity}
+\label{sec:sensibilidad-flota}
+% =====================================================================
+
+The four heuristics of Section~\ref{sec:politica-base} were run again on a larger, full-day instance (the whole operating window, 06:00 to 24:00, at the demand model's 10\% daily participation rate, Section~\ref{sec:demand}), this time sweeping the fleet size itself: 4, 6, 8, 10, 12, 14, and 16 boats, each policy run on the same five evaluation seeds used throughout this report. The point of this sweep is not to verify the heuristics again (that was already done in Section~\ref{sec:escalones}), but to ask a different question: once a fleet coordination rule works correctly, does making it smarter (H1, then H2, then H3) actually translate into a better service as the fleet grows, or does the benefit fade, or even reverse?
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figuras/sensibilidad_flota.png}
+\caption{H0 to H3 across seven fleet sizes: mean waiting time, percent served, and total boat movements (mean $\pm$ one standard deviation over the five evaluation seeds).}
+\label{fig:sensibilidad-flota}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Mean waiting time (minutes) by fleet size, all four heuristics. The percentage in parenthesis is the change relative to H0 at the same fleet size; a negative number is an improvement.}
+\label{tab:sensibilidad-flota}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Boats & H0 & H1 & H2 & H3 \\
+\midrule
+4  & 73.9 & 71.5 ($-$3\%)  & 72.2 ($-$2\%)  & 72.9 ($-$1\%)  \\
+6  & 26.6 & 25.4 ($-$4\%)  & 25.7 ($-$3\%)  & 24.3 ($-$8\%)  \\
+8  & 12.0 & 12.0 (0\%)     & 12.0 (0\%)     & 10.6 ($-$12\%) \\
+10 & 7.6  & 7.8 (+3\%)     & 7.8 (+3\%)     & 6.3 ($-$17\%)  \\
+12 & 6.2  & 7.3 (+18\%)    & 7.0 (+13\%)    & 4.8 ($-$22\%)  \\
+14 & 5.6  & 7.1 (+27\%)    & 6.8 (+22\%)    & 4.4 ($-$22\%)  \\
+16 & 5.5  & 7.2 (+31\%)    & 6.7 (+23\%)    & 4.1 ($-$25\%)  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The result is not what a reader might guess from Sections~\ref{sec:h1} and~\ref{sec:h2} alone. H1 and H2 do not beat H0 in any consistent way, and the gap against them gets worse, not better, as boats are added: H1 ends up 31\% worse than H0 at 16 boats, H2 23\% worse. The reason is visible in how each one spends its boats: fixing the coordination bug (H1) and adding a cost function that only ever refines the remote branch (H2) both make a boat somewhat more careful about when it is worth repositioning at all, and with more boats in the fleet, that caution more often means a boat sits idle rather than reposition toward demand that H0's blunter, more eager rule would have already gone after. Neither H1 nor H2 has any way to weigh that caution against the cost of leaving a boat idle, so as the fleet grows and idle boats become more available, the caution costs more than it saves.
+
+H3 is the only one of the three that beats H0 at every single fleet size tested, and the advantage grows rather than shrinks as boats are added, reaching $-25\%$ at 16 boats, while also using fewer total movements than H0, H1, or H2 at every size. This matches the design difference described in Section~\ref{sec:h3}: H3 is the only rule that lets a remote queue outcompete a local one, so it is the only one that can use an added boat to go after whichever demand is genuinely most urgent system wide, not just whatever happens to be closest. The improvement does flatten out: from 12 to 14 boats mean waiting time drops by 8.8\%, but from 14 to 16 boats only by 6.9\%, a clear sign of diminishing returns. H0 is flattening too, and faster (only $-2.3\%$ from 14 to 16 boats), which means H3 is still extracting value from additional boats at fleet sizes where H0 has essentially stopped improving.
+
+The practical conclusion carried forward into the rest of this report is that H3 is the strongest heuristic available, at every fleet size tested, and it is the one used as the point of comparison for the reinforcement-learning agent in Section~\ref{sec:comparacion}, alongside H0.
 
 % =====================================================================
 \section{Reinforcement Learning Agent}
@@ -443,6 +553,52 @@ C2 & $\infty$ & 0.001 & 44.7\% & 22.5 & 95  \\
 
 Removing the cap (B) beats the capped configuration (A) on every column, including movements, so B is the base carried into C1/C2. Between those two, C1 tracks B closely on percent served while moving about as much; C2, with a smaller weight, both serves fewer people and moves less, and the fewer movements it does make are not used any better than C1's. \emph{Percent served is read here only as a rough dial for comparing configurations against each other within this short-training sequence, not as the metric that matters: Section~\ref{sec:comparacion} explains why and reports mean and maximum time in system instead once the real training budget is spent.} Neither run here gets close to the reference policy, but 30{,}000 timesteps is a fifth of what Section~\ref{sec:entrenamiento} uses for the agent actually evaluated later, so that is expected: the point of this sequence is choosing a reward shape cheaply, not producing a competitive agent yet. The combination carried forward is the uncapped penalty with $w_{\text{move}} = 0.003$ (C1).
 
+\subsection{A fuller search: eight reward formulas at full training budget}
+\label{sec:prueba-rewards}
+
+The A/B/C1/C2 sequence above is a cheap probe, thirty thousand timesteps per configuration, meant to rule out obviously bad shapes before committing to a longer run. A separate, later round of experiments repeats the same idea at the full training budget used for the agent in the rest of this report, one hundred fifty thousand timesteps per configuration, and widens the search to eight reward formulas built on genuinely different principles rather than four variations of one formula. Every configuration below is trained on the same instance (Step 1, two boats, the morning window), the same seed, and the same PPO settings as Section~\ref{sec:entrenamiento}; only the reward changes.
+
+\begin{itemize}
+\item \textbf{A, pure linear time.} Charges every active person, at every step, exactly the two minutes of that step, with no term for movement. This follows directly from an identity behind Little's Law: summing, over every step of an episode, how many people are active times the length of that step gives exactly the same number as summing, over every person, how long each one individually spent in the system. Maximizing A is therefore, by this identity, the same thing as directly minimizing total time in system, with no tolerance and no curve standing in the way.
+\item \textbf{B.} The same formula already used for the rest of this report (Section~\ref{sec:reward-agent}), the winner of the A/B/C1/C2 sequence above.
+\item \textbf{C, B plus potential-based shaping.} Adds a second term to B, built from a result by \citet{Ng1999}: a reward bonus of the form $\gamma \Phi(s_{t+1}) - \Phi(s_t)$, for any function $\Phi$ of the state alone, changes the reward the agent sees at every step but never changes which policy is optimal. Here $\Phi(s) = -\eta \cdot N(s)$, with $N(s)$ the number of people active in state $s$, so the bonus rewards making that number go down sooner, without changing the underlying objective. The intended benefit is a denser, more immediate training signal, not a different final target: B's discomfort penalty only grows once someone has waited past the twelve minute tolerance, so a lot of early, helpful behavior gets no direct credit under B alone.
+\item \textbf{D.} The production reward formula, the values already used for reporting (never for training) throughout Section~\ref{sec:politica-base}, trained here with reinforcement learning for the first time. In the version actually trained and reported here, it is the same uncapped quadratic penalty already defined in Section~\ref{sec:reward-agent}, with no movement term.
+\item \textbf{E, pure linear time, no per step tolerance.} Charges each active person the full time they have been in the system so far, added up fresh at every step, rather than the two minute increment A charges. No tolerance, no normalizer, no cap, no movement term.
+\item \textbf{F, pure quadratic time, not normalized.} The same squared penalty as D, but without dividing by the eighteen minute width $\sigma$ first, so the number grows unnormalized. This isolates whether normalizing before squaring, on its own, matters once PPO's own observation and reward normalization is already active.
+\item \textbf{G, the time added this step.} Rather than a person's total time in system (E) or a fixed charge per step (A), G charges exactly the time that was added to the system total during this one step, computed as the change, from one step to the next, in the sum of every active person's elapsed time, with a correction added back in for anyone who was delivered during the step (since a delivered person leaves the active count and would otherwise vanish from that difference without ever being charged for their last few minutes). This was checked to be exact, not just approximately right, by summing it over a whole ninety step episode and comparing the total against the true total time in system of every person involved: the two matched to nine decimal places.
+\item \textbf{H, a weighted mix of time and movement.} Combines F's unnormalized squared time term with a count of boats currently under way, weighted 95\% time and 5\% movement.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Eight reward formulas plus the reference policy, 150{,}000 timesteps each, evaluated on the five held-out seeds. Best value per column in bold; percent served is context only, not a ranking criterion (Section~\ref{sec:comparacion}).}
+\label{tab:prueba-rewards}
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+Reward & Mean sys.\ time (min) & Max sys.\ time (min) & Mean wait (min) & Movements & Served \\
+\midrule
+A & 37.17 & 122.07 & 22.45 & 164 & 78.1\% \\
+B & 29.02 & 60.77 & 17.06 & 191 & 88.0\% \\
+C & 29.25 & 74.07 & 20.21 & 193 & 84.5\% \\
+D & \textbf{25.73} & \textbf{51.92} & \textbf{16.21} & 174 & 84.5\% \\
+E & 41.06 & 123.13 & 24.41 & 172 & 74.8\% \\
+F & 33.05 & 81.13 & 22.78 & 183 & 75.9\% \\
+G & 33.46 & 109.74 & 20.72 & \textbf{169} & 74.4\% \\
+H & 37.15 & 103.74 & 24.94 & 194 & 81.4\% \\
+Reference (H0) & 26.05 & 69.74 & 16.42 & 155 & 88.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+D comes out ahead of every other formula, including B, on every column that matters (mean and maximum time in system, mean wait), and it is the closest any trained agent gets to the reference policy on this instance, close enough on mean time in system to actually edge past it (25.73 against 26.05 minutes). That D wins at all is itself worth noting: it is the raw production formula, never tuned for reinforcement learning, and the earlier, capped configuration A in the first probe above performed poorly for a related reason (a penalty that stops growing past a point gives the agent no reason to prioritize the worst case). D is uncapped and grows quickly, and here that turns out to help rather than hurt, once PPO's own normalization is active. This is the formula carried forward into the long training run of Section~\ref{sec:entrenamiento} and, later, into the full-scale training of Section~\ref{sec:entrenamiento-completo}.
+
+Among the four new formulas, E and F confirm that squaring the time penalty (F) is better than charging it linearly (E) on every column, which is consistent with the same design choice already made for D and B in Section~\ref{sec:reward-agent}: a penalty that grows faster than the wait itself pushes harder on the worst cases. G, which charges only the time added at each step rather than a person's whole accumulated time, gets close to D's mean and its lowest fifty percent of cases, but its worst case is much longer, suggesting a long tail that G's flatter, per step charge does not push against as hard as D's does. H, the weighted mix of time and movement, behaves almost identically to F rather than splitting the difference between time and movement as its 95/5 weighting might suggest; the reason turns out to be a scale problem, not a weighting problem, described next.
+
+\paragraph{A scale check on H's weighting.} Running the reference policy for one full episode and adding up H's two components separately shows why H behaves like F alone: the unweighted time term totals about 229{,}567 over the episode, the unweighted movement term totals 96, a ratio of roughly 2{,}400 to 1. Applying the nominal 95\%/5\% weights to numbers that far apart does not produce a 95/5 split of what the agent actually feels: the time term ends up carrying 99.998\% of the weighted total, the movement term the remaining 0.002\%. A weighted sum of two terms only reflects its stated weights if both terms already live on comparable scales before the weights are applied; here they did not, by roughly three orders of magnitude, and the result is a formula that reads as balanced on paper but is not in practice. This is stated here as a general point about combining several objectives into one number (exactly what Section~\ref{sec:reward-agent} does for discomfort and movement, at a much smaller and previously checked ratio), not only as a comment on H.
+
+\paragraph{A correctness finding, caught before it could spread further.} While implementing G, a check that should have summed to exactly zero over a full episode did not, which is what first exposed a bug worth describing here because of what it shows about working with mutable state in Python. Computing G at each step needs to know the system's total active time immediately before the step, so the first implementation simply kept a reference to the previous step's full state object. In this codebase, that state object is built by handing it the same list and dictionary the simulator itself keeps and keeps changing, not a copy of them; a variable that appears to store "the state as it was a moment ago" was, underneath, still pointing at the live, currently-changing data, so reading it later returned the current state, not the one from before. This was confirmed directly: a state saved at the very start of an episode, re-read eight steps later, reported people already active in a system that had started completely empty. The fix does not touch the simulator, only how G (and C, which relies on the same kind of "value from one step ago") is computed: instead of keeping a reference to the whole state object, a single number is computed and stored the moment the state is still fresh, and a number, unlike a reference to a mutable object, cannot later change out from under the code holding it. After the fix, G's zero-sum check holds to nine decimal places over a full episode. C had already been trained under the earlier version of the code by the time this was found; Table~\ref{tab:prueba-rewards} reports that run as it was, since retraining it was outside the scope of what was being checked at the time, but the potential-based shaping guarantee behind C (Ng et al.'s result, cited above) only holds for the shaping term as originally defined, so the guarantee should not be assumed to hold exactly for that particular run.
+
 \subsection{Fresh demand on every reset}
 \label{sec:demanda-fresca}
 
@@ -487,10 +643,23 @@ Percent served (context only) & 88.0\% & 77.5\% & 88.0\% \\
 
 $n_{\text{steps}}=90$ loses on every column, including the two that matter most: its worst case (73.7 minutes) is worse than the reference policy's, not just worse than $n_{\text{steps}}=512$'s, and its evaluation reward ($-28{,}082.5$) is close to where $n_{\text{steps}}=512$ started training, not where it ended. Training performance and evaluation performance pulled apart for this configuration even though both runs looked similar while training. The most likely reason: with $n_{\text{steps}}=90$ the rollout buffer holds exactly one episode, so PPO updates about 1{,}666 times over the run (once per episode) instead of about 293 times, each update built from an order of magnitude less experience. More frequent updates on smaller batches make each gradient step noisier and more tied to that one episode's particular random demand, which can look like steady improvement during training while leaving the policy less robust to demand it has not seen. $n_{\text{steps}}=512$, despite not being chosen for a principled reason either (Section~\ref{sec:entrenamiento}), ends up giving each update a wider, less noisy sample to learn from, and that turns out to matter more than lining updates up with episode boundaries. The agent used throughout Section~\ref{sec:comparacion} is the $n_{\text{steps}}=512$ run; $n_{\text{steps}}=90$ is reported here as a result that did not hold up under evaluation, not adopted.
 
+\subsection{Scaling up: training at the full instance}
+\label{sec:entrenamiento-completo}
+
+Everything up to this point, the reward search of Sections~\ref{sec:experimentos-reward} and~\ref{sec:prueba-rewards} and the training run just described, uses Step 1: two boats and a three hour morning window. That instance was chosen because it is small enough to iterate on quickly, but it is not the instance the rest of this report is actually about: the fleet-size sweep of Section~\ref{sec:sensibilidad-flota} and the heuristics it compares run on the full operating day with twelve boats. An agent trained on two boats cannot simply be pointed at twelve: the input vector described in Section~\ref{sec:implementacion} has a size that depends directly on the number of boats and pair queues, so a network trained for one fleet size is not even the right shape to load for another. A second, separate training run is therefore needed at the full scale before the agent can be compared against the heuristics on equal terms, which is what this section describes.
+
+The setup carries over the winning choice of Section~\ref{sec:prueba-rewards} without change: reward D, the same uncapped quadratic discomfort penalty, no movement term, and the same PPO settings (learning rate, entropy coefficient, VecNormalize) used throughout. The instance itself is the full-day, twelve-boat one used for the heuristics comparison in Section~\ref{sec:sensibilidad-flota}: 06:00 to 24:00, capacity 30 per boat, five hundred forty two-minute steps per episode. The rollout length is set to match, 540 steps, so that every PPO update sees a whole number of complete episodes, the same reasoning already applied to the smaller instance in Section~\ref{sec:entrenamiento}. Before committing to a long run, a short automated check confirmed the basics could not have silently drifted: the episode length, the boat count and capacity, the reward configuration actually being read, and that two calls to reset with the same explicit seed return identical demand while two calls with no seed return different demand, all matched what was intended.
+
+Two practical changes were made to this run purely to make better use of the computer it ran on, neither of which touches the reward, the hyperparameters, or the environment's mechanics. First, the environment runs in two copies in parallel rather than one, so that the computer's several processor cores can each advance a copy of the simulation at the same time instead of one core doing all the work alone; this cuts wall clock time roughly in half for the same number of environment steps. Second, an unrelated piece of background software on the same machine (a cloud file sync client) was found, partway through an earlier attempt, to be competing heavily for processor time with the training run itself; pausing it removed that source of slowdown. These are computational, not scientific, decisions, and they are recorded here for transparency rather than because they change what was learned. The one consequence worth stating plainly is the total training budget: an initial attempt at four parallel environments and one million timesteps ran into memory pressure on the training machine and had to be stopped partway through, so the run actually completed here uses two parallel environments and a reduced budget of seven hundred thousand timesteps, chosen to fit comfortably in the time available rather than derived from any formula.
+
+The completed run reached 700{,}920 timesteps (slightly over the seven hundred thousand target, since training only stops at the end of a whole update), 649 policy updates, and about 1{,}892 complete episodes, in a little under four hours of wall clock time. The resulting model and its normalization statistics are what Section~\ref{sec:comparacion-final} evaluates against the heuristics of Sections~\ref{sec:politica-base} and~\ref{sec:sensibilidad-flota}, on the same twelve-boat, full-day instance and the same five evaluation seeds used everywhere else in this report.
+
 % =====================================================================
-\section{Results: Agent vs.\ Reference Policy}
+\section{Results: Agent vs.\ Reference Policy at Small Scale}
 \label{sec:comparacion}
 % =====================================================================
+
+This section keeps the comparison originally run for this project's first trained agent, at the two-boat scale used to develop and check the training pipeline itself. It is a useful checkpoint precisely because the instance is small enough to read a single run by eye, but the fleet-size sweep of Section~\ref{sec:sensibilidad-flota} already showed that a heuristic's ranking at four boats does not always predict its ranking at twelve, so this comparison should be read as a sanity check on the method, not as the project's main result. Section~\ref{sec:comparacion-final} repeats the same kind of comparison, agent against the strongest heuristic, on the full twelve-boat instance the rest of this report is about, and is where the main conclusion of this project should be read from.
 
 The trained agent of Section~\ref{sec:entrenamiento} and the reference policy of Section~\ref{sec:politica-base} are run on the same five evaluation seeds, 1001 through 1005, chosen outside the range of seeds used to generate training episodes so that neither policy is evaluated on demand it could have seen before. Because both policies act on the same \texttt{EntornoDemandaAleatoria.reset(seed=\ldots)} call (Section~\ref{sec:demanda-fresca}), a given seed produces the identical demand table for both, so any difference in outcome reflects the policy, not the demand.
 
@@ -550,6 +719,61 @@ On this specific seed the reference policy has a clearly shorter mean wait than 
 \end{figure}
 
 % =====================================================================
+\section{Results: Full-Day Comparison}
+\label{sec:comparacion-final}
+% =====================================================================
+
+This is the main comparison of the project: the agent trained at full scale in Section~\ref{sec:entrenamiento-completo} against H0 and H3, the weakest and the strongest of the four heuristics from Sections~\ref{sec:politica-base} and~\ref{sec:sensibilidad-flota}, all three run on the exact instance the rest of this report has been building toward, twelve boats, capacity 30, the full operating day from 06:00 to 24:00, and the same five held-out evaluation seeds used everywhere else. H1 and H2 are left out here because Section~\ref{sec:sensibilidad-flota} already showed neither one beats H0 consistently at this scale, so H0 and H3 already bracket the range worth comparing the agent against. H0 and H3's numbers below are the same ones already reported in Section~\ref{sec:sensibilidad-flota} at the twelve-boat row, not recomputed; only the agent is evaluated fresh here, on the same five seeds, using the model of Section~\ref{sec:entrenamiento-completo}.
+
+As a check before trusting the comparison at all, the amount of demand generated for a given seed was confirmed to match exactly between the heuristics, which read a fixed table of demand prepared ahead of time, and the agent, which generates its own demand table on the fly from the same seed (Section~\ref{sec:demanda-fresca}): for seed 1001, both paths produce exactly 8{,}324 people, confirming that "the same seed" really does mean the same demand for all three.
+
+\subsection{Aggregate result, five seeds}
+
+\begin{table}[H]
+\centering
+\caption{H0, H3, and the trained agent, twelve boats, full day, mean over the five evaluation seeds.}
+\label{tab:comparacion-final}
+\small
+\begin{tabular}{lccc}
+\toprule
+Metric & H0 & H3 & PPO agent \\
+\midrule
+Percent served & 99.58\% & 99.61\% & 99.39\% \\
+Backlog at close & 34.2 & 31.8 & 50.2 \\
+Mean waiting time (min) & 6.18 & 4.81 & 12.76 \\
+95th percentile wait (min) & 15.71 & 12.27 & 37.25 \\
+Maximum wait (min) & 28.03 & 18.36 & 105.40 \\
+Mean time in system (min) & 15.97 & 14.60 & 22.55 \\
+Total movements & 1268.6 & 803.2 & 1149.8 \\
+Empty movements & 704.0 & 200.6 & 660.6 \\
+Loaded movements & 564.6 & 602.6 & 489.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 95th percentile and maximum time in system are also available for the agent (46.17 and 115.40 minutes) but not for H0 and H3, since the fleet-size sweep of Section~\ref{sec:sensibilidad-flota} did not record them; they are not recomputed here to avoid mixing a number just calculated with numbers taken as given, so they are reported for the agent alone, for completeness, without a heuristic to set them against.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figuras/dia_completo_dashboard.png}
+\caption{All headline metrics side by side, H0 vs.\ H3 vs.\ the trained agent, twelve boats, full day, mean $\pm$ one standard deviation over five seeds.}
+\label{fig:dia-completo-dashboard}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figuras/dia_completo_heatmap.png}
+\caption{Percent served by origin-destination pair, H0 vs.\ H3 vs.\ the trained agent, seed 1001.}
+\label{fig:dia-completo-heatmap}
+\end{figure}
+
+\subsection{Reading the result honestly}
+
+At this scale, the trained agent does not beat either heuristic. It comes close on percent served (99.39\% against 99.58\% and 99.61\%), but every metric this report has treated as the one that actually matters throughout (mean wait, the 95th percentile, the worst case, time in system) is clearly worse for the agent, by a factor of two to four depending on the column, and the backlog left over at the end of the day is larger too. H3 remains the strongest policy of the three by a wide margin, and it does so while moving the fleet less than either H0 or the agent, so this is not a case of H3 simply working the boats harder. This is stated plainly and without qualification because the reward the agent was trained on is not the criterion for this comparison (Section~\ref{sec:comparacion} already explains why, and the same reasoning applies here): the agent should not be called better because its own training signal looks favorable, only because the same operational numbers used to judge every heuristic in this report say so, and here they do not.
+
+It is worth asking why, given that the same reward, D, was the strongest performer of eight tested at the smaller, two-boat scale (Section~\ref{sec:prueba-rewards}), and even edged past the reference policy there. Three things changed at once between that result and this one, and this report cannot cleanly separate their individual contribution. First, the action space grows sharply with the fleet: each boat still chooses among five options, but the joint choice for the whole fleet is one of $5^{12}$ combinations at this scale against $5^{2}$ at the smaller one, a much larger space for the same policy network architecture (Section~\ref{sec:implementacion}) to search. Second, the training budget did grow, from 150{,}000 to about 700{,}000 timesteps, but far less than the instance did: the smaller instance's episodes are 90 steps long, so 150{,}000 timesteps is around 1{,}600 full episodes of experience, while the larger instance's 540 step episodes mean 700{,}000 timesteps is only around 1{,}300 episodes, fewer complete passes through the problem despite the larger raw timestep count. Third, the twelve-boat instance was reached in a single attempt rather than through the same kind of deliberate, evidence-based search this report ran for the reward itself (Section~\ref{sec:prueba-rewards}) and for the rollout length (Section~\ref{sec:entrenamiento}); it is entirely possible that some setting tuned for the two-boat instance, the rollout length in particular, is no longer a good choice once the episode itself is six times longer, and nothing in this report tests that directly at the larger scale. None of this excuses the result or explains it away; it points at what a next attempt at this scale would need to try first.
+
+% =====================================================================
 \section{Assumptions and Limitations}
 \label{sec:limitaciones}
 % =====================================================================
@@ -560,19 +784,50 @@ This project makes a number of explicit simplifying choices, stated here togethe
 
 \paragraph{No passenger patience, by design.} The environment does not remove anyone from a queue for having waited too long (Section~\ref{sec:mdp}); every person generated is either served or still in the system when a run ends. This was a deliberate choice to obtain uncensored waiting-time statistics (Section~\ref{sec:escalones}), but it also means neither policy has any pressure resembling a hard service-level deadline: the reference policy never consults the reward at all, and the agent is trained on the uncapped discomfort penalty (Section~\ref{sec:reward-agent}), which grows without bound the longer someone waits rather than plateauing.
 
-\paragraph{The reference policy is local-first and myopic (Section~\ref{sec:limitaciones-politica-base}).} It is a considered heuristic, not an optimizer, and the comparison in Section~\ref{sec:comparacion} should be read as agent-vs-heuristic, not agent-vs-optimal.
+\paragraph{None of the four heuristics is an optimizer.} H0 through H3 (Sections~\ref{sec:politica-base} and~\ref{sec:h1}-\ref{sec:h3}) are considered rules, each checked by hand-built cases and compared honestly against the others, but none of them searches for the best possible joint assignment of boats to demand; every comparison in this report, including the agent's, should be read as one method against another, not against a known optimum.
 
-\paragraph{The agent is trained and evaluated on a single, small instance.} Both the reward-shaping experiments of Section~\ref{sec:experimentos-reward} and the long training run of Section~\ref{sec:entrenamiento} use Step 1 (two boats, the morning window) exclusively; nothing in this report establishes how the trained agent would behave on the larger Step 2 or Step 3 instances, or on a fleet of a different size.
+\paragraph{The reward search and the rollout-length check were only ever done at the small, two-boat scale.} Sections~\ref{sec:experimentos-reward} through~\ref{sec:entrenamiento} settle on a reward formula and a rollout length using the two-boat morning instance exclusively, because it is cheap enough to run many configurations on. The full-scale training run of Section~\ref{sec:entrenamiento-completo} carries that same reward and rollout length forward without re-checking either one at the larger size, and Section~\ref{sec:comparacion-final} discusses this directly as one of the likely reasons the full-scale agent does not perform as well, relative to the heuristics, as the small-scale one did.
 
-\paragraph{Reward shape was explored, not exhaustively searched.} Section~\ref{sec:experimentos-reward} tests four configurations along two design axes (discomfort cap, movement weight) at one training budget each; other combinations, and other training budgets for the same combinations, were not tried, so the chosen configuration is a reasonable, evidence-based choice rather than a demonstrably optimal one.
+\paragraph{The full-scale training run was attempted once.} Unlike the reward search, which compared eight formulas, or the rollout-length check, which compared two settings, the twelve-boat training of Section~\ref{sec:entrenamiento-completo} was run a single time, with a training budget chosen to fit the time available rather than tuned for this instance specifically; a different budget, a different rollout length, or a repeated run with a different random seed might change the result in either direction, and this report does not have the evidence to say by how much.
+
+\paragraph{Reward shape was explored, not exhaustively searched.} Sections~\ref{sec:experimentos-reward} and~\ref{sec:prueba-rewards} together test twelve configurations along several design axes (discomfort cap, movement weight, linear vs.\ quadratic, potential-based shaping, a multi-objective weighting), which is a wider search than a single guess but still not every combination worth trying; the chosen configuration, reward D, is a reasonable, evidence-based choice rather than a demonstrably optimal one. One of the twelve, reward C, was later found to have been trained under a software bug that changed what its shaping term actually computed (Section~\ref{sec:prueba-rewards}); its result is reported as it was obtained, not retrained, and is flagged there rather than treated as a clean data point.
 
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
 
-This project set out to build the simulation and dispatch logic for a schedule-free, on-demand water transport service in Bergen, and to compare a fixed reference policy against a learned one on that simulation. The fixed policy, nearest-available with fleet coordination (Section~\ref{sec:politica-base}), serves as more than a placeholder: verified at three increasing scales, it serves essentially all demand (99.6-100\%) and its coordination step (Section~\ref{sec:asignar-flota}) is what makes it work at all with more than one boat sharing the same demand picture. The reinforcement-learning agent, trained with PPO after a deliberate, evidence-based sequence of reward-shaping experiments (Section~\ref{sec:experimentos-reward}) rather than by assumption, beats the reference policy on the metric its reward is built around, the worst case of time in system (60.8 vs.\ 69.7 minutes), at the cost of a slightly longer mean wait and a more active fleet (Section~\ref{sec:comparacion}). The seed-level detail in the same section is a deliberate corrective to reading the aggregate table alone: on a single representative run, the reference policy can wait noticeably less than the agent, so which policy is preferable depends on whether the objective is a shorter typical wait or protection against the worst individual case. This is a question this project surfaces with concrete evidence rather than resolves.
+This project set out to build the simulation and dispatch logic for a schedule-free, on-demand water transport service in Bergen, from the routing and demand model that feed it (Sections~\ref{sec:demand} onward) through a family of fixed dispatch rules and, finally, a learned one, compared honestly against each other on the same instance.
 
-The most direct next steps follow from the limitations of Section~\ref{sec:limitaciones}: training and evaluating the agent on the larger Step 2 and Step 3 instances, to see whether its behavior generalizes beyond the two-boat morning instance used here; extending the reward-shaping search beyond the four configurations tested; and, longer term, using the uncensored waiting-time percentiles this environment already produces (Section~\ref{sec:escalones}) to propose a concrete service-time guarantee, the kind of commitment a real schedule-free service would need to state and hold itself to.
+The four fixed heuristics tell a clear, evidence-based story. H0, nearest-available with fleet coordination (Section~\ref{sec:politica-base}), is more than a placeholder: verified at three increasing time scales, it serves essentially all demand and its coordination step is what lets it work at all once more than one boat shares the same demand picture. H1 fixes a second coordination gap, one that H0's own fix did not reach, by adding a reservation that survives across simulation steps, not just within one. H2 adds a cost function but keeps H0's local-first split. H3 removes that split entirely, letting any queue in the system compete on equal footing, and this is the one change that actually pays off: across seven fleet sizes, H3 is the only heuristic that beats H0 consistently, and its advantage grows rather than shrinks as the fleet grows (Section~\ref{sec:sensibilidad-flota}), while H1 and H2 fall further behind H0 as more boats are added. This is not a small or expected result: adding a cost function alone (H2) is not enough, and only removing the local-first restriction that costs are computed under (H3) turns that cost function into a genuine improvement.
+
+The reinforcement-learning agent was developed with the same evidence-first approach: twelve different reward formulas were tried, at a small, fast-iterating scale, before settling on one (Section~\ref{sec:prueba-rewards}), and a rollout-length choice was checked directly rather than assumed (Section~\ref{sec:entrenamiento}) once training performance and evaluation performance turned out to disagree for a plausible-looking default. At that same small scale, the chosen reward even edged past the reference policy on mean time in system. Trained again at the full scale this report is really about, twelve boats and a full operating day (Section~\ref{sec:entrenamiento-completo}), the agent does not repeat that result: H0 and, especially, H3 both serve people faster and more predictably than the trained agent at this scale, on every metric this report has treated as the one that matters, not only on the reward the agent happened to be trained on (Section~\ref{sec:comparacion-final}). This is reported as it was measured, without softening it, because the point of building the heuristics first and holding them to real operational metrics throughout was precisely so that a result like this one could not be waved away.
+
+Taken together, the clearest finding of this project is that a carefully built rule, one that removes an unnecessary restriction on what it is allowed to compare (H3), was harder to beat than expected, and a learning method that looked strong at small scale did not automatically carry that strength to the scale that actually matters. Both of those are useful things to know before committing to either approach for a real service, and both point at the same next step: whatever is tried next, whether a better-tuned agent or a further refinement of the heuristic, needs to be checked at the full scale directly, not assumed to transfer from a smaller one.
+
+The most direct next steps follow from the limitations of Section~\ref{sec:limitaciones}: repeating the reward and rollout-length search directly at the twelve-boat scale, rather than carrying over choices made at the smaller one; training the full-scale agent for longer, or more than once, to see how much of the current gap is a training-budget effect rather than a ceiling; retraining reward C under the corrected code now that the aliasing bug behind it is understood (Section~\ref{sec:prueba-rewards}); and, longer term, using the uncensored waiting-time percentiles this environment already produces to propose a concrete service-time guarantee, the kind of commitment a real schedule-free service would need to state and hold itself to.
+
+% =====================================================================
+\appendix
+\section{Where Everything Lives in This Project}
+\label{sec:apendice-repo}
+% =====================================================================
+\sloppy
+
+This report is one part of a larger project kept under version control (git), with every simulator, policy, training script, and result file organized into folders by what it is responsible for. This appendix is a short map of that project, for anyone who wants to look at the code or the raw results behind a number in this report, or rerun something themselves.
+
+\paragraph{The overall layout.} Six top-level folders each own one piece of the project, and every later piece reads from the earlier ones rather than copying anything:
+\begin{itemize}
+\item \texttt{bergen-boats/} holds the base instance: the four stops, the navigable routing module of Section~\ref{sec:ruteo}, and the resulting travel-time matrix.
+\item \texttt{demand/} holds the synthetic demand model of Section~\ref{sec:demand}: the population and employment data, the intensity formula, and the code that draws arrivals.
+\item \texttt{simulador/} is the simulation engine itself (Section~\ref{sec:mdp}): the environment, the state and reward definitions, the metrics used throughout this report, and the mapping and plotting code shared by every later piece.
+\item \texttt{politica\_base/} and \texttt{heuristicas/} hold H0 and H1 through H3 respectively (Sections~\ref{sec:politica-base}-\ref{sec:h3}), together with the fleet-size sweep of Section~\ref{sec:sensibilidad-flota}.
+\item \texttt{modelo\_rl/} holds the reinforcement-learning agent: the training code, the reward-formula experiments of Sections~\ref{sec:experimentos-reward} and~\ref{sec:prueba-rewards} (the latter under \texttt{modelo\_rl/prueba\_rewards/}), and the full-scale training run of Section~\ref{sec:entrenamiento-completo}.
+\item \texttt{comparacion/} holds every side-by-side comparison between policies, including both results sections of this report (Sections~\ref{sec:comparacion} and~\ref{sec:comparacion-final}).
+\end{itemize}
+
+\paragraph{A shared rule.} Every one of these folders keeps its own settings in a single \texttt{config/instance.yaml} file (fleet size, capacity, reward parameters, evaluation seeds, and so on) and every other folder that needs one of those settings reads that same file rather than copying the value into its own code; this is why, for instance, the twelve-boat instance used in Section~\ref{sec:sensibilidad-flota} and the one used in Section~\ref{sec:comparacion-final} are guaranteed to be the same instance, not two numbers that happen to match.
+
+\paragraph{Finding a specific result.} Each folder also keeps a \texttt{README.md} file explaining, in plain language, what is in it and why, and most also keep an \texttt{outputs/} or \texttt{output/} folder with the raw CSV result tables and figures behind whatever this report summarizes. In particular, the five controlled cases used to check H1 through H3 in Section~\ref{sec:h1} live in \texttt{heuristicas/notebooks/01\_metodologia\_heuristicas.ipynb}, run live rather than only asserted; the full fleet-size sweep behind Section~\ref{sec:sensibilidad-flota} is in \texttt{heuristicas/notebooks/03\_comparacion\_flota.ipynb}, with its raw numbers in \texttt{heuristicas/outputs/resultados/}; the eight-formula reward search of Section~\ref{sec:prueba-rewards}, including the scale-check and the aliasing bug described there, is written up in full in \texttt{modelo\_rl/prueba\_rewards/README.md}; and the full-scale training and final comparison of Sections~\ref{sec:entrenamiento-completo} and~\ref{sec:comparacion-final} are in \texttt{modelo\_rl/ppo\_dia\_10pct\_12barcos\_reward\_D\_1M/} and \texttt{comparacion/dia\_completo/} respectively, the latter also holding an animated, minute-by-minute video of all three policies side by side over the morning hours, the same kind of visualization Figure~\ref{fig:politica-base-snapshots} could only show as a handful of static frames here.
 
 \bibliographystyle{plainnat}
 \bibliography{referencias}

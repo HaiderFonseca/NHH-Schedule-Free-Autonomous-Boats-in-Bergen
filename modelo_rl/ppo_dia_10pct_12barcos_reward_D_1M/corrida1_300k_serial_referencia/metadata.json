@@ -1,0 +1,44 @@
+{
+  "demand_level": 0.1,
+  "hours": [
+    6,
+    24
+  ],
+  "num_boats": 12,
+  "capacity": 30,
+  "step_minutes": 2,
+  "episode_steps": 540,
+  "reward": "D",
+  "reward_overrides_used": {
+    "tolerancia_incomodidad_min": 0,
+    "sobrante_normalizador_min": 12,
+    "penalizacion_maxima_persona": 100000000000.0,
+    "peso_movimiento": 0,
+    "premio_por_persona_entregada": 0
+  },
+  "gamma": 0.99,
+  "learning_rate": 0.0003,
+  "ent_coef": 0.01,
+  "n_steps": 540,
+  "vecnormalize": true,
+  "total_timesteps_original_request": 1000000,
+  "total_timesteps_usado": 300000,
+  "motivo_cambio_total_timesteps": "Medido en esta maquina: 1,000,000 timesteps tomaba ~48.5h (5.7 pasos/seg), por OneDrive sincronizando el log de entrenamiento en tiempo real. Con el log movido fuera de OneDrive durante el entrenamiento subio a ~22.8 pasos/seg (~12-13h para 1,000,000), pero seguia siendo mas de lo que el usuario podia esperar. Se le pregunto explicitamente y autorizo bajar a 300,000 (~3.7-4h). Ningun otro parametro (gamma, learning_rate, ent_coef, n_steps, reward D, semillas) se modifico por este motivo.",
+  "total_timesteps_requested": 300000,
+  "total_timesteps_real": 300240,
+  "actualizaciones_ppo": 556,
+  "tiempo_entrenamiento_s": 12234.012659549713,
+  "tiempo_entrenamiento_min": 203.90021099249523,
+  "episodios_completados": 556,
+  "pasos_por_segundo": 24.54141648820647,
+  "training_seed": 123,
+  "evaluation_seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "nodo_inicial": "bryggen",
+  "unidad_demanda": "personas"
+}

@@ -1,0 +1,46 @@
+{
+  "demand_level": 0.1,
+  "hours": [
+    6,
+    24
+  ],
+  "num_boats": 12,
+  "capacity": 30,
+  "step_minutes": 2,
+  "episode_steps": 540,
+  "reward": "D",
+  "reward_overrides_used": {
+    "tolerancia_incomodidad_min": 0,
+    "sobrante_normalizador_min": 12,
+    "penalizacion_maxima_persona": 100000000000.0,
+    "peso_movimiento": 0,
+    "premio_por_persona_entregada": 0
+  },
+  "gamma": 0.99,
+  "learning_rate": 0.0003,
+  "ent_coef": 0.01,
+  "n_steps": 540,
+  "n_envs": 2,
+  "pasos_por_actualizacion": 1080,
+  "vecnormalize": true,
+  "total_timesteps_original_request": 1000000,
+  "total_timesteps_usado": 700000,
+  "motivo_cambio_total_timesteps": "Corrida 1 (300,000, 1 entorno) completada y evaluada -- PPO no supero a H0 ni H3 en ninguna metrica de servicio (ver corrida1_300k_serial_referencia/). Corrida 2 (1,000,000, 4 entornos en paralelo) se INTERRUMPIO a los ~92 min: la RAM libre de la maquina (15.8GB totales) cayo de 3.7GB a 1.4GB con 4 procesos en paralelo, y el fps colapso de 69 a 7 (proyectaba ~38h). Se mato el proceso antes de que degradara mas. Corrida 3 (esta): 2 entornos en vez de 4 (menos presion de memoria), validado con una prueba sostenida de 20 rollouts (~11 min) antes de lanzar la corrida larga -- la memoria SI se recupero completa despues de esa prueba (no hubo fuga persistente), aunque el fps igual bajo de forma mas suave (67->31) sin causa clara identificada. total_timesteps=700,000 (no el 1,000,000 original) como punto medio realista dado el fps medido (~31 pasos/seg sostenidos, ~6.2h) -- aprobado explicitamente por el usuario (Opcion A). Ningun otro hiperparametro (gamma, learning_rate, ent_coef, n_steps POR ENTORNO, reward D, semillas) se modifico.",
+  "total_timesteps_requested": 700000,
+  "total_timesteps_real": 700920,
+  "actualizaciones_ppo": 649,
+  "tiempo_entrenamiento_s": 14231.552730560303,
+  "tiempo_entrenamiento_min": 237.19254550933837,
+  "episodios_completados": 1892,
+  "pasos_por_segundo": 49.251126231284005,
+  "training_seed": 123,
+  "evaluation_seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "nodo_inicial": "bryggen",
+  "unidad_demanda": "personas"
+}

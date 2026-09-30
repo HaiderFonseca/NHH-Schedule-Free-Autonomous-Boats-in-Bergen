@@ -1,0 +1,20 @@
+{
+  "evaluation_seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "num_boats": 12,
+  "capacity": 30,
+  "demand_level": 0.1,
+  "hours": [
+    6,
+    24
+  ],
+  "modelo": "C:\\Users\\hfons\\Andes\\OneDrive - Universidad de los Andes\\NHH\\NHH-Schedule-Free-Autonomous-Boats-in-Bergen\\modelo_rl\\ppo_dia_10pct_12barcos_reward_D_1M\\modelo_ppo.zip",
+  "vecnormalize": "C:\\Users\\hfons\\Andes\\OneDrive - Universidad de los Andes\\NHH\\NHH-Schedule-Free-Autonomous-Boats-in-Bergen\\modelo_rl\\ppo_dia_10pct_12barcos_reward_D_1M\\vecnormalize.pkl",
+  "h0_h3_source": "C:\\Users\\hfons\\Andes\\OneDrive - Universidad de los Andes\\NHH\\NHH-Schedule-Free-Autonomous-Boats-in-Bergen\\heuristicas\\outputs\\resultados\\resultados_h0_h1_h2_h3.csv",
+  "nota": "H0 y H3 reusados de heuristicas/, NO recalculados. sistema_p95_min/sistema_max_min no estan disponibles para H0/H3 en esa fuente."
+}

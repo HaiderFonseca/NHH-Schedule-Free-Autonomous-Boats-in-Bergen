@@ -1,13 +1,14 @@
 # Fdb version 4
-["bibtex informe"] 1788953940.80193 "informe.aux" "informe.bbl" "informe" 1788953945.97448 0
-  "./referencias.bib" 1788438605 1917 efc69dc8ba687af89f8a4a6cfcdef2f0 ""
+["bibtex informe"] 1790762428.52173 "informe.aux" "informe.bbl" "informe" 1790762437.87052 0
+  "./referencias.bib" 1790762023 2264 1655fe9e93a2e978bd710bbc833f9af6 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/bibtex/bst/natbib/plainnat.bst" 1748957407 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "informe.aux" 1788953945 17526 2b66b8a092aa17df159c769a997b8f5c "pdflatex"
+  "informe.aux" 1790762437 24273 809714d95775599084dd75b9cdda7c6a "pdflatex"
   (generated)
   "informe.bbl"
   "informe.blg"
   (rewritten before read)
-["pdflatex"] 1788953940.88855 "informe.tex" "informe.pdf" "informe" 1788953945.97507 0
+["pdflatex"] 1790762428.60526 "informe.tex" "informe.pdf" "informe" 1790762437.87151 0
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm" 1748957412 1536 02c06700a42be0f5a28664c7273f82e7 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1748957413 1004 54797486969f23fa377b128694d548df ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1748957413 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex9.tfm" 1748957413 996 a18840b13b499c08ac2de96a99eda4bc ""
@@ -50,6 +51,7 @@
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1748957417 35752 024fb6c41858982481f6968b5fc26508 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1748957417 32722 d7379af29a190c3f453aba36302ff5a9 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb" 1748957417 32362 bc3f3eec7ab7d65fe700963d4017d32c ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb" 1748957417 32734 69e00a6b65cedb993666e42eedb3d48f ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb" 1748957417 32762 7fee39e011c23b3589931effd97b9702 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1748957417 32726 39f0f9e62e84beb801509898a605dbd5 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1748957417 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
@@ -114,11 +116,14 @@
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/url/url.sty" 1748957426 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/web2c/texmf.cnf" 1748957427 42148 61becc7c670cd061bb319c643c27fdd4 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1748957427 94259 aec9939469efac8f0cf917369f632359 ""
+  "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1095.600pk" 1788191681 12644 e40ca6da75b24752767278ab019bc412 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt" 1748957502 2193975 12648406d9923e00f513b5cef61551c3 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf.cnf" 1748957458 956 3a220487175abd462f2198e027963bed ""
   "figuras/comparacion_heatmaps.png" 1788783541 165187 2a683e5513fd3268cacbcdb749d8c8a3 ""
   "figuras/comparacion_ocupacion_semilla1001.png" 1788783546 177372 4cc5520fe60eee5b97ac9aeace4c93f3 ""
   "figuras/comparacion_perfil_espera_semilla1001.png" 1788783544 146889 437486725527d20998564692bbabec35 ""
+  "figuras/dia_completo_dashboard.png" 1790761709 182413 356b2163ee8d4ae086310794d3049b16 ""
+  "figuras/dia_completo_heatmap.png" 1790761709 117797 b3ffb46b8c2bfaccb53c65f2ef33fe20 ""
   "figuras/heatmaps_od_por_franja.png" 1788191387 247612 9e892437f4bc6abd3a2bb18d0cd6fcd0 ""
   "figuras/histograma_tamano_grupo.png" 1788191388 66119 f89e13ce4c4180c11a957537125c7674 ""
   "figuras/mapa_general_zonas_grunnkretser.png" 1788191387 1532814 43b55c48eab3ad1ec046968518429072 ""
@@ -128,11 +133,12 @@
   "figuras/politica_base_perfil_espera.png" 1788438258 194273 fd95b9119bd655f72c892e932d589dbc ""
   "figuras/politica_base_snapshots.png" 1788438333 409022 abc977b83c9f7a94b1e766309e436d05 ""
   "figuras/rl_training_curve.png" 1788783549 308683 bd6747b161700afcd9648c81cd68cbb2 ""
-  "informe.aux" 1788953945 17526 2b66b8a092aa17df159c769a997b8f5c "pdflatex"
-  "informe.bbl" 1788953940 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
-  "informe.out" 1788953945 5349 ac7020bc0b65f9116668c8ab3bb330a0 "pdflatex"
-  "informe.tex" 1788953923 69448 2dcbf179386967024386f04fa645e2e3 ""
-  "informe.toc" 1788953945 4062 10a22d434b000173a24ed71c890e9a35 "pdflatex"
+  "figuras/sensibilidad_flota.png" 1790761699 259413 303eeb80a9c758f3c60d0c19cdb50ff9 ""
+  "informe.aux" 1790762437 24273 809714d95775599084dd75b9cdda7c6a "pdflatex"
+  "informe.bbl" 1790762428 2606 ef9bf8d8ec2ec0e7950c0b6b2936f894 "bibtex informe"
+  "informe.out" 1790762437 8746 3e4cbec0fc201bc6020200d1df935294 "pdflatex"
+  "informe.tex" 1790762412 114773 d0494716c325d24856345a345ed7d8bd ""
+  "informe.toc" 1790762437 5809 3e93845281ed23d540fc363f3ff9b16a "pdflatex"
   (generated)
   "informe.aux"
   "informe.log"
