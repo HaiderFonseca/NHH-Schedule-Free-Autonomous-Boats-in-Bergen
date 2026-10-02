@@ -1,121 +1,121 @@
-# Política base ("nearest-available") -- referencia + verificación del simulador
+# Base policy ("nearest-available") - reference + simulator verification
 
-**Qué es esto, en una frase:** la política de referencia (una regla fija, no aprendida) y los notebooks que, corriéndola sobre demanda de tamaño creciente, verifican a fondo que el motor (`simulador/`) hace lo que debe -- antes de conectar cualquier agente de RL (`modelo_rl/`).
+**What this is, in one sentence:** the reference policy (a fixed rule, not learned) and the notebooks that, by running it over demand of increasing size, thoroughly verify that the engine (`simulador/`) does what it should - before connecting any RL agent (`modelo_rl/`).
 
 ---
 
-## 1. Cómo está organizado
+## 1. How it is organized
 
 ```
 politica_base/
-├── README.md                      # este archivo
+├── README.md                      # this file
 ├── src/
-│   └── politica_base.py           # la regla "nearest-available" + coordinación de flota
+│   └── politica_base.py           # the "nearest-available" rule + fleet coordination
 ├── notebooks/
-│   ├── 00_preparar_demanda_escalones.ipynb   # genera la demanda de prueba (escalones 1-3)
-│   ├── 01_escalon_1_verificacion.ipynb       # franja mañana, verificación a ojo + animación
-│   ├── 02_escalon_2_metricas.ipynb           # día completo, métricas agregadas (sin animación)
-│   └── 03_escalon_3_semana.ipynb             # semana completa (7 días), métricas agregadas
+│   ├── 00_preparar_demanda_escalones.ipynb   # generates the test demand (stages 1-3)
+│   ├── 01_escalon_1_verificacion.ipynb       # morning window, visual verification + animation
+│   ├── 02_escalon_2_metricas.ipynb           # full day, aggregated metrics (no animation)
+│   └── 03_escalon_3_semana.ipynb             # full week (7 days), aggregated metrics
 └── output/
-    ├── escalon1/                  # todo lo que produce el notebook 01
-    ├── escalon2/                  # todo lo que produce el notebook 02, misma estructura de archivos
-    └── escalon3/                  # todo lo que produce el notebook 03 (semana)
+    ├── escalon1/                  # everything produced by notebook 01
+    ├── escalon2/                  # everything produced by notebook 02, same file structure
+    └── escalon3/                  # everything produced by notebook 03 (week)
 ```
 
-Los notebooks importan `simulador/src` (motor: `env.py`, `estado.py`, `recompensa.py`, `metricas.py`, `visualizacion.py`) además de `src/politica_base.py` propio, y leen `simulador/config/instance.yaml` (única fuente de verdad de parámetros compartidos). Cada escalón tiene su propia carpeta en `output/` con los mismos nombres de archivo adentro (`grupos.csv`, `metricas_por_par.csv`, `wait_profile.html`, etc.) -- fácil comparar un escalón contra el otro abriendo la carpeta correspondiente. La única diferencia de contenido: `escalon1/` tiene `animacion.gif` (la corrida es chica, 90 pasos, se puede animar); `escalon2/` y `escalon3/` no (corridas largas -- un GIF de esa duración pesa y tarda mucho más, y la verificación visual paso a paso ya se hizo a fondo en el escalón 1). `escalon3/` usa `grupos_semana.csv` en vez de `grupos.csv` (7 días concatenados, columna `dia`).
+The notebooks import `simulador/src` (engine: `env.py`, `estado.py`, `recompensa.py`, `metricas.py`, `visualizacion.py`) in addition to its own `src/politica_base.py`, and read `simulador/config/instance.yaml` (single source of truth for shared parameters). Each stage has its own folder in `output/` with the same filenames inside (`grupos.csv`, `metricas_por_par.csv`, `wait_profile.html`, etc.) - easy to compare one stage against another by opening the corresponding folder. The only difference in content: `escalon1/` has `animacion.gif` (the run is small, 90 steps, so it can be animated); `escalon2/` and `escalon3/` do not (long runs - a GIF of that duration is heavy and takes much longer, and the step-by-step visual verification was already done thoroughly in stage 1). `escalon3/` uses `grupos_semana.csv` instead of `grupos.csv` (7 days concatenated, column `dia`).
 
 ---
 
-## 2. La política de referencia ("nearest-available")
+## 2. The reference policy ("nearest-available")
 
-`src/politica_base.py` tiene dos funciones:
+`src/politica_base.py` has two functions:
 
-- **`politica_base(barco, estado, matriz_tiempos, cfg)`** -- decide UN barco: prioriza la demanda que sale de su nodo actual (servible de inmediato); si no hay nada ahí, considera reposicionarse vacío hacia el nodo con la demanda más urgente del resto del sistema.
-- **`asignar_flota(barcos_libres, estado, matriz_tiempos, capacidad_barco, cfg)`** -- aplica lo anterior a **varios barcos libres a la vez, uno por uno**, descontando localmente lo que cada barco ya "se llevaría" antes de decidir el siguiente. Es la forma correcta de usar la política con más de un barco (ver "coordinación de flota" más abajo) -- la que realmente se usa en los notebooks.
+- **`politica_base(barco, estado, matriz_tiempos, cfg)`** - decides for ONE boat: it prioritizes demand leaving from its current node (immediately servable); if there is nothing there, it considers repositioning empty toward the node with the most urgent demand in the rest of the system.
+- **`asignar_flota(barcos_libres, estado, matriz_tiempos, capacidad_barco, cfg)`** - applies the above to **several free boats at once, one by one**, locally deducting what each boat would already "take" before deciding the next one. This is the correct way to use the policy with more than one boat (see "fleet coordination" below) - the one actually used in the notebooks.
 
-Es una heurística **competente, no trivial**: no es solo "vas al vecino más cercano" -- combina prioridad estricta a demanda local, reposicionamiento a la demanda remota más urgente cuando no hay nada local, y coordinación entre varios barcos libres en el mismo paso para no duplicar esfuerzo. Sirve como línea base seria contra la que comparar el agente de RL (`comparacion/`) -- está escrita como funciones independientes, separadas del motor, precisamente para poder compararla contra otra política sin tocar el simulador.
+It is a **competent, non-trivial** heuristic: it is not just "go to the nearest neighbor" - it combines strict priority for local demand, repositioning to the most urgent remote demand when there is nothing local, and coordination among several free boats in the same step so as not to duplicate effort. It serves as a serious baseline against which to compare the RL agent (`comparacion/`) - it is written as independent functions, separate from the engine, precisely so it can be compared against another policy without touching the simulator.
 
-### 2.1 Quién sube a cada barco, y a dónde va
+### 2.1 Who boards each boat, and where it goes
 
-**La política NO elige a quién recoge, elige el NODO destino.** Quién sube es una regla fija del simulador (`simulador/`): las colas están separadas por par origen-destino (12 colas, una por cada combinación). Cuando un barco libre en A recibe la orden "ir a B", solo puede embarcar de la cola exacta A→B, en orden de llegada, hasta llenar el barco -- nunca lleva gente con destinos mixtos, y al llegar a B baja a todos. Es un viaje directo punto a punto, no una ruta con paradas intermedias.
+**The policy does NOT choose who it picks up, it chooses the destination NODE.** Who boards is a fixed rule of the simulator (`simulador/`): the queues are separated by origin-destination pair (12 queues, one for each combination). When a free boat at A receives the order "go to B", it can only board from the exact A→B queue, in order of arrival, until the boat is full - it never carries people with mixed destinations, and upon arriving at B it drops everyone off. It is a direct point-to-point trip, not a route with intermediate stops.
 
-**¿Y si la gente que más necesita un barco está en OTRO nodo?** Regla importante, no la única forma razonable de hacerlo:
+**What if the people who most need a boat are at ANOTHER node?** An important rule, not the only reasonable way to do it:
 
-> **La política SIEMPRE prioriza la demanda del nodo donde el barco ya está, sobre cualquier demanda de otro nodo -- sin importar cuánto tiempo lleve esperando la gente de otros nodos.**
+> **The policy ALWAYS prioritizes demand at the node where the boat already is, over any demand at another node - no matter how long the people at other nodes have been waiting.**
 
-Ejemplo concreto: un barco queda libre en Bryggen. Ahí mismo hay 5 personas que acaban de llegar (esperan 1 minuto) queriendo ir a Laksevåg. En Kleppestø hay 1 persona que lleva 20 minutos esperando ir a Sandviken. **La política manda el barco a buscar a las 5 de Laksevåg, no a la persona de Kleppestø** -- aunque esa persona lleve muchísimo más tiempo esperando y esté mucho más cerca de perderse. La regla no compara "qué tan urgente es cada uno" de forma global; primero agota TODA la demanda local (por más pequeña o reciente que sea) y solo mira otros nodos cuando en el propio no queda absolutamente nadie esperando.
+Concrete example: a boat becomes free at Bryggen. Right there are 5 people who just arrived (waiting 1 minute) wanting to go to Laksevåg. At Kleppestø there is 1 person who has been waiting 20 minutes to go to Sandviken. **The policy sends the boat to pick up the 5 people at Laksevåg, not the person at Kleppestø** - even though that person has been waiting much longer and is much closer to being lost. The rule does not compare "how urgent each one is" globally; it first exhausts ALL local demand (no matter how small or recent) and only looks at other nodes when absolutely no one is left waiting at its own node.
 
-¿Por qué se diseñó así? Para no dejar "abandonada" gente que el barco ya podría atender de inmediato, a cambio de perseguir a alguien que todavía requiere viajar. Es una decisión de diseño razonable pero **no es la única posible** -- una alternativa sería comparar la urgencia de TODOS los candidatos (locales y remotos) en una sola lista, y que el barco a veces se vaya a buscar a alguien lejano si es mucho más urgente que la demanda local. Esa alternativa no está implementada; la actual es más simple de explicar y de verificar, pero puede llevar a que alguien muy urgente en otro nodo espere mucho más tiempo de lo razonable. Como el simulador no purga a nadie por paciencia (`simulador/README.md`, sección 4.5), esa espera ya no tiene un límite implícito -- puede crecer indefinidamente si el patrón de demanda no le da nunca prioridad a ese par. Queda declarado como límite conocido, no escondido (sección 5).
+Why was it designed this way? So as not to leave "abandoned" people that the boat could already serve immediately, in exchange for chasing someone who still needs to travel. It is a reasonable design decision but **not the only possible one** - an alternative would be to compare the urgency of ALL candidates (local and remote) in a single list, and have the boat sometimes go fetch someone far away if they are much more urgent than local demand. That alternative is not implemented; the current one is simpler to explain and verify, but it can lead to someone very urgent at another node waiting much longer than reasonable. Since the simulator does not purge anyone for patience (`simulador/README.md`, section 4.5), that wait no longer has an implicit limit - it can grow indefinitely if the demand pattern never gives priority to that pair. This is stated as a known limitation, not hidden (section 5).
 
-Mecánicamente, en `politica_base`: primero arma la lista `candidatos_directos` (solo pares que SALEN del nodo actual del barco); si esa lista no está vacía, elige de ahí el más urgente y punto -- nunca mira `candidatos_reposicion` (demanda de otros nodos) a menos que `candidatos_directos` esté completamente vacío. Cuando sí se reposiciona, el barco viaja **vacío** hasta el nodo con la demanda remota más urgente y ahí, en su siguiente momento libre, decide de nuevo con información fresca -- es una decisión miope (no planea las dos etapas de una vez).
+Mechanically, in `politica_base`: it first builds the `candidatos_directos` list (only pairs that LEAVE the boat's current node); if that list is not empty, it picks the most urgent one from it and that is it - it never looks at `candidatos_reposicion` (demand from other nodes) unless `candidatos_directos` is completely empty. When it does reposition, the boat travels **empty** to the node with the most urgent remote demand, and there, at its next free moment, it decides again with fresh information - it is a myopic decision (it does not plan both stages at once).
 
-### 2.2 Coordinación de flota -- por qué `asignar_flota` existe
+### 2.2 Fleet coordination - why `asignar_flota` exists
 
-Con la política aplicada de forma INDEPENDIENTE por barco (cada uno mirando la misma foto del mundo, antes de que cualquiera de los dos suba gente), dos barcos libres en el mismo nodo y momento pueden decidir ambos "ir a Bryggen" pensando que hay, por ejemplo, 11 personas esperando ahí -- el primero en procesarse se las lleva todas, el segundo viaja **vacío** hasta Bryggen, pagando la penalización de movimiento sin servir a nadie. Se detectó durante la verificación original inspeccionando un minuto concreto de una corrida de ejemplo (`visualizacion.inspeccionar`) y se confirmó en el log de texto.
+With the policy applied INDEPENDENTLY per boat (each one looking at the same snapshot of the world, before either of them has boarded anyone), two free boats at the same node and moment can both decide "go to Bryggen" thinking there are, say, 11 people waiting there - whichever gets processed first takes all of them, the second travels **empty** to Bryggen, paying the movement penalty without serving anyone. This was detected during the original verification by inspecting a specific minute of an example run (`visualizacion.inspeccionar`) and was confirmed in the text log.
 
-`asignar_flota` corrige esto asignando los barcos libres de a uno, con una copia LOCAL de las colas que se va descontando conforme cada barco decide -- así el siguiente barco de la lista ve la cola ya reducida por lo que el anterior se llevaría. Efecto medido en su momento (bajo el sistema de paciencia, antes de eliminarla del todo -- `simulador/README.md` sección 4.5): el % de cumplimiento subió de 53% a 90% -- no fue un detalle menor. Es exactamente la clase de coordinación que convierte "una regla simple aplicada varias veces" en "una heurística competente" -- sin ella, más barcos en la flota no necesariamente sirven más gente.
+`asignar_flota` fixes this by assigning the free boats one at a time, with a LOCAL copy of the queues that gets deducted as each boat decides - so the next boat in the list sees the queue already reduced by what the previous one would take. Effect measured at the time (under the patience system, before it was removed entirely - `simulador/README.md` section 4.5): the compliance percentage rose from 53% to 90% - this was not a minor detail. It is exactly the kind of coordination that turns "a simple rule applied several times" into "a competent heuristic" - without it, more boats in the fleet do not necessarily serve more people.
 
 ---
 
-## 3. Los escalones (instancias de prueba, demanda creciente)
+## 3. The stages (test instances, increasing demand)
 
-| | Escalón 1 | Escalón 2 | Escalón 3 |
+| | Stage 1 | Stage 2 | Stage 3 |
 |---|---|---|---|
-| Cuándo | Franja mañana (6-9h) | Día completo (6-24h) | Semana completa (7 días, 6-24h c/u) |
-| Barcos | 2 | 3 | 3 |
-| Grupos / personas | 23 / 202 | 133 / 1106 | 620 / 5429 |
-| Pasos de 2 min | 90 | 540 | 7 × hasta 540 (7 episodios independientes) |
-| Para qué | Verificar a ojo, log de texto, animación | Métricas agregadas, sin animación | Métricas agregadas sobre entre-semana + fin de semana |
+| When | Morning window (6-9h) | Full day (6-24h) | Full week (7 days, 6-24h each) |
+| Boats | 2 | 3 | 3 |
+| Groups / people | 23 / 202 | 133 / 1106 | 620 / 5429 |
+| 2 min steps | 90 | 540 | 7 × up to 540 (7 independent episodes) |
+| Purpose | Visual verification, text log, animation | Aggregated metrics, no animation | Aggregated metrics over weekdays + weekend |
 | Notebook | `01_escalon_1_verificacion.ipynb` | `02_escalon_2_metricas.ipynb` | `03_escalon_3_semana.ipynb` |
 
-La demanda de cada escalón se generó con `demand/src/llegadas.py` **sin tocarlo** -- solo se le pasó un `porcentaje_poblacion_dia` más bajo que el oficial (10%, en `demand/config/instance.yaml`, intacto), calibrado por prueba y error hasta acercarse a "~20-30 grupos" en el escalón 1. El escalón 3 reusa la densidad y flota del escalón 2 sobre `generar_llegadas_semana` (`demand/src/llegadas.py`) en vez de `generar_llegadas_dia` -- 7 días (lunes=0..domingo=6), con el factor entre-semana/fin-de-semana ya resuelto adentro.
+The demand for each stage was generated with `demand/src/llegadas.py` **without modifying it** - it was simply passed a `porcentaje_poblacion_dia` lower than the official one (10%, in `demand/config/instance.yaml`, untouched), calibrated by trial and error until approaching "~20-30 groups" in stage 1. Stage 3 reuses the density and fleet from stage 2 over `generar_llegadas_semana` (`demand/src/llegadas.py`) instead of `generar_llegadas_dia` - 7 days (Monday=0..Sunday=6), with the weekday/weekend factor already resolved internally.
 
 ---
 
-## 4. Resultados de verificación
+## 4. Verification results
 
-**Conservación** (`metricas.verificar_conservacion`): toda persona generada debe terminar contabilizada.
+**Conservation** (`metricas.verificar_conservacion`): every person generated must end up accounted for.
 
-| | Escalón 1 | Escalón 2 | Escalón 3 |
+| | Stage 1 | Stage 2 | Stage 3 |
 |---|---|---|---|
-| Generadas | 202 | 1106 | 5429 |
-| = Atendidas + | 202 | 1106 | 5406 |
-| Esperando al final + | 0 | 0 | 0 |
-| A bordo al final | 0 | 0 | 23 |
+| Generated | 202 | 1106 | 5429 |
+| = Served + | 202 | 1106 | 5406 |
+| Waiting at the end + | 0 | 0 | 0 |
+| On board at the end | 0 | 0 | 23 |
 
-Escalones 1 y 2: 100% atendidas (la ventana de tiempo alcanza para vaciar el backlog). Escalón 3: **99.58%** -- con 7 ventanas de cierre en vez de una, hay 7 veces más oportunidades de que alguien suba a un barco justo antes de que se acabe la hora operativa (24:00) y el barco no alcance a llegar antes del corte. No es un bug: es exactamente el caso que las categorías "esperando/a bordo al final" existen para capturar correctamente (el simulador nunca "pierde" a nadie, `simulador/README.md` sección 4.5).
+Stages 1 and 2: 100% served (the time window is enough to drain the backlog). Stage 3: **99.58%** - with 7 closing windows instead of one, there are 7 times more opportunities for someone to board a boat right before the operating hour ends (24:00) and the boat does not manage to arrive before the cutoff. This is not a bug: it is exactly the case that the "waiting/on board at the end" categories exist to correctly capture (the simulator never "loses" anyone, `simulador/README.md` section 4.5).
 
-**Globales** (`metricas.metricas_globales`):
+**Global** (`metricas.metricas_globales`):
 
-| Métrica | Escalón 1 | Escalón 2 | Escalón 3 |
+| Metric | Stage 1 | Stage 2 | Stage 3 |
 |---|---|---|---|
-| % atendidas | 100.0% | 100.0% | 99.58% |
-| Espera media | 17.4 min | 10.9 min | 10.0 min |
-| Tiempo en sistema medio / máximo | 27.2 / 54.0 min | 20.5 / 53.6 min | 19.8 / 57.1 min |
-| Espera p50 / p90 / p95 | 15.6 / 33.4 / 33.5 min | 9.4 / 21.6 / 26.3 min | 9.1 / 21.4 / 25.1 min |
+| % served | 100.0% | 100.0% | 99.58% |
+| Mean wait | 17.4 min | 10.9 min | 10.0 min |
+| Mean / maximum time in system | 27.2 / 54.0 min | 20.5 / 53.6 min | 19.8 / 57.1 min |
+| Wait p50 / p90 / p95 | 15.6 / 33.4 / 33.5 min | 9.4 / 21.6 / 26.3 min | 9.1 / 21.4 / 25.1 min |
 
-El escalón 2, pese a tener 5.5× más demanda y 9× más pasos que el escalón 1 (con solo 1 barco más), termina con espera media y p90/p95 **más bajos** -- tiene sentido: el escalón 1 concentra toda su demanda en 3h de franja pico, sin margen para que el backlog se drene entre picos, mientras que el escalón 2 cubre 18h con franjas de alta y baja intensidad alternándose, dando más oportunidades de que la flota se ponga al día en los valles. Demanda del escalón 3 por día: lunes-viernes entre 756 y 1121 personas; sábado y domingo, 324-326 (factor `fin_de_semana=0.4` de `demand/config/instance.yaml`). El backlog de las 23 personas a bordo al cierre se concentra en 3 pares (`bryggen->laksevag`: 10, `laksevag->bryggen`: 7, `kleppesto->bryggen`: 6) -- las rutas más transitadas de la semana.
+Stage 2, despite having 5.5× more demand and 9× more steps than stage 1 (with only 1 more boat), ends up with **lower** mean wait and p90/p95 - this makes sense: stage 1 concentrates all its demand in a 3h peak window, with no margin for the backlog to drain between peaks, while stage 2 covers 18h with alternating high- and low-intensity windows, giving the fleet more opportunities to catch up during the lulls. Stage 3 demand per day: Monday-Friday between 756 and 1121 people; Saturday and Sunday, 324-326 (factor `fin_de_semana=0.4` from `demand/config/instance.yaml`). The backlog of the 23 people on board at closing is concentrated in 3 pairs (`bryggen->laksevag`: 10, `laksevag->bryggen`: 7, `kleppesto->bryggen`: 6) - the busiest routes of the week.
 
-Reproducibilidad verificada en los tres escalones: misma semilla de demanda → misma corrida exacta; semilla distinta → resultado distinto.
+Reproducibility verified across the three stages: same demand seed → same exact run; different seed → different result.
 
-**Por par origen-destino, por barco, por usuario (percentiles), y backlog al final** -- tablas completas en cada notebook (`metricas.metricas_por_par`, `metricas_por_barco`, `metricas_por_usuario`, `metricas.sin_atender_al_final_por_par`), guardadas también en `output/escalonN/metricas_por_par.csv` / `metricas_por_barco.csv`. En escalones 1 y 2, `sin_atender_al_final_por_par` da una tabla vacía (nadie quedó sin atender), consistente con el 100%.
+**By origin-destination pair, by boat, by user (percentiles), and backlog at the end** - complete tables in each notebook (`metricas.metricas_por_par`, `metricas_por_barco`, `metricas_por_usuario`, `metricas.sin_atender_al_final_por_par`), also saved in `output/escalonN/metricas_por_par.csv` / `metricas_por_barco.csv`. In stages 1 and 2, `sin_atender_al_final_por_par` returns an empty table (nobody was left unserved), consistent with the 100%.
 
-**Gráficas** (`simulador/src/visualizacion.py`, interactivas -- Plotly; `output/escalonN/*.html`): perfil temporal de personas esperando (`wait_profile.html`), ocupación de la flota en el tiempo (`fleet_occupancy.html`), heatmap de % atendidas por par (`pct_served_heatmap.html`), desglose de recompensa en el tiempo (`reward_breakdown.html`), barras de backlog por par (`backlog_by_pair.html`) -- misma función, para los tres escalones. Zoom/pan nativo, valores exactos al pasar el mouse; la leyenda de `fleet_occupancy.html` permite aislar un barco (click) o volver a mostrarlos todos (doble click).
+**Charts** (`simulador/src/visualizacion.py`, interactive - Plotly; `output/escalonN/*.html`): time profile of people waiting (`wait_profile.html`), fleet occupancy over time (`fleet_occupancy.html`), heatmap of % served by pair (`pct_served_heatmap.html`), reward breakdown over time (`reward_breakdown.html`), backlog bars by pair (`backlog_by_pair.html`) - same function, for all three stages. Native zoom/pan, exact values on hover; the `fleet_occupancy.html` legend allows isolating one boat (click) or showing them all again (double click).
 
-`escalon1/` además tiene `animacion.gif` (90 frames, uno por paso), `visualizacion.inspeccionar` (un minuto concreto -- funciona siempre, no requiere kernel vivo) y `visualizacion.reproductor_interactivo` (botones de paso a paso, **solo funciona con un kernel de Jupyter vivo**: hay que abrir el notebook en VS Code/Jupyter Lab y correr las celdas ahí, no alcanza con verlo ya ejecutado). El mapa de fondo usa Esri.WorldGrayCanvas (sin llave de API) -- CartoDB.Positron (el que usa `bergen-boats/`) empezó a exigir API key, y OpenStreetMap bloqueó la solicitud por política de uso; se descarga una sola vez por corrida, no una vez por frame.
-
----
-
-## 5. Supuestos y limitaciones (de la política de referencia)
-
-- **`asignar_flota` prioriza siempre la demanda local sobre la remota** (sección 2.1), sin comparar urgencia global. Como el simulador no tiene paciencia, esto puede dejar esperando **indefinidamente** a alguien muy urgente en otro nodo mientras el barco atiende demanda local menos urgente, si el patrón de demanda nunca le da prioridad a ese par. En las corridas de los escalones esto no llegó a pasar (99.6-100% atendidas), pero con una flota más chica o una demanda más desbalanceada sí podría -- declarado explícitamente, no es la única forma razonable de diseñar la política.
-- **`asignar_flota` es miope, no óptima.** Coordina los barcos libres de UN mismo paso para que no se dupliquen entre sí (sección 2.2), pero sigue decidiendo de a uno, en el orden en que aparecen en la lista de barcos -- no evalúa todas las combinaciones posibles para encontrar la asignación conjunta óptima. Es una mejora real sobre la versión sin coordinar, pero sigue siendo una regla simple, apropiada como línea base.
-- **Reposicionamiento vacío:** decisión de diseño propia, no está detallada explícitamente en la especificación original -- se dedujo como la forma más simple y consistente de manejar demanda fuera del nodo actual del barco bajo el modelo de viajes directos punto a punto.
-- **Escala de demanda de los escalones (0.8%/1.2% de la población):** valores propios de esta verificación, elegidos solo para que el tamaño de la corrida sea manejable de verificar a ojo -- no tienen relación con el 10% "oficial" de `demand/`.
+`escalon1/` also has `animacion.gif` (90 frames, one per step), `visualizacion.inspeccionar` (a specific minute - always works, does not require a live kernel) and `visualizacion.reproductor_interactivo` (step-by-step buttons, **only works with a live Jupyter kernel**: the notebook must be opened in VS Code/Jupyter Lab and the cells run there, it is not enough to view it already executed). The background map uses Esri.WorldGrayCanvas (no API key needed) - CartoDB.Positron (the one used by `bergen-boats/`) started requiring an API key, and OpenStreetMap blocked the request due to usage policy; it is downloaded once per run, not once per frame.
 
 ---
 
-## 6. Cómo correr
+## 5. Assumptions and limitations (of the reference policy)
+
+- **`asignar_flota` always prioritizes local demand over remote demand** (section 2.1), without comparing global urgency. Since the simulator has no patience, this can leave someone very urgent at another node waiting **indefinitely** while the boat serves less urgent local demand, if the demand pattern never gives priority to that pair. In the stage runs this did not end up happening (99.6-100% served), but with a smaller fleet or more unbalanced demand it could - explicitly stated, this is not the only reasonable way to design the policy.
+- **`asignar_flota` is myopic, not optimal.** It coordinates the free boats within a SINGLE step so they do not duplicate each other (section 2.2), but it still decides one at a time, in the order they appear in the boat list - it does not evaluate all possible combinations to find the optimal joint assignment. It is a real improvement over the uncoordinated version, but it remains a simple rule, appropriate as a baseline.
+- **Empty repositioning:** a design decision of its own, not explicitly detailed in the original specification - it was deduced as the simplest and most consistent way to handle demand outside the boat's current node under the direct point-to-point trip model.
+- **Demand scale of the stages (0.8%/1.2% of the population):** values specific to this verification, chosen only so that the run size would be manageable to verify visually - they have no relation to the "official" 10% from `demand/`.
+
+---
+
+## 6. How to run
 
 ```bash
 cd politica_base/notebooks
@@ -125,4 +125,4 @@ jupyter nbconvert --to notebook --execute --inplace 02_escalon_2_metricas.ipynb
 jupyter nbconvert --to notebook --execute --inplace 03_escalon_3_semana.ipynb
 ```
 
-Necesita que `demand/output/` y `bergen-boats/02_ruteo_navegable/output/` ya existan (pasos previos, cerrados). El notebook 00 tiene que correr antes que 01, 02 y 03 (genera `output/escalon1/grupos.csv`, `output/escalon2/grupos.csv` y `output/escalon3/grupos_semana.csv`, que los otros leen).
+It needs `demand/output/` and `bergen-boats/02_ruteo_navegable/output/` to already exist (previous, completed steps). Notebook 00 must run before 01, 02 and 03 (it generates `output/escalon1/grupos.csv`, `output/escalon2/grupos.csv` and `output/escalon3/grupos_semana.csv`, which the others read).

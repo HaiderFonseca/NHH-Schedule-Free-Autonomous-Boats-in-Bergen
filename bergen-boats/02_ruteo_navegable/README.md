@@ -1,75 +1,75 @@
-# Paso 2 - Ruteo navegable (corrige las líneas rectas que cruzan tierra)
+# Step 2 - Navigable routing (corrects the straight lines that cross land)
 
-El paso 1 (`../01_tiempos_distancias/`) usaba Haversine: distancia en línea recta. Al revisarla visualmente encontramos que las líneas que tocan **Bryggen** cruzan tierra - Bryggen está metida en la bahía de Vågen, junto a la **península de Nordnes**. Este paso lo corrige con un **módulo de ruteo sobre agua**: construye una malla navegable real y calcula el camino más corto que no pasa por tierra.
+Step 1 (`../01_tiempos_distancias/`) used Haversine: straight-line distance. When reviewed visually we found that the lines touching **Bryggen** cross land - Bryggen sits inside Vågen bay, next to the **Nordnes peninsula**. This step corrects that with a **routing module over water**: it builds a real navigable mesh and computes the shortest path that does not pass over land.
 
-## Cómo funciona, paso a paso
+## How it works, step by step
 
-1. **Descargar un mapa real** de la zona (CartoDB Positron sin etiquetas - sin etiquetas para que el texto de nombres no se clasifique por error como tierra).
-2. **Clasificar agua/tierra por color de píxel.**
-3. **Construir un grafo**: cada píxel de agua es un nodo conectado a sus 8 vecinos.
-4. **Enganchar (snap)** cada puerto al píxel de agua más cercano.
-5. **Dijkstra** desde cada puerto hacia los demás → distancia navegable real y el camino exacto.
-6. **Aplicar la velocidad de diseño fija** (30 km/h, ver más abajo) para convertir distancia a tiempo.
+1. **Download a real map** of the area (CartoDB Positron with no labels - no labels so that name text is not mistakenly classified as land).
+2. **Classify water/land by pixel color.**
+3. **Build a graph**: each water pixel is a node connected to its 8 neighbors.
+4. **Snap** each port to the nearest water pixel.
+5. **Dijkstra** from each port to the others → real navigable distance and the exact path.
+6. **Apply the fixed design speed** (30 km/h, see below) to convert distance to time.
 
-Toda la lógica reutilizable está en [`../src/water_routing.py`](../src/water_routing.py), documentada para usarse en pasos futuros (p.ej. si se necesita rutear un barco real durante la simulación, no solo calcular una matriz).
-
----
-
-## Cómo se construye la máscara agua/tierra, en detalle
-
-**El mapa es un mosaico de tiles XYZ** (el mismo formato que usan Google Maps y OpenStreetMap): para cada nivel de zoom, el mundo se divide en una grilla de tiles de 256×256 píxeles, y cada nivel duplica la resolución del anterior. Con `ZOOM=14` eso da una resolución **fija en todo el planeta** de:
-
-```
-metros_mercator_por_píxel = 156543.03392 / 2^zoom = 156543.03392 / 16384 ≈ 9.55 m/píxel
-```
-
-Ese valor está en metros **proyectados** (Web Mercator, EPSG:3857), que no son metros reales: Mercator estira las distancias por un factor `1/cos(latitud)` para poder representar la Tierra esférica en un plano (por eso Groenlandia se ve gigante en un mapamundi). Bergen está a ≈60.4°N, donde `cos(60.4°) ≈ 0.494` - así que un metro proyectado ahí equivale a solo ~0.494 metros reales. La resolución real en el suelo es:
-
-```
-metros_reales_por_píxel = 9.55 × cos(60.4°) ≈ 4.7 m/píxel
-```
-
-Es decir: **cada "cuadrito" de la malla es un cuadrado de ~4.7 × 4.7 m de agua o tierra real.** El notebook calcula este número explícitamente (sección 2) en vez de dejarlo fijo, porque depende de la latitud exacta de la instancia.
-
-**El grafo se construye directamente sobre estos píxeles - no hay una distancia de grilla elegida aparte.** Un nodo del grafo *es* un píxel de agua, así que el espaciado entre dos nodos vecinos es exactamente esa resolución: **~4.72 m** para un vecino ortogonal (arriba/abajo/izquierda/derecha) y **~6.67 m** (`4.72 × √2`) para un vecino diagonal, con `ZOOM=14`. El notebook lo imprime explícitamente en la sección 3, al construir el grafo. Subir el `ZOOM` da una malla más fina (más nodos, más precisión, más lento); bajarlo da una malla más gruesa.
-
-**Clasificación por color:** se descargó un tile de prueba de Bergen y se contaron los colores de píxel más frecuentes. El agua en CartoDB Positron resultó tener un color muy consistente - `COLOR_AGUA_POSITRON = (212, 218, 220)` (gris-azulado claro) - que aparecía en ~40% de los píxeles del área de prueba, consistente con ser el color del fiordo. Cada píxel se clasifica como agua si su distancia euclidiana en espacio RGB a ese color de referencia es menor a un umbral (`umbral_color=15`); si no, es tierra.
-
-**Por qué la máscara queda tan pegada a la costa real** (ver `output/mapa_mascara_agua.png`, donde se superpone en azul semitransparente sobre el mapa real): porque es *literalmente* el mismo raster que dibuja el mapa. La conversión píxel↔lon/lat (`wr.pixel_a_lonlat` / `wr.lonlat_a_pixel`) usa la misma fórmula de Web Mercator esférico, con el mismo radio (6378137 m), que usó el servidor de tiles para renderizar la imagen. Al superponer la máscara clasificada de vuelta sobre el mapa original, coincide píxel a píxel por construcción - la precisión de la costa depende de qué tan buena sea la geometría de OpenStreetMap (la fuente de datos de CartoDB), no de ninguna aproximación nuestra.
-
-*(Nota técnica que costó un bug: Web Mercator usa el radio ecuatorial de WGS84, 6378137 m, no el radio medio terrestre 6371009 m que se usa en Haversine para distancias reales. Usar el radio equivocado en la fórmula de proyección desalinea todo el grid - nos pasó en la primera versión y quedaba a ~150 km de donde debía.)*
-
-## Cómo funciona Dijkstra aquí, en detalle
-
-1. **El grafo**: cada píxel de agua (~1 millón en el bbox de esta instancia) es un nodo, conectado a sus 8 vecinos (arriba, abajo, izquierda, derecha y las 4 diagonales) *solo si ese vecino también es agua*. Si un vecino es tierra, no existe esa arista - así que el grafo **no tiene forma de ofrecer un salto que cruce tierra**, ni por accidente. El peso de cada arista es la distancia real en km entre los centros de los dos píxeles (con la corrección `cos(lat)` aplicada fila por fila).
-2. **Snap**: las coordenadas reales de un puerto casi nunca caen justo en un píxel de agua (pueden caer en el borde de un muelle). `wr.snap_a_grafo()` busca el píxel de agua más cercano en espiral creciente, **restringido a la componente conexa principal** del grafo (calculada con `scipy.sparse.csgraph.connected_components`). Esto evita enganchar un puerto a un charco o estanque aislado que el color clasificó como agua pero que no está conectado al mar abierto - nos pasó con Hegreneset en una primera versión, antes de agregar esta restricción.
-3. **Dijkstra multi-fuente**: `scipy.sparse.csgraph.dijkstra(grafo, indices=[...], return_predecessors=True)` corre el algoritmo de Dijkstra una vez por cada nodo/puerto de origen, todo en una sola llamada. Como todos los pesos son distancias reales (siempre positivos), Dijkstra garantiza encontrar el camino de **menor distancia total** desde cada origen hacia todos los demás nodos del grafo. No hace falta A* ni ninguna heurística: con ~1 millón de nodos y ~8 millones de aristas dirigidas, Dijkstra puro (implementado en Cython dentro de scipy) corre en ~1 segundo para los 5 puertos a la vez.
-4. **Reconstrucción de la ruta**: Dijkstra también devuelve `predecessors`, el nodo anterior en el camino más corto hacia cada destino. `wr.reconstruir_ruta_latlon()` camina esa cadena hacia atrás (destino → origen), junta los píxeles visitados y los convierte de vuelta a lon/lat - así se dibuja la ruta real en los mapas, no solo se reporta un número.
-
-**Limitación conocida:** al permitir solo 8 direcciones (no 360°), el camino más corto puede hacer un ligero "zigzag" en vez de una diagonal perfecta cuando la dirección real no coincide con ninguna de las 8 permitidas (se nota como un pequeño quiebre en algunas rutas de los mapas). El sobrecosto de esto es pequeño (unos pocos % en el peor caso) y no afecta la conclusión de fondo: evita tierra con certeza.
+All the reusable logic is in [`../src/water_routing.py`](../src/water_routing.py), documented for use in future steps (e.g. if a real boat needs to be routed during the simulation, not just a matrix computed).
 
 ---
 
-## Nodos de esta versión
+## How the water/land mask is built, in detail
 
-Laksevåg y Sandviken se corrigieron a ubicaciones confirmadas (las anteriores eran aproximaciones):
+**The map is a mosaic of XYZ tiles** (the same format used by Google Maps and OpenStreetMap): for each zoom level, the world is divided into a grid of 256x256 pixel tiles, and each level doubles the resolution of the previous one. With `ZOOM=14` that gives a resolution that is **fixed across the entire planet** of:
 
-| Nodo | Antes (aprox.) | Ahora (confirmado) |
+```
+mercator_meters_per_pixel = 156543.03392 / 2^zoom = 156543.03392 / 16384 ≈ 9.55 m/pixel
+```
+
+That value is in **projected** meters (Web Mercator, EPSG:3857), which are not real meters: Mercator stretches distances by a factor of `1/cos(latitude)` in order to represent the spherical Earth on a plane (which is why Greenland looks gigantic on a world map). Bergen is at ≈60.4°N, where `cos(60.4°) ≈ 0.494` - so one projected meter there equals only ~0.494 real meters. The real resolution on the ground is:
+
+```
+real_meters_per_pixel = 9.55 × cos(60.4°) ≈ 4.7 m/pixel
+```
+
+In other words: **each "cell" of the mesh is a square of ~4.7 x 4.7 m of real water or land.** The notebook computes this number explicitly (section 2) rather than leaving it fixed, because it depends on the exact latitude of the instance.
+
+**The graph is built directly on these pixels - there is no separately chosen grid spacing.** A node of the graph *is* a water pixel, so the spacing between two neighboring nodes is exactly that resolution: **~4.72 m** for an orthogonal neighbor (up/down/left/right) and **~6.67 m** (`4.72 × √2`) for a diagonal neighbor, with `ZOOM=14`. The notebook prints this explicitly in section 3, when building the graph. Raising the `ZOOM` gives a finer mesh (more nodes, more precision, slower); lowering it gives a coarser mesh.
+
+**Classification by color:** a test tile of Bergen was downloaded and the most frequent pixel colors were counted. Water in CartoDB Positron turned out to have a very consistent color - `COLOR_AGUA_POSITRON = (212, 218, 220)` (light blue-gray) - which appeared in ~40% of the pixels of the test area, consistent with being the color of the fjord. Each pixel is classified as water if its Euclidean distance in RGB space to that reference color is less than a threshold (`umbral_color=15`); otherwise, it is land.
+
+**Why the mask hugs the real coastline so closely** (see `output/mapa_mascara_agua.png`, where it is overlaid in semi-transparent blue on the real map): because it is *literally* the same raster that draws the map. The pixel↔lon/lat conversion (`wr.pixel_a_lonlat` / `wr.lonlat_a_pixel`) uses the same spherical Web Mercator formula, with the same radius (6378137 m), that the tile server used to render the image. When the classified mask is overlaid back on the original map, it matches pixel for pixel by construction - the accuracy of the coastline depends on how good OpenStreetMap's geometry is (CartoDB's data source), not on any approximation of ours.
+
+*(A technical note that cost us a bug: Web Mercator uses the WGS84 equatorial radius, 6378137 m, not the mean Earth radius of 6371009 m used in Haversine for real distances. Using the wrong radius in the projection formula misaligns the entire grid - this happened to us in the first version and it ended up ~150 km off from where it should have been.)*
+
+## How Dijkstra works here, in detail
+
+1. **The graph**: each water pixel (~1 million in the bounding box of this instance) is a node, connected to its 8 neighbors (up, down, left, right and the 4 diagonals) *only if that neighbor is also water*. If a neighbor is land, that edge does not exist - so the graph **has no way to offer a jump that crosses land**, not even by accident. The weight of each edge is the real distance in km between the centers of the two pixels (with the `cos(lat)` correction applied row by row).
+2. **Snap**: the real coordinates of a port almost never fall exactly on a water pixel (they can fall on the edge of a dock). `wr.snap_a_grafo()` searches for the nearest water pixel in an expanding spiral, **restricted to the graph's main connected component** (computed with `scipy.sparse.csgraph.connected_components`). This prevents snapping a port to an isolated puddle or pond that was classified as water by color but is not connected to the open sea - this happened to us with Hegreneset in an early version, before adding this restriction.
+3. **Multi-source Dijkstra**: `scipy.sparse.csgraph.dijkstra(grafo, indices=[...], return_predecessors=True)` runs Dijkstra's algorithm once for each source node/port, all in a single call. Since all weights are real distances (always positive), Dijkstra guarantees finding the path of **minimum total distance** from each source to all other nodes in the graph. No A* or any heuristic is needed: with ~1 million nodes and ~8 million directed edges, plain Dijkstra (implemented in Cython inside scipy) runs in ~1 second for all 5 ports at once.
+4. **Path reconstruction**: Dijkstra also returns `predecessors`, the previous node in the shortest path to each destination. `wr.reconstruir_ruta_latlon()` walks that chain backward (destination → origin), gathers the visited pixels and converts them back to lon/lat - this is how the real route is drawn on the maps, not just a reported number.
+
+**Known limitation:** by allowing only 8 directions (not 360°), the shortest path can make a slight "zigzag" instead of a perfect diagonal when the real direction does not match any of the 8 allowed ones (visible as a small kink in some routes on the maps). The extra cost of this is small (a few percent at worst) and does not affect the underlying conclusion: it avoids land with certainty.
+
+---
+
+## Nodes in this version
+
+Laksevåg and Sandviken were corrected to confirmed locations (the previous ones were approximations):
+
+| Node | Before (approx.) | Now (confirmed) |
 |---|---|---|
 | Laksevåg | 60.3945, 5.2875 | **60.390886, 5.259586** (Gravdal) |
 | Sandviken | 60.4075, 5.3214 | **60.421149, 5.300502** (BSI Padling) |
 
-Kleppestø y Bryggen no cambiaron.
+Kleppestø and Bryggen did not change.
 
-## Velocidad: decisión de diseño fija (30 km/h)
+## Speed: fixed design decision (30 km/h)
 
-En vez de calibrar con el tramo real Kleppestø–Bryggen (como en una versión anterior de este paso, que daba ≈24.65 km/h), el equipo decidió usar una **velocidad de diseño fija para toda la flota: 30 km/h (~16.2 nudos)** - `config/instance.yaml` → `calibracion.velocidad_forzada_kmh`. No es la velocidad de un ferry existente; es una suposición de diseño para los barcos pequeños a demanda, que se puede volver a barrer más adelante como parámetro de sensibilidad.
+Instead of calibrating with the real Kleppestø-Bryggen segment (as in an earlier version of this step, which gave ≈24.65 km/h), the team decided to use a **fixed design speed for the entire fleet: 30 km/h (~16.2 knots)** - `config/instance.yaml` → `calibracion.velocidad_forzada_kmh`. This is not the speed of an existing ferry; it is a design assumption for the small on-demand boats, which can be swept again later as a sensitivity parameter.
 
-## Resultado: las 6 rutas (todas las combinaciones de a pares entre 4 nodos)
+## Result: the 6 routes (all pairwise combinations among the 4 nodes)
 
-`output/comparacion_recta_vs_navegable.csv` - línea recta (paso 1) vs. ruta navegable real (este paso), ambas a 30 km/h:
+`output/comparacion_recta_vs_navegable.csv` - straight line (step 1) vs. real navigable route (this step), both at 30 km/h:
 
-| Conexión | km recta | km navegable | diferencia | min recta | min navegable |
+| Connection | km straight | km navigable | difference | min straight | min navigable |
 |---|---|---|---|---|---|
 | Laksevåg ↔ Bryggen | 3.48 | 4.31 | **+23.8%** | 7.0 | 8.6 |
 | Kleppestø ↔ Sandviken | 4.33 | 4.78 | +10.5% | 8.7 | 9.6 |
@@ -78,33 +78,33 @@ En vez de calibrar con el tramo real Kleppestø–Bryggen (como en una versión 
 | Kleppestø ↔ Bryggen | 5.36 | 5.75 | +7.3% | 10.7 | 11.5 |
 | Laksevåg ↔ Sandviken | 4.05 | 4.31 | +6.4% | 8.1 | 8.6 |
 
-6 pares = C(4,2), todas las combinaciones posibles entre los 4 nodos de demanda - están todas. Con las coordenadas nuevas, Laksevåg (ahora en Gravdal, más adentro del Puddefjorden) es la que más se alarga al rutear sobre agua real, porque el rodeo alrededor de Nordnes pesa más relativo a su distancia total.
+6 pairs = C(4,2), all possible combinations among the 4 demand nodes - all of them are included. With the new coordinates, Laksevåg (now at Gravdal, further inside Puddefjorden) is the one that lengthens the most when routed over real water, because the detour around Nordnes weighs more relative to its total distance.
 
-## ⚠️ A partir de aquí, usar esta matriz
+## Warning: from here on, use this matrix
 
-`output/matriz_tiempos_min.csv` de este paso **reemplaza** al de `01_tiempos_distancias/` para todo lo que siga (`03_demanda/` en adelante).
+`output/matriz_tiempos_min.csv` from this step **replaces** the one from `01_tiempos_distancias/` for everything that follows (`03_demanda/` onward).
 
 ## Outputs (`output/`)
 
-| Archivo | Qué es |
+| File | What it is |
 |---|---|
-| `matriz_distancias_km.csv` / `matriz_tiempos_min.csv` | Matrices navegables 4×4 a 30 km/h - **las canónicas de aquí en adelante** |
-| `matriz_*_con_waypoints_REFERENCIA.csv` | Igual pero 5×5 incluyendo Hegreneset |
-| `comparacion_recta_vs_navegable.csv` | Tabla de diferencias por par (las 6 combinaciones) |
-| `velocidad_usada_kmh.txt` | 30.0 (fija, decisión de diseño) |
-| `mapa_mascara_agua.png` | Validación: máscara agua/tierra superpuesta sobre el mapa real |
-| `mapa_rutas_navegables.png` | Las 6 rutas reales entre los 4 nodos de demanda |
-| `mapa_zoom_bryggen_comparacion.png` | Bryggen: recta (roja) vs. ruta real (verde) - la comparación clave |
-| `heatmap_tiempos_navegables.png` | Heatmap de la matriz de tiempos a 30 km/h |
+| `matriz_distancias_km.csv` / `matriz_tiempos_min.csv` | Navigable 4x4 matrices at 30 km/h - **the canonical ones from here on** |
+| `matriz_*_con_waypoints_REFERENCIA.csv` | Same but 5x5 including Hegreneset |
+| `comparacion_recta_vs_navegable.csv` | Table of differences per pair (the 6 combinations) |
+| `velocidad_usada_kmh.txt` | 30.0 (fixed, design decision) |
+| `mapa_mascara_agua.png` | Validation: water/land mask overlaid on the real map |
+| `mapa_rutas_navegables.png` | The 6 real routes between the 4 demand nodes |
+| `mapa_zoom_bryggen_comparacion.png` | Bryggen: straight line (red) vs. real route (green) - the key comparison |
+| `heatmap_tiempos_navegables.png` | Heatmap of the time matrix at 30 km/h |
 
-## Cómo correr
+## How to run
 
 ```bash
 jupyter nbconvert --to notebook --execute --inplace notebook.ipynb
 ```
 
-Necesita conexión a internet (descarga tiles de mapa la primera vez). Tarda ~15-20 s en total.
+Needs an internet connection (downloads map tiles the first time). Takes ~15-20 s in total.
 
-## Siguiente paso
+## Next step
 
-`../03_demanda/` - generar las solicitudes Poisson por franja horaria, usando `output/matriz_tiempos_min.csv` de este paso.
+`../03_demanda/` - generate the Poisson requests per time slot, using `output/matriz_tiempos_min.csv` from this step.

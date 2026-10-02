@@ -1,59 +1,59 @@
-# Heurísticas de despacho - H0 → H1 → H2 → H3
+# Dispatch heuristics - H0 → H1 → H2 → H3
 
-**Qué es esto, en una frase:** la fase de heurísticas fuertes (sin RL) del proyecto de barcos a demanda en Bergen - cuatro políticas de despacho, cada una construida como una extensión estricta de la anterior, auditadas y validadas con casos controlados antes de compararlas en un experimento completo.
+**What this is, in one sentence:** the strong-heuristics phase (without RL) of the on-demand boats in Bergen project - four dispatch policies, each built as a strict extension of the previous one, audited and validated with controlled test cases before comparing them in a full experiment.
 
-**Por qué existe una carpeta `heuristicas/` separada de `politica_base/`:** las primeras versiones de estas ideas (`politica_base/src/politica_h1.py`, `politica_h2/`, `politica_h3/`, `politica_h0c/`) se probaron, no superaron consistentemente a la política base, y una auditoría encontró por qué (una función de costo con un término mal puesto). Esas carpetas ya no existen en el repo -- se limpiaron una vez que quedó claro que la definición vigente, auditada y validada, es la de aquí. `politica_base/` ahora contiene únicamente `politica_base.py` (H0, la referencia) y la demanda generada (`output/escalon_dia_10pct/grupos_seed*.csv`) que las 4 políticas de aquí reusan.
+**Why there is a `heuristicas/` folder separate from `politica_base/`:** the first versions of these ideas (`politica_base/src/politica_h1.py`, `politica_h2/`, `politica_h3/`, `politica_h0c/`) were tested, did not consistently outperform the base policy, and an audit found out why (a cost function with a misplaced term). Those folders no longer exist in the repo - they were cleaned up once it became clear that the current, audited, and validated definition is the one here. `politica_base/` now contains only `politica_base.py` (H0, the reference) and the generated demand (`output/escalon_dia_10pct/grupos_seed*.csv`) that the 4 policies here reuse.
 
 ---
 
-## 1. El ciclo de control (igual para las 4 políticas - esto no cambia nunca)
+## 1. The control loop (the same for all 4 policies - this never changes)
 
-El simulador (`simulador/src/env.py`) avanza en pasos fijos de 2 minutos. Ninguna política toca esto - todas reciben la misma foto del mundo y devuelven la misma clase de decisión (a qué nodo debe ir cada barco libre, o `None` para esperar). El bucle de control (en cada notebook) hace, en cada paso:
+The simulator (`simulador/src/env.py`) advances in fixed 2-minute steps. No policy touches this - all of them receive the same snapshot of the world and return the same kind of decision (which node each free boat should go to, or `None` to wait). The control loop (in each notebook) does, at each step:
 
 ```text
-1. Mirar el estado actual: qué colas tienen gente esperando, dónde está cada barco,
-   cuáles están libres.
-2. Para cada barco LIBRE, la política decide: ¿a qué nodo va, o espera?
-   (un barco EN TRÁNSITO no recibe ninguna decisión nueva - el motor no permite
-   redirigir a media ruta)
-3. El motor aplica las decisiones: el barco libre que decide "ir a B" embarca de
-   inmediato lo que quepa de la cola (A,B), FIFO hasta su capacidad, y parte.
-4. El motor avanza el reloj 2 minutos. El barco que llega a destino baja a TODOS
-   los que lleva (viaje directo, nunca mezcla destinos) y queda libre.
-5. El motor incorpora a las colas la gente que llegó durante esos 2 minutos
-   - recién visible para la PRÓXIMA decisión, nunca para la que se acaba de tomar.
-6. Volver a 1.
+1. Look at the current state: which queues have people waiting, where each boat is,
+   which ones are free.
+2. For each FREE boat, the policy decides: which node does it go to, or does it wait?
+   (a boat IN TRANSIT does not receive any new decision - the engine does not allow
+   redirecting it mid-route)
+3. The engine applies the decisions: the free boat that decides to "go to B" boards
+   immediately whatever fits from the queue (A,B), FIFO up to its capacity, and departs.
+4. The engine advances the clock 2 minutes. The boat that arrives at its destination drops off ALL
+   the passengers it is carrying (direct trip, never mixes destinations) and becomes free.
+5. The engine adds to the queues the people who arrived during those 2 minutes
+   - only visible for the NEXT decision, never for the one just made.
+6. Back to 1.
 ```
 
-Ninguna política ve nunca demanda que todavía no llegó (paso 5) ( es lo que garantiza que ninguna de las 4 use información del futuro. La única diferencia entre H0/H1/H2/H3 es **qué calcula el paso 2** ) el resto del ciclo es idéntico, y ninguna lo modifica.
+No policy ever sees demand that has not yet arrived (step 5) ( this is what guarantees that none of the 4 uses information from the future. The only difference between H0/H1/H2/H3 is **what step 2 computes** ) the rest of the cycle is identical, and none of them modifies it.
 
 ---
 
-## 2. H0 - política base (`politica_base/src/politica_base.py`)
+## 2. H0 - base policy (`politica_base/src/politica_base.py`)
 
-Regla, para un barco libre en el nodo A:
-
-
-1. **Demanda local primero.** Si hay colas que salen de $A$, el barco va al destino cuya persona más antigua lleva más esperando:
-
-2. **Reposicionamiento.** Solo si no hay ninguna demanda local, el barco va a buscar la demanda remota más urgente (empate: el nodo más cercano en tiempo de viaje):
+Rule, for a free boat at node A:
 
 
-Coordinación entre varios barcos libres en el mismo paso (`asignar_flota`): decide los barcos en el orden en que aparecen en la lista, descontando de una copia local de las colas lo que cada uno se llevaría, antes de pasar al siguiente.
+1. **Local demand first.** If there are queues departing from $A$, the boat goes to the destination whose oldest person has waited the longest:
+
+2. **Repositioning.** Only if there is no local demand, the boat goes to find the most urgent remote demand (tie: the node closest in travel time):
+
+
+Coordination among several free boats in the same step (`asignar_flota`): it decides the boats in the order they appear in the list, subtracting from a local copy of the queues what each one would take, before moving on to the next.
 
 
 
-## 3. H1 = H0 + reserva persistente (`h1_reserva/src/politica_h1.py`)
+## 3. H1 = H0 + persistent reservation (`h1_reserva/src/politica_h1.py`)
 
-Toda la regla de decisión de arriba se conserva exactamente igual. Lo único que cambia es cómo se coordinan varios barcos libres, y que ahora existe una reserva que sobrevive entre pasos.
+The whole decision rule above is kept exactly the same. The only thing that changes is how several free boats are coordinated, and that there is now a reservation that survives between steps.
 
-### 3.1 El diccionario de reservas
+### 3.1 The reservations dictionary
 
 ```python
-reservas: dict[str, tuple[str, str]]   # barco_id -> (origen, destino)
+reservas: dict[str, tuple[str, str]]   # boat_id -> (origin, destination)
 ```
 
-Vive fuera de la política, mantenido por el bucle de control (igual que ya mantiene `obs, info` de `env.step()`):
+Lives outside the policy, maintained by the control loop (just as it already maintains `obs, info` from `env.step()`):
 
 ```python
 reservas = {}
@@ -62,133 +62,133 @@ while True:
     ...
 ```
 
-### 3.2 Cuándo se crea
+### 3.2 When it is created
 
-Solo cuando un barco decide *reposicionarse* (rama 2 de la regla - demanda remota). Una decisión *local* (rama 1) embarca de inmediato - no queda nada pendiente que proteger, así que no genera reserva.
+Only when a boat decides to *reposition* (branch 2 of the rule - remote demand). A *local* decision (branch 1) boards immediately - nothing pending is left to protect, so it does not generate a reservation.
 
-Ejemplo paso a paso: t=100 min, un barco B1 libre en Bryggen, sin demanda local. En Laksevåg→Kleppestø hay 3 personas esperando. B1 decide reposicionarse a Laksevåg → se crea `reservas["B1"] = ("laksevag", "kleppesto")`.
+Step-by-step example: t=100 min, a free boat B1 at Bryggen, with no local demand. On Laksevåg→Kleppestø there are 3 people waiting. B1 decides to reposition to Laksevåg → `reservas["B1"] = ("laksevag", "kleppesto")` is created.
 
-### 3.3 Cómo protege del duplicado
+### 3.3 How it protects against duplication
 
-En cada paso, antes de evaluar candidatos, se calcula la cola efectiva de cada par: `len(cola) − Σ(capacidad_barco de cada reserva que apunta a ese par)`. Con capacidad 30 y una sola reserva activa sobre `(laksevag,kleppesto)`, esa cola queda con disponibilidad efectiva `max(0, N−30)` para cualquier OTRO barco libre - si tiene menos de 30 personas, queda en 0: ningún otro barco la ve como candidata.
+At each step, before evaluating candidates, the effective queue of each pair is computed: `len(cola) − Σ(boat_capacity for each reservation pointing to that pair)`. With capacity 30 and a single active reservation on `(laksevag,kleppesto)`, that queue is left with effective availability `max(0, N−30)` for any OTHER free boat - if it has fewer than 30 people, it is left at 0: no other boat sees it as a candidate.
 
-Siguen llegando personas a la misma cola mientras B1 viaja (2 min después llegan 4 más, total 7) - la reserva sigue cubriendo hasta 30, así que las 7 siguen protegidas sin que nadie tenga que recalcular nada (verificado en `01_metodologia_heuristicas.ipynb`, Caso 2, con dos llamadas separadas: las reservas que entran al paso 2 son *idénticas*, bit a bit, a las que salieron del paso 1).
+People keep arriving at the same queue while B1 is traveling (2 min later 4 more arrive, total 7) - the reservation keeps covering up to 30, so the 7 remain protected without anyone needing to recalculate anything (verified in `01_metodologia_heuristicas.ipynb`, Case 2, with two separate calls: the reservations that enter step 2 are *identical*, bit for bit, to those that came out of step 1).
 
-### 3.4 Cuándo se libera
+### 3.4 When it is released
 
-Un solo evento posible: el barco llega a destino y vuelve a estar libre. El motor nunca redirige un barco a medio camino (`env.py`) y no existe ningún mecanismo de cancelación, así que "la reserva deja de ser viable" no puede pasar antes de llegar - la liberación ocurre automáticamente, al principio de la siguiente llamada a la política, para cualquier barco cuyo `.libre` ya sea `True`.
+A single possible event: the boat arrives at its destination and becomes free again. The engine never redirects a boat mid-route (`env.py`) and there is no cancellation mechanism, so "the reservation stops being viable" cannot happen before arrival - release happens automatically, at the start of the next call to the policy, for any boat whose `.libre` is already `True`.
 
-### 3.5 Coordinación entre varios barcos libres
+### 3.5 Coordination among several free boats
 
-En vez del orden de lista arbitrario de H0, cada barco libre propone su mejor opción (local si tiene, si no remota); se compromete la propuesta de MAYOR espera entre TODAS las propuestas pendientes primero, se descuenta, se repite.
+Instead of H0's arbitrary list order, each free boat proposes its best option (local if it has one, remote otherwise); the proposal with the GREATEST wait among ALL pending proposals is committed first, it is subtracted, and the process repeats.
 
 
 
-## 4. H2 = H1 + costo, con partición local/remoto preservada (`h2_costo_local/src/politica_h2.py`)
+## 4. H2 = H1 + cost, with the local/remote partition preserved (`h2_costo_local/src/politica_h2.py`)
 
-Función de costo (en minutos):
+Cost function (in minutes):
 
 $$C(b,q) = T_{pickup}(b,q) - W_{max}(q)$$
 
-- $T_{pickup}(b,q)$: minutos que el barco $b$ tarda en llegar al origen de la cola $q$ (0 si ya está ahí).
-- $W_{max}(q)$: minutos que lleva esperando la persona más antigua de la cola $q$.
+- $T_{pickup}(b,q)$: minutes boat $b$ takes to reach the origin of queue $q$ (0 if it is already there).
+- $W_{max}(q)$: minutes the oldest person in queue $q$ has been waiting.
 
-Regla por barco:
-
-```text
-1. Si hay demanda local: comparar SOLO las colas locales con C, elegir la de menor C.
-2. Si no hay demanda local: comparar SOLO las colas remotas con C, elegir la de menor C.
-3. Si no hay nada: esperar.
-```
-
-**Por qué la rama local no cambia nada respecto a H0:** para cualquier candidato local, $T_{pickup}=0$, así que $C=-W_{max}$ - minimizar $C$ es exactamente maximizar la espera, la MISMA regla de H0. El costo solo aporta algo nuevo en la rama remota: en vez de "mayor espera, empate por menor viaje" (regla de H0, que compara por umbrales), hace un trade-off continuo - una cola remota algo menos urgente pero mucho más cercana puede ganarle a una más urgente pero muy lejana.
-
-**Una cola remota NUNCA compite con una local**, sin importar la magnitud - verificado numéricamente: con 5 personas esperando 3 min en una cola local y 5 personas esperando **200 min** en una remota, H2 sigue eligiendo la local (`01_metodologia_heuristicas.ipynb`).
-
-
-
-## 5. H3 = H1 + costo global, sin partición (`h3_costo_global/src/politica_h3.py`)
-
-Misma función de costo exacta que H2. La única diferencia:
+Rule per boat:
 
 ```text
-candidatos = TODAS las colas con gente esperando (locales Y remotas a la vez)
--> elegir la de menor C, sin ninguna restricción de nivel
+1. If there is local demand: compare ONLY the local queues using C, choose the one with the lowest C.
+2. If there is no local demand: compare ONLY the remote queues using C, choose the one with the lowest C.
+3. If there is nothing: wait.
 ```
 
-**El umbral exacto de cuándo lo remoto le gana a lo local** (para un barco con demanda local de espera $W_{local}$ y una cola remota con pickup $T_{pickup}$):
+**Why the local branch does not change anything relative to H0:** for any local candidate, $T_{pickup}=0$, so $C=-W_{max}$ - minimizing $C$ is exactly maximizing the wait, the SAME rule as H0. The cost only contributes something new in the remote branch: instead of "greatest wait, tie broken by shortest trip" (H0's rule, which compares by thresholds), it makes a continuous trade-off - a remote queue that is somewhat less urgent but much closer can beat one that is more urgent but very far away.
+
+**A remote queue NEVER competes with a local one**, regardless of magnitude - verified numerically: with 5 people waiting 3 min in a local queue and 5 people waiting **200 min** in a remote one, H2 still chooses the local one (`01_metodologia_heuristicas.ipynb`).
+
+
+
+## 5. H3 = H1 + global cost, no partition (`h3_costo_global/src/politica_h3.py`)
+
+The exact same cost function as H2. The only difference:
+
+```text
+candidates = ALL queues with people waiting (local AND remote at the same time)
+-> choose the one with lowest C, without any level restriction
+```
+
+**The exact threshold for when remote beats local** (for a boat with local demand wait $W_{local}$ and a remote queue with pickup $T_{pickup}$):
 
 $$W_{remoto} > T_{pickup} + W_{local}$$
 
-Es decir: lo remoto solo gana cuando su ventaja de espera supera lo que cuesta ir a buscarlo - no por diferencias triviales. **Verificado numéricamente:** con pickup Bryggen→Kleppestø = 11.5 min y espera local = 3 min, el umbral teórico es 14.5 min; H3 efectivamente cruza a la cola remota exactamente entre 14 y 15 min de espera remota, ni un minuto antes (`01_metodologia_heuristicas.ipynb`, Caso 4).
+That is: remote only wins when its wait advantage exceeds what it costs to go get it - not because of trivial differences. **Verified numerically:** with pickup Bryggen→Kleppestø = 11.5 min and local wait = 3 min, the theoretical threshold is 14.5 min; H3 actually crosses over to the remote queue exactly between 14 and 15 min of remote wait, not a minute before (`01_metodologia_heuristicas.ipynb`, Case 4).
 
-Esta es la única de las 4 que permite que una demanda remota, si es suficientemente urgente, le gane a la local - corrigiendo la debilidad documentada de H0 (puede dejar esperando indefinidamente a alguien muy urgente en otro nodo mientras el barco atiende cualquier cosa local, sin importar cuán poco urgente).
+This is the only one of the 4 that allows remote demand, if urgent enough, to beat local demand - correcting the documented weakness of H0 (it can leave someone very urgent in another node waiting indefinitely while the boat handles anything local, no matter how low its urgency).
 
 
-## 6. Comparación de las 4 reglas
+## 6. Comparison of the 4 rules
 
 | | H0 | H1 | H2 | H3 |
 |---|---|---|---|---|
-| Regla de decisión por barco | local estricto > remoto | igual que H0 | local estricto > remoto, costo dentro de cada nivel | costo global, sin partición |
-| Coordinación entre barcos libres en un paso | orden de lista (bug de reposicionamiento) | por urgencia (bug corregido) | por urgencia | por urgencia (costo) |
-| Reserva persistente entre pasos | no | sí | sí | sí |
-| Función de costo | ninguna | ninguna | $C=T_{pickup}-W_{max}$ (solo remoto) | $C=T_{pickup}-W_{max}$ (local y remoto) |
-| ¿Demanda remota puede ganarle a la local? | nunca | nunca | nunca | si $W_{remoto} > T_{pickup}+W_{local}$ |
-| Forecasting / demanda futura | no | no | no | no |
+| Decision rule per boat | strict local > remote | same as H0 | strict local > remote, cost within each level | global cost, no partition |
+| Coordination among free boats in a step | list order (repositioning bug) | by urgency (bug fixed) | by urgency | by urgency (cost) |
+| Persistent reservation between steps | no | yes | yes | yes |
+| Cost function | none | none | $C=T_{pickup}-W_{max}$ (remote only) | $C=T_{pickup}-W_{max}$ (local and remote) |
+| Can remote demand beat local? | never | never | never | if $W_{remoto} > T_{pickup}+W_{local}$ |
+| Forecasting / future demand | no | no | no | no |
 | Multi-stop | no | no | no | no |
-| Pesos que calibrar | ninguno | ninguno | ninguno | ninguno |
+| Weights to calibrate | none | none | none | none |
 
 
 
-## 7. Resultado central (5 semillas de evaluación, capacidad 30, día completo al 10% de población)
+## 7. Central result (5 evaluation seeds, capacity 30, full day at 10% of population)
 
-Espera media (min), barrido completo 4-16 barcos:
+Mean wait (min), full 4-16 boat sweep:
 
-| Barcos | H0 | H1 | H2 | **H3** |
+| Boats | H0 | H1 | H2 | **H3** |
 |---|---|---|---|---|
 | 4 | 73.9 | 71.5 (−3%) | 72.2 (−2%) | 72.9 (−1%) |
 | 6 | 26.6 | 25.4 (−4%) | 25.7 (−3%) | **24.3 (−8%)** |
 | 8 | 12.0 | 12.0 (0%) | 12.0 (0%) | **10.6 (−12%)** |
-| 10 | 7.6 | 7.8 (+3%, peor) | 7.8 (+3%, peor) | **6.3 (−17%)** |
-| 12 | 6.2 | 7.3 (+18%, peor) | 7.0 (+13%, peor) | **4.8 (−22%)** |
-| 14 | 5.6 | 7.1 (+27%, peor) | 6.8 (+22%, peor) | **4.4 (−22%)** |
-| 16 | 5.5 | 7.2 (+31%, peor) | 6.7 (+23%, peor) | **4.1 (−25%)** |
+| 10 | 7.6 | 7.8 (+3%, worse) | 7.8 (+3%, worse) | **6.3 (−17%)** |
+| 12 | 6.2 | 7.3 (+18%, worse) | 7.0 (+13%, worse) | **4.8 (−22%)** |
+| 14 | 5.6 | 7.1 (+27%, worse) | 6.8 (+22%, worse) | **4.4 (−22%)** |
+| 16 | 5.5 | 7.2 (+31%, worse) | 6.7 (+23%, worse) | **4.1 (−25%)** |
 
-H1 y H2 no superan a H0 de forma consistente - la brecha en contra empeora con la flota (H1 llega a +31% peor en 16 barcos): son más conservadoras sobre cuándo mover un barco, sin una forma de valorar si vale la pena, y la flota queda ociosa de más. H3 es la única que gana a H0 en las 7 flotas probadas, y la ventaja se sostiene incluso creciendo (−25% en 16 barcos) - con menos movimientos totales que cualquiera de las otras tres.
+H1 and H2 do not consistently outperform H0 - the gap against them worsens with fleet size (H1 reaches +31% worse at 16 boats): they are more conservative about when to move a boat, with no way to assess whether it is worth it, and the fleet ends up idle more often. H3 is the only one that beats H0 across all 7 fleet sizes tested, and the advantage holds even as it grows (−25% at 16 boats) - with fewer total movements than any of the other three.
 
-La curva de H3 se aplana pero no se estanca del todo: de 12→14 barcos mejora −8.8%, de 14→16 solo −6.9% - rendimientos decrecientes claros, pero H3 sigue extrayendo valor de barcos adicionales más allá de donde H0 ya está prácticamente plano (H0 de 14→16 solo mejora −2.3%). Ver `03_comparacion_flota.ipynb` para la tabla y curvas completas (espera, tiempo en sistema, backlog, movimientos, ocupación, y la serie de barcos en movimiento vs. ociosos por hora del día, incluida como evidencia para evaluar una flota de tamaño variable a lo largo del día).
+H3's curve flattens but does not plateau completely: from 12→14 boats it improves −8.8%, from 14→16 only −6.9% - clear diminishing returns, but H3 keeps extracting value from additional boats beyond where H0 is already essentially flat (H0 from 14→16 only improves −2.3%). See `03_comparacion_flota.ipynb` for the full table and curves (wait, time in system, backlog, movements, occupancy, and the series of boats moving vs. idle per hour of the day, included as evidence for evaluating a variable-size fleet throughout the day).
 
 
-## 8. Estructura
+## 8. Structure
 
 ```
 heuristicas/
-├── README.md                          -- este archivo
-├── comun/src/reservas.py              -- reserva persistente compartida (crear/liberar/descontar)
+├── README.md                          -- this file
+├── comun/src/reservas.py              -- shared persistent reservation (create/release/subtract)
 ├── h1_reserva/src/politica_h1.py
 ├── h2_costo_local/src/politica_h2.py
 ├── h3_costo_global/src/politica_h3.py
-├── experimento_fleet_sweep.py         -- barrido de flota standalone (misma logica que el notebook 03, para correr sin Jupyter)
+├── experimento_fleet_sweep.py         -- standalone fleet sweep (same logic as notebook 03, to run without Jupyter)
 ├── notebooks/
-│   ├── 01_metodologia_heuristicas.ipynb   -- reglas de cada política + los 5 casos controlados, ejecutados en vivo
-│   ├── 02_experimentos_heuristicas.ipynb  -- H0/H1/H2/H3 bajo condiciones idénticas (1 flota, 1 semilla), gráficas interactivas
-│   ├── 03_comparacion_flota.ipynb         -- barrido 4-16 barcos x 5 semillas, todo interactivo (Plotly)
-│   └── 04_visualizacion_heuristicas.ipynb -- animación 2h, mapa real, reservas explícitas, inspector de decisión paso a paso
+│   ├── 01_metodologia_heuristicas.ipynb   -- rules for each policy + the 5 controlled cases, run live
+│   ├── 02_experimentos_heuristicas.ipynb  -- H0/H1/H2/H3 under identical conditions (1 fleet, 1 seed), interactive charts
+│   ├── 03_comparacion_flota.ipynb         -- 4-16 boat sweep x 5 seeds, fully interactive (Plotly)
+│   └── 04_visualizacion_heuristicas.ipynb -- 2h animation, real map, explicit reservations, step-by-step decision inspector
 └── outputs/
-    ├── resultados/  -- CSVs (por corrida, agregados, y serie de movimiento por minuto)
-    └── figuras/     -- GIFs (individuales por politica + combinado); las graficas de servicio y flota
-                        son interactivas (Plotly) y viven solo dentro de los notebooks 02/03, no se exportan a archivo
+    ├── resultados/  -- CSVs (per run, aggregated, and per-minute movement series)
+    └── figuras/     -- GIFs (individual per policy + combined); the service and fleet charts
+                        are interactive (Plotly) and live only inside notebooks 02/03, not exported to file
 ```
 
-## 9. Qué NO hace ninguna de las 4 (restricciones respetadas en todas)
+## 9. What none of the 4 does (constraints respected by all of them)
 
-- No usa información de demanda que todavía no llegó (sección 1, paso 5).
-- No hace reposicionamiento anticipatorio ni forecasting.
-- No permite rutas multi-parada - todo viaje es directo origen→destino.
-- No tiene ningún peso o coeficiente que calibrar - todo lo que no es una regla booleana está en minutos.
-- No implementa una segunda lógica de embarque/capacidad - eso sigue siendo, en las 4, responsabilidad exclusiva de `simulador/src/env.py`.
+- Does not use demand information that has not yet arrived (section 1, step 5).
+- Does not perform anticipatory repositioning or forecasting.
+- Does not allow multi-stop routes - every trip is direct origin→destination.
+- Has no weight or coefficient to calibrate - everything that is not a boolean rule is expressed in minutes.
+- Does not implement a second boarding/capacity logic - that remains, in all 4, the exclusive responsibility of `simulador/src/env.py`.
 
-## 10. Cómo correr
+## 10. How to run
 
 ```bash
 cd heuristicas/notebooks
@@ -198,4 +198,4 @@ jupyter nbconvert --to notebook --execute --inplace 03_comparacion_flota.ipynb
 jupyter nbconvert --to notebook --execute --inplace 04_visualizacion_heuristicas.ipynb
 ```
 
-Necesita `politica_base/output/escalon_dia_10pct/grupos_seed*.csv` ya generado (fase anterior) y `bergen-boats/02_ruteo_navegable/output/` (rutas navegables + matriz de tiempos).
+Requires `politica_base/output/escalon_dia_10pct/grupos_seed*.csv` already generated (previous phase) and `bergen-boats/02_ruteo_navegable/output/` (navigable routes + time matrix).

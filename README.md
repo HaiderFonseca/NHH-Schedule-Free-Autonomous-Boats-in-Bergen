@@ -1,30 +1,31 @@
-# NHH-Schedule-Free-Autonomous-Boats-in-Bergen
+# Schedule-Free Autonomous Boats in Bergen
 
-Tesis de máster (NHH, Bergen): simulación + optimización de un servicio de barcos pequeños **a demanda** para Bergen, Noruega. El servicio no existe todavía - este repo construye la lógica de cómo operaría.
+Master's thesis (NHH, Bergen). Simulation and dispatch-logic design for a small-boat, **on-demand** water transport service in Bergen, Norway. The service does not exist yet: this project does not improve something that already runs, it builds the model of how such a service would operate, with no fixed timetable, using a dispatch policy that recomputes itself every few minutes.
 
-## Estructura
+**Full report (in English):** [`docs/informe/informe.pdf`](docs/informe/informe.pdf). This is the document that summarizes the whole project end to end, with the math and the results. This README is only a quick map of the repository.
 
-```
-.
-├── docs/                 # Contexto y decisiones de la tesis - LEER PRIMERO (docs/CLAUDE.md); informe final en docs/informe/
-├── papers/               # Papers de referencia (Gu & Wallace 2021, Braathen/Goez/Guajardo 2024, etc.)
-├── bergen-boats/         # Instancia base: nodos, matriz de tiempos, ruteo navegable (pasos 01-02)
-├── demand/               # Generación de demanda sintética anclada en datos abiertos SSB
-├── simulador/            # El motor: entorno Gymnasium, estado, recompensa, métricas, visualización
-├── politica_base/        # Política de referencia ("nearest-available") + verificación del simulador
-├── modelo_rl/            # Agente PPO: entrenamiento, experimentos de recompensa, corrida final
-└── comparacion/          # Agente PPO vs. política base, mismas semillas de evaluación
-```
+Advisors: Julio Goez (optimization) and Stein W. Wallace (stochastic programming). Starting point: Gu & Wallace (2021), *Operational benefits of autonomous vessels in logistics*, the static water-taxi model this project builds a real-time version of.
 
-Cada subcarpeta es autocontenida: notebook(s) + `README.md` propio + `output/` con lo que produce. `simulador/`, `politica_base/`, `modelo_rl/` y `comparacion/` son 4 bloques con responsabilidad única sobre un mismo motor de simulación - ver `simulador/README.md` sección 1 para cómo se conectan entre sí y `simulador/config/instance.yaml` (única fuente de verdad de los parámetros que comparten los 4). Ver el `README.md` de cada carpeta para el detalle.
+## Project order
 
-## Por dónde empezar
+The work moves in the same order as the folders below, each one built on top of the previous:
 
-1. `docs/CLAUDE.md` - contexto completo del proyecto, principios, decisiones con Julio Goez y Stein W. Wallace.
-2. `bergen-boats/README.md` - instancia base (nodos, tiempos de viaje navegables).
-3. `demand/README.md` - generación de demanda sintética.
-4. `simulador/README.md` - el motor de simulación (MDP: estado, acciones, recompensa).
-5. `politica_base/README.md` - política de referencia y verificación del simulador (escalones 1-3).
-6. `modelo_rl/README.md` - agente PPO (entrenamiento, experimentos de recompensa).
-7. `comparacion/README.md` - agente vs. política base.
-8. `docs/informe/` - informe final (LaTeX/PDF) con el resultado completo del proyecto.
+| Folder | What it holds |
+|---|---|
+| [`bergen-boats/`](bergen-boats/) | The base instance: the 4 stops, the real navigable routing (follows the coastline), and the resulting travel-time matrix. |
+| [`demand/`](demand/) | The synthetic demand model, anchored in official population and employment data (SSB). |
+| [`simulador/`](simulador/) | The engine: the simulation environment (state, actions, reward), the metrics, and the visualization used by everything else. |
+| [`politica_base/`](politica_base/) | The reference policy H0 ("nearest-available") and the simulator's verification at three scales. |
+| [`heuristicas/`](heuristicas/) | Heuristics H1, H2, and H3, each built on top of the previous, with their verification cases and the fleet-size sweep. |
+| [`modelo_rl/`](modelo_rl/) | The reinforcement-learning agent (PPO): the reward-formula search and the training runs, at small scale and at full scale. |
+| [`comparacion/`](comparacion/) | The final comparisons between the agent and the heuristics, with tables, figures, and animations. |
+| [`docs/`](docs/) | The final report (`docs/informe/`) and the simulator's technical specification. |
+| [`papers/`](papers/) | The reference papers cited in the report. |
+
+Each folder is self-contained: it has its own `README.md` with the detail for that part, and its own output folder (`output/` or `outputs/`) with the results and figures. Shared parameters (fleet, reward, evaluation seeds) live in a single file, `simulador/config/instance.yaml`, which every folder reads without copying it.
+
+## Where to start
+
+The fastest way to understand the whole project is to read the report (`docs/informe/informe.pdf`): it covers routing, demand, the simulator, the four heuristics, the RL agent, and the final comparison in one ordered document. For the code and the detailed results behind any one part, the `README.md` in the matching folder has the detail and instructions to run it.
+
+**Note:** the folder-level `README.md` files and the code comments are in Spanish (the language this project was developed in); the final report above is in English.

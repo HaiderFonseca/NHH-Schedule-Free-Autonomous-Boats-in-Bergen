@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex informe"] 1790762428.52173 "informe.aux" "informe.bbl" "informe" 1790762437.87052 0
+["bibtex informe"] 1790937795.06334 "informe.aux" "informe.bbl" "informe" 1790937810.86374 0
   "./referencias.bib" 1790762023 2264 1655fe9e93a2e978bd710bbc833f9af6 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/bibtex/bst/natbib/plainnat.bst" 1748957407 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "informe.aux" 1790762437 24273 809714d95775599084dd75b9cdda7c6a "pdflatex"
+  "informe.aux" 1790937810 22828 5bf6fb51e72a22f8c61c474cb9f2a77b "pdflatex"
   (generated)
   "informe.bbl"
   "informe.blg"
   (rewritten before read)
-["pdflatex"] 1790762428.60526 "informe.tex" "informe.pdf" "informe" 1790762437.87151 0
+["pdflatex"] 1790937795.27325 "informe.tex" "informe.pdf" "informe" 1790937810.86543 0
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm" 1748957412 1536 02c06700a42be0f5a28664c7273f82e7 ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1748957413 1004 54797486969f23fa377b128694d548df ""
   "c:/Users/hfons/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1748957413 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -134,11 +134,11 @@
   "figuras/politica_base_snapshots.png" 1788438333 409022 abc977b83c9f7a94b1e766309e436d05 ""
   "figuras/rl_training_curve.png" 1788783549 308683 bd6747b161700afcd9648c81cd68cbb2 ""
   "figuras/sensibilidad_flota.png" 1790761699 259413 303eeb80a9c758f3c60d0c19cdb50ff9 ""
-  "informe.aux" 1790762437 24273 809714d95775599084dd75b9cdda7c6a "pdflatex"
-  "informe.bbl" 1790762428 2606 ef9bf8d8ec2ec0e7950c0b6b2936f894 "bibtex informe"
-  "informe.out" 1790762437 8746 3e4cbec0fc201bc6020200d1df935294 "pdflatex"
-  "informe.tex" 1790762412 114773 d0494716c325d24856345a345ed7d8bd ""
-  "informe.toc" 1790762437 5809 3e93845281ed23d540fc363f3ff9b16a "pdflatex"
+  "informe.aux" 1790937810 22828 5bf6fb51e72a22f8c61c474cb9f2a77b "pdflatex"
+  "informe.bbl" 1790937795 2275 5e6027ef325021667ad5bd5a5ceda083 "bibtex informe"
+  "informe.out" 1790937810 8438 6d7819b9499b52a00c1b7e933075fe2b "pdflatex"
+  "informe.tex" 1790937754 104823 6887a15b069688a77ba26c30a355eb21 ""
+  "informe.toc" 1790937810 5304 6d6f2350fa30e3422174e36674b60235 "pdflatex"
   (generated)
   "informe.aux"
   "informe.log"

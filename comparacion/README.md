@@ -1,140 +1,140 @@
-# Agente PPO vs. política base
+# PPO agent vs. base policy
 
-**Qué es esto, en una frase:** corre el agente entrenado (`modelo_rl/`) y la política de referencia (`politica_base/`) sobre las mismas 5 semillas de evaluación, agregado y con el detalle completo de una semilla concreta.
+**What this is, in one sentence:** runs the trained agent (`modelo_rl/`) and the reference policy (`politica_base/`) on the same 5 evaluation seeds, aggregated and with full detail for a specific seed.
 
 ---
 
-## 1. Cómo está organizado
+## 1. How it is organized
 
 ```
 comparacion/
-├── README.md                                  # este archivo
+├── README.md                                  # this file
 ├── notebooks/
-│   └── 05_comparacion_agente_vs_base.ipynb    # comparación agregada (5 semillas) + detalle semilla 1001
-└── output/                                     # tablas, gráficas interactivas, animaciones, GIFs
+│   └── 05_comparacion_agente_vs_base.ipynb    # aggregated comparison (5 seeds) + seed 1001 detail
+└── output/                                     # tables, interactive charts, animations, GIFs
 ```
 
-El notebook importa `simulador/src` (motor), `politica_base/src` (`asignar_flota`) y `modelo_rl/src` (`EntornoDemandaAleatoria`), y lee `simulador/config/instance.yaml`. Necesita que `modelo_rl/output/modelo_final/modelo_ppo.zip` ya exista (`modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb` ya corrido).
+The notebook imports `simulador/src` (engine), `politica_base/src` (`asignar_flota`) and `modelo_rl/src` (`EntornoDemandaAleatoria`), and reads `simulador/config/instance.yaml`. It needs `modelo_rl/output/modelo_final/modelo_ppo.zip` to already exist (`modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb` already run).
 
-**Cómo se evalúa:** las dos políticas corren sobre las mismas 5 semillas (`agente.evaluacion.semillas`: 1001-1005, fuera del rango de `semilla_entrenamiento`), vía `EntornoDemandaAleatoria.reset(seed=...)` -- misma semilla, misma demanda para las dos, así la comparación es justa. El reward se calcula con la fórmula de RL (`agente.entrenamiento.recompensa_overrides`: sin techo, `peso_movimiento=0.003`) para AMBAS políticas, no la de producción -- si cada una usara una fórmula distinta, comparar el reward total no significaría nada.
+**How it is evaluated:** both policies run on the same 5 seeds (`agente.evaluacion.semillas`: 1001-1005, outside the range of `semilla_entrenamiento`), via `EntornoDemandaAleatoria.reset(seed=...)` - same seed, same demand for both, so the comparison is fair. The reward is computed with the RL formula (`agente.entrenamiento.recompensa_overrides`: no cap, `peso_movimiento=0.003`) for BOTH policies, not the production one - if each used a different formula, comparing the total reward would mean nothing.
 
 ---
 
-## 2. Comparación agregada (5 semillas)
+## 2. Aggregated comparison (5 seeds)
 
-**Modelo actual: 300 000 timesteps (585 actualizaciones de PPO)** -- se subió desde los 150 000 (292 actualizaciones) de la versión anterior. Ver `modelo_rl/README.md` sección 4.2 para el tiempo real medido de esta corrida.
+**Current model: 300 000 timesteps (585 PPO updates)** - raised from the 150 000 (292 updates) of the previous version. See `modelo_rl/README.md` section 4.2 for the actual measured time of this run.
 
-**Por qué no lideramos con % atendidas.** El simulador no pierde a nadie -- nadie se retira nunca (`simulador/README.md` sección 4.5), así que alguien que no subió a un barco cuando termina la corrida no está "perdido", sigue en cola y se habría atendido si la corrida seguía un rato más. Eso quiere decir que "% atendidas" mezcla dos cosas distintas: qué tan bien despacha la política, y cuánto quedaba de ventana operativa cuando llegó la última gente -- lo segundo es arbitrario, no dice nada de la política. Lo que la recompensa realmente castiga (y lo que de verdad nos importa) es cuánto tiempo pasa la gente en el sistema -- medio y, sobre todo, máximo -- y cuántos movimientos le cuesta a la flota lograrlo. Por eso la tabla de abajo lidera con esas dos cosas, y deja % atendidas al final, solo como referencia.
+**Why we do not lead with % served.** The simulator loses no one - nobody ever withdraws (`simulador/README.md` section 4.5), so someone who did not board a boat by the end of the run is not "lost", they remain in the queue and would have been served if the run had continued a while longer. This means "% served" mixes two different things: how well the policy dispatches, and how much operating window was left when the last people arrived - the second one is arbitrary, it says nothing about the policy. What the reward actually penalizes (and what we truly care about) is how much time people spend in the system - mean and, above all, maximum - and how many movements it costs the fleet to achieve it. That is why the table below leads with those two things, and leaves % served for last, only as a reference.
 
-| Métrica | Agente PPO | Política base | Diferencia |
+| Metric | PPO agent | Base policy | Difference |
 |---|---|---|---|
-| Tiempo en sistema medio | 26.1 min | 26.1 min | +0.05 min (empate) |
-| Tiempo en sistema máximo | 66.8 min | 69.7 min | **-3.0 min** |
-| Espera media | 16.3 min | 16.4 min | -0.07 min (empate) |
-| Movimientos totales (5 episodios) | 185 | 155 | +30 |
-| Reward total (5 episodios, fórmula RL) | **-3754.1** | -5259.0 | **+1504.9** |
-| % atendidas (referencia, ver arriba) | 87.8% | 88.0% | -0.2 pp |
+| Mean time in system | 26.1 min | 26.1 min | +0.05 min (tie) |
+| Maximum time in system | 66.8 min | 69.7 min | **-3.0 min** |
+| Mean wait | 16.3 min | 16.4 min | -0.07 min (tie) |
+| Total movements (5 episodes) | 185 | 155 | +30 |
+| Total reward (5 episodes, RL formula) | **-3754.1** | -5259.0 | **+1504.9** |
+| % served (reference, see above) | 87.8% | 88.0% | -0.2 pp |
 
-Con más entrenamiento, el agente ya prácticamente EMPATA a la base en tiempo medio y espera media (antes le costaba 3 min más de media; ahora la diferencia es ruido), y sigue ganando en el peor caso (66.8 vs. 69.7 min) -- el efecto esperado de entrenar sin techo en la penalización (`modelo_rl/README.md` sección 3): al agente le sigue costando cada vez más dejar a alguien esperando mucho, así que prioriza no dejar a nadie en el peor de los casos, sin sacrificar ya el promedio como antes. El costo que queda es movimientos (185 vs. 155, 30 de más) -- mueve la flota más activamente. Ver sección 2.1 para por qué esto se ve todavía más claro en los percentiles que en el promedio.
+With more training, the agent now practically TIES the base on mean time and mean wait (it used to cost 3 min more on average; now the difference is noise), and it still wins in the worst case (66.8 vs. 69.7 min) - the expected effect of training without a cap on the penalty (`modelo_rl/README.md` section 3): it keeps costing the agent more and more to leave someone waiting a long time, so it prioritizes not leaving anyone in the worst case, without sacrificing the average anymore as before. The remaining cost is movements (185 vs. 155, 30 more) - it moves the fleet more actively. See section 2.1 for why this is seen even more clearly in the percentiles than in the average.
 
-### 2.1 Percentiles (la base real de una garantía de servicio)
+### 2.1 Percentiles (the real basis for a service guarantee)
 
-`metricas.metricas_por_usuario` -- percentiles sobre las unidades ATENDIDAS, sin censurar (el simulador no pierde a nadie, así que son datos reales, no una muestra sesgada hacia los casos rápidos). Es lo que hace falta para poder decir algo como "servimos al 95% de la gente en X minutos" con sustento, no solo el promedio -- y es donde la ventaja del agente se ve mucho más clara que en la tabla de arriba:
+`metricas.metricas_por_usuario` - percentiles over SERVED units, uncensored (the simulator loses no one, so this is real data, not a sample biased toward the fast cases). It is what is needed to be able to say something like "we serve 95% of people within X minutes" with support, not just the average - and it is where the agent's advantage is seen much more clearly than in the table above:
 
-| Métrica | Percentil | Agente PPO | Política base | Diferencia |
+| Metric | Percentile | PPO agent | Base policy | Difference |
 |---|---|---|---|---|
-| Espera | p50 | 14.1 min | 13.9 min | +0.1 min |
-| Espera | p90 | 31.9 min | 37.2 min | **-5.3 min** |
-| Espera | p95 | 35.0 min | 46.1 min | **-11.1 min** |
-| Espera | máx | 54.8 min | 59.7 min | **-5.0 min** |
-| Sistema | p50 | 23.5 min | 23.0 min | +0.5 min |
-| Sistema | p90 | 40.7 min | 37.8 min | +2.9 min |
-| Sistema | p95 | 44.2 min | 58.8 min | **-14.6 min** |
-| Sistema | máx | 66.8 min | 69.7 min | -3.0 min |
+| Wait | p50 | 14.1 min | 13.9 min | +0.1 min |
+| Wait | p90 | 31.9 min | 37.2 min | **-5.3 min** |
+| Wait | p95 | 35.0 min | 46.1 min | **-11.1 min** |
+| Wait | max | 54.8 min | 59.7 min | **-5.0 min** |
+| System | p50 | 23.5 min | 23.0 min | +0.5 min |
+| System | p90 | 40.7 min | 37.8 min | +2.9 min |
+| System | p95 | 44.2 min | 58.8 min | **-14.6 min** |
+| System | max | 66.8 min | 69.7 min | -3.0 min |
 
-En la mediana (p50) las dos políticas son prácticamente iguales -- la diferencia real está en la COLA de la distribución: en p95 de espera, el agente le saca casi 11 minutos a la base; en p95 de tiempo en sistema, casi 15 minutos. Esto es consistente con la teoría (`modelo_rl/README.md` sección 3, reward sin techo): el agente no está optimizado para el caso típico, está optimizado para que NINGÚN caso individual crezca sin límite -- y eso es exactamente lo que un percentil alto mide. Tabla completa: `output/percentiles_agregado.csv`.
+At the median (p50) the two policies are practically identical - the real difference is in the TAIL of the distribution: at p95 of wait, the agent beats the base by almost 11 minutes; at p95 of time in system, almost 15 minutes. This is consistent with the theory (`modelo_rl/README.md` section 3, uncapped reward): the agent is not optimized for the typical case, it is optimized so that NO individual case grows without bound - and that is exactly what a high percentile measures. Full table: `output/percentiles_agregado.csv`.
 
-**Por semilla, el resultado no es parejo** (`output/reward_por_semilla.csv`):
+**By seed, the result is not uniform** (`output/reward_por_semilla.csv`):
 
-| Semilla | Reward agente | Reward base | Diferencia |
+| Seed | Agent reward | Base reward | Difference |
 |---|---|---|---|
-| 1001 | -216.0 | -132.8 | -83.1 (gana la base) |
-| 1002 | -640.1 | -617.1 | -23.0 (gana la base) |
-| 1003 | -787.7 | -318.8 | -469.0 (gana la base) |
-| 1004 | -1699.3 | -4091.1 | **+2391.7** (gana el agente, por mucho) |
-| 1005 | -411.1 | -99.3 | -311.7 (gana la base) |
+| 1001 | -216.0 | -132.8 | -83.1 (base wins) |
+| 1002 | -640.1 | -617.1 | -23.0 (base wins) |
+| 1003 | -787.7 | -318.8 | -469.0 (base wins) |
+| 1004 | -1699.3 | -4091.1 | **+2391.7** (agent wins, by a lot) |
+| 1005 | -411.1 | -99.3 | -311.7 (base wins) |
 
-El agente pierde en 4 de las 5 semillas individuales, pero gana el promedio porque en la semilla 1004 la base tiene una corrida particularmente mala (-4091.1, la peor de las 10 corridas) mientras el agente la maneja bien (-1699.3) -- misma lectura que antes: el agente es más parejo en el peor caso, la base puede ser mejor en el caso típico pero tiene más varianza hacia abajo. Con más entrenamiento el agente ahora pierde en una semilla más que antes (4 de 5, era 3 de 5) -- vale la pena tenerlo presente: ganar el agregado por un solo caso extremo es una base más frágil de lo que "el agente gana en promedio" sugiere a primera vista.
+The agent loses in 4 of the 5 individual seeds, but wins the average because on seed 1004 the base has a particularly bad run (-4091.1, the worst of the 10 runs) while the agent handles it well (-1699.3) - same reading as before: the agent is more consistent in the worst case, the base can be better in the typical case but has more downside variance. With more training the agent now loses on one more seed than before (4 of 5, it used to be 3 of 5) - worth keeping in mind: winning the aggregate because of a single extreme case is a more fragile basis than "the agent wins on average" suggests at first glance.
 
-**¿El agente simplemente no mueve la flota?** No -- es justo lo contrario. `metricas.decisiones_por_barco` (cruza el log de decisiones con el estado en ese momento -- ver `simulador/README.md` sección 5) muestra que el agente espera en solo **4.1%** de sus decisiones (8 de 193), contra **47.5%** de la política base (140 de 295) -- unas 12 veces menos. Tabla completa por barco en `output/decisiones_por_barco_comparado.csv` y `output/por_barco_comparado.csv` (movimientos, tiempo navegado/esperando, ocupación por barco).
+**Does the agent simply not move the fleet?** No - it is just the opposite. `metricas.decisiones_por_barco` (crosses the decision log with the state at that moment - see `simulador/README.md` section 5) shows that the agent waits in only **4.1%** of its decisions (8 of 193), versus **47.5%** for the base policy (140 of 295) - about 12 times less. Full table by boat in `output/decisiones_por_barco_comparado.csv` and `output/por_barco_comparado.csv` (movements, time sailing/waiting, occupancy per boat).
 
-### 2.2 `veces_espero_con_demanda_local` -- por qué la base "esperaba con demanda local" (y ya no)
+### 2.2 `veces_espero_con_demanda_local` - why the base "waited with local demand" (and no longer does)
 
-La regla de la política base es estricta: **si hay alguien esperando en el nodo donde el barco está, SIEMPRE lo recoge antes que cualquier otra cosa** (`politica_base/README.md` sección 2.1) -- no hay ningún caso legítimo donde decida esperar teniendo demanda local, salvo uno: cuando OTRO barco también está libre en el mismo nodo en el mismo paso, y la coordinación de flota (`asignar_flota`, `politica_base/README.md` sección 2.2) ya le asignó esa demanda al primero -- el segundo, correctamente, no tiene nada que recoger (aunque la foto general del nodo todavía muestre gente esperando, ya está "reclamada").
+The base policy's rule is strict: **if someone is waiting at the node where the boat is, it ALWAYS picks them up before anything else** (`politica_base/README.md` section 2.1) - there is no legitimate case where it decides to wait while having local demand, except one: when ANOTHER boat is also free at the same node in the same step, and fleet coordination (`asignar_flota`, `politica_base/README.md` section 2.2) has already assigned that demand to the first one - the second one, correctly, has nothing to pick up (even though the overall snapshot of the node still shows people waiting, they are already "claimed").
 
-Antes de esta revisión, `metricas.decisiones_por_barco` reportaba muchos más casos de los que esa regla explica (hasta 15 para un barco en una corrida) -- se encontró la causa real: la función reconstruye, para cada decisión, "qué foto del mundo vio la política en ese momento" cruzando el log de decisiones con `historial_estados`, avanzando un puntero de a 1 cada vez que el minuto de la decisión cambiaba. **Si en algún paso los dos barcos estaban ocupados (ninguno libre, nadie decide nada), ese paso no quedaba contado, y el puntero se atrasaba** -- el atraso se acumula para el resto de la corrida, así que con el tiempo la función terminaba leyendo una foto vieja, de varios pasos atrás, que podía mostrar demanda que YA había sido recogida antes de que la decisión ocurriera de verdad. Se corrigió (`simulador/src/metricas.py`, `decisiones_por_barco`) calculando el índice del frame directamente a partir del minuto de la decisión (en vez de contar saltos), sin asumir que cada decisión nueva es exactamente un paso después de la anterior. Resultado, misma corrida, antes/después del fix:
+Before this revision, `metricas.decisiones_por_barco` reported many more cases than that rule explains (up to 15 for one boat in a single run) - the real cause was found: the function reconstructs, for each decision, "what snapshot of the world the policy saw at that moment" by crossing the decision log with `historial_estados`, advancing a pointer by 1 each time the decision's minute changed. **If at some step both boats were busy (none free, nobody deciding anything), that step was not counted, and the pointer fell behind** - the lag accumulates for the rest of the run, so over time the function ended up reading an old snapshot, several steps back, which could show demand that had ALREADY been picked up before the decision actually occurred. It was fixed (`simulador/src/metricas.py`, `decisiones_por_barco`) by computing the frame index directly from the decision's minute (instead of counting jumps), without assuming that each new decision is exactly one step after the previous one. Result, same run, before/after the fix:
 
-| | Antes (con el bug) | Después (corregido) |
+| | Before (with the bug) | After (fixed) |
 |---|---|---|
-| Base, `veces_espero_con_demanda_local` | 22 casos (10 sin ninguna explicación real) | **1 caso** (coordinación de flota, legítimo) |
-| Agente, `veces_espero_con_demanda_local` | -- | **2 casos** (mismo motivo) |
+| Base, `veces_espero_con_demanda_local` | 22 cases (10 with no real explanation) | **1 case** (fleet coordination, legitimate) |
+| Agent, `veces_espero_con_demanda_local` | - | **2 cases** (same reason) |
 
-Con el fix, casi todos los casos "sin explicación" desaparecen (verificado caso por caso: cruzando cada "esperó con demanda local" contra si había OTRO barco libre en el mismo nodo en el mismo paso -- 12 de los 22 casos originales ya se explicaban así incluso con el bug; con el fix, los 10 restantes, que no tenían otro barco libre, resultan ser lecturas de un frame viejo, no esperas reales con demanda disponible). El número que queda (1 para la base, 2 para el agente) es exactamente lo que la regla de coordinación predice: casos raros, de dos barcos libres a la vez en el mismo nodo.
+With the fix, almost all the "unexplained" cases disappear (verified case by case: crossing each "waited with local demand" against whether there was ANOTHER free boat at the same node in the same step - 12 of the 22 original cases were already explained this way even with the bug; with the fix, the remaining 10, which had no other free boat, turn out to be readings of an old frame, not real waits with demand available). The number that remains (1 for the base, 2 for the agent) is exactly what the coordination rule predicts: rare cases of two boats free at the same time at the same node.
 
-**Por par origen-destino** -- `output/por_par_comparado.csv`: el agente iguala o supera a la base en varios pares (`kleppesto->bryggen` 91.4% vs. 80.8%, `laksevag->sandviken` empatado 60%) y queda por debajo en otros (`kleppesto->sandviken` 70.5% vs. 100%, `bryggen->sandviken` 77.8% vs. 100%) -- no gana de forma pareja en todos los pares, consistente con que la política base también es competente (`politica_base/README.md` sección 2), no un piso fácil de superar en todos lados.
+**By origin-destination pair** - `output/por_par_comparado.csv`: the agent matches or exceeds the base on several pairs (`kleppesto->bryggen` 91.4% vs. 80.8%, `laksevag->sandviken` tied at 60%) and falls below on others (`kleppesto->sandviken` 70.5% vs. 100%, `bryggen->sandviken` 77.8% vs. 100%) - it does not win uniformly across all pairs, consistent with the base policy also being competent (`politica_base/README.md` section 2), not an easy floor to beat everywhere.
 
-**Gráficas** -- `output/heatmaps_comparados.html` (% atendidas por par, lado a lado) y `output/reward_por_semilla.html` (barras de reward por semilla).
+**Charts** - `output/heatmaps_comparados.html` (% served by pair, side by side) and `output/reward_por_semilla.html` (reward bars by seed).
 
 ---
 
-## 3. Detalle completo, dos semillas (1001 y 1004)
+## 3. Full detail, two seeds (1001 and 1004)
 
-Mismo paquete de 5 métricas/gráficas que produce `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (`simulador/README.md` sección 5), corrido para las dos políticas sobre DOS semillas concretas -- no solo una -- elegidas porque son casos opuestos: 1001 es una de las semillas donde gana la base, 1004 es donde el agente gana por más margen (sección 2). Todo esto vive en una sola función (`mostrar_detalle_semilla`, `05_comparacion_agente_vs_base.ipynb`), llamada una vez por semilla, para no duplicar treinta celdas por cada una.
+The same package of 5 metrics/charts produced by `politica_base/notebooks/01_escalon_1_verificacion.ipynb` (`simulador/README.md` section 5), run for both policies on TWO specific seeds - not just one - chosen because they are opposite cases: 1001 is one of the seeds where the base wins, 1004 is where the agent wins by the largest margin (section 2). All of this lives in a single function (`mostrar_detalle_semilla`, `05_comparacion_agente_vs_base.ipynb`), called once per seed, so as not to duplicate thirty cells for each one.
 
-| | Semilla 1001 -- Agente | Semilla 1001 -- Base | Semilla 1004 -- Agente | Semilla 1004 -- Base |
+| | Seed 1001 - Agent | Seed 1001 - Base | Seed 1004 - Agent | Seed 1004 - Base |
 |---|---|---|---|---|
-| Espera media | 11.8 min | 9.4 min | **18.2 min** | 27.7 min |
-| % atendidas (referencia) | 85.2% (115/135) | 91.9% (124/135) | **91.7%** (198/216) | 84.3% (182/216) |
-| Conservación | OK | OK | OK | OK |
+| Mean wait | 11.8 min | 9.4 min | **18.2 min** | 27.7 min |
+| % served (reference) | 85.2% (115/135) | 91.9% (124/135) | **91.7%** (198/216) | 84.3% (182/216) |
+| Conservation | OK | OK | OK | OK |
 
-**Las dos semillas cuentan historias opuestas, a propósito.** En 1001 la base espera menos (9.4 vs. 11.8 min) -- uno de los 4 casos (de 5) donde el reward agregado le da la razón a la base (sección 2). En 1004 pasa lo contrario, y por mucho: el agente espera 18.2 min contra 27.7 de la base, y atiende más gente (91.7% vs 84.3%) -- es la semilla donde la base tiene su peor corrida de las diez (reward -4091, sección 2), y acá se ve por qué: a minuto 460 la cola `K->B` de la base tiene 33 personas esperando hace **37.9 minutos**, contra un backlog más repartido del lado del agente en el mismo instante (`output/percentiles_semilla1004.csv`, `output/percentiles_semilla1001.csv`).
+**The two seeds tell opposite stories, on purpose.** In 1001 the base waits less (9.4 vs. 11.8 min) - one of the 4 cases (out of 5) where the aggregated reward favors the base (section 2). In 1004 the opposite happens, and by a lot: the agent waits 18.2 min against 27.7 for the base, and serves more people (91.7% vs 84.3%) - this is the seed where the base has its worst run of the ten (reward -4091, section 2), and here you can see why: at minute 460 the base's `K->B` queue has 33 people who have been waiting **37.9 minutes**, against a more evenly spread backlog on the agent's side at the same instant (`output/percentiles_semilla1004.csv`, `output/percentiles_semilla1001.csv`).
 
-**Percentiles, cada semilla por separado:**
+**Percentiles, each seed separately:**
 
-| Métrica | Percentil | 1001 -- Agente | 1001 -- Base | 1004 -- Agente | 1004 -- Base |
+| Metric | Percentile | 1001 - Agent | 1001 - Base | 1004 - Agent | 1004 - Base |
 |---|---|---|---|---|---|
-| Espera | p50 | 11.3 min | 8.5 min | 14.3 min | 23.5 min |
-| Espera | p90 | 26.4 min | 20.3 min | 33.7 min | 52.8 min |
-| Espera | p95 | 28.3 min | 25.3 min | **37.3 min** | **59.2 min** |
-| Sistema | p95 | 36.3 min | 31.3 min | **49.3 min** | **69.2 min** |
-| Sistema | máx | 38.4 min | 31.3 min | 66.8 min | 69.7 min |
+| Wait | p50 | 11.3 min | 8.5 min | 14.3 min | 23.5 min |
+| Wait | p90 | 26.4 min | 20.3 min | 33.7 min | 52.8 min |
+| Wait | p95 | 28.3 min | 25.3 min | **37.3 min** | **59.2 min** |
+| System | p95 | 36.3 min | 31.3 min | **49.3 min** | **69.2 min** |
+| System | max | 38.4 min | 31.3 min | 66.8 min | 69.7 min |
 
-En 1004, el agente le saca a la base casi **22 minutos en p95 de tiempo en sistema** (49.3 vs. 69.2) -- la misma ventaja de cola de distribución que se ve en el agregado (sección 2.1), pero en una corrida concreta, no como promedio de cinco.
+In 1004, the agent beats the base by almost **22 minutes in p95 of time in system** (49.3 vs. 69.2) - the same distribution-tail advantage seen in the aggregate (section 2.1), but in a specific run, not as an average of five.
 
-**Gráficas** (`output/*_semilla{1001,1004}.html`, agente y base por separado): `wait_profile_*`, `fleet_occupancy_*`, `pct_served_heatmap_comparado_*`, `reward_breakdown_*`, `backlog_by_pair_*` -- mismos nombres de archivo que antes, con el número de semilla al final.
+**Charts** (`output/*_semilla{1001,1004}.html`, agent and base separately): `wait_profile_*`, `fleet_occupancy_*`, `pct_served_heatmap_comparado_*`, `reward_breakdown_*`, `backlog_by_pair_*` - same filenames as before, with the seed number at the end.
 
-**Visualización paso a paso:** `animacion_{agente,base}_semilla{1001,1004}.gif` (los pasos completos de cada corrida), inspector en minutos concretos, y el reproductor interactivo completo.
+**Step-by-step visualization:** `animacion_{agente,base}_semilla{1001,1004}.gif` (the complete steps of each run), inspector at specific minutes, and the full interactive player.
 
-- **Inspector -- bug corregido.** Los minutos que se piden son RELATIVOS al inicio de la corrida (`hora_ini_min + 40`, `hora_ini_min + 100` -- 400 y 460 para `escalon_1`), no minutos absolutos del día. Antes se pedían `inspeccionar(40, ...)` / `inspeccionar(100, ...)` a secas -- como `escalon_1` arranca en el minuto 360 (06:00), los dos caían muy antes de que la corrida empezara, y el inspector siempre mostraba el mismo primer frame (minuto 360) sin importar cuál de los dos se pidiera -- parecía que "no mostraba nada". Con los minutos corregidos, cada llamada muestra un instante real y distinto de la corrida (ver la salida del notebook, cada una con barcos, colas y recompensa reales, distintas entre sí).
-- **Reproductor -- por qué se quedaba cargando mucho tiempo.** El cómputo de cada frame es rápido (~35 ms medido), así que no era la causa. La causa más probable: `IntSlider` (la barra de tiempo) dispara una actualización por CADA posición intermedia mientras se arrastra con el mouse, no solo al soltar -- arrastrar rápido de punta a punta de la corrida puede encolar decenas de redibujados, y aunque cada uno sea rápido, la cola tarda minutos en drenarse. Se corrigió (`simulador/src/visualizacion.py`, `reproductor_interactivo`): la barra ahora solo actualiza al SOLTAR el mouse (`continuous_update=False`) -- el botón `▶` de reproducción automática no se ve afectado (avanza un paso a la vez con su propio temporizador, no por arrastre). Además, el mapa ahora se renderiza a PNG explícito en vez de con el protocolo de "rich display" por defecto de matplotlib, más liviano y predecible en notebooks remotos. **Solo funciona con un kernel de Jupyter vivo** -- un notebook ya ejecutado y guardado (como los que produce `nbconvert`, que es como se corrieron los de este proyecto) no tiene kernel corriendo, así que ahí los botones no van a responder.
+- **Inspector - bug fixed.** The minutes requested are RELATIVE to the start of the run (`hora_ini_min + 40`, `hora_ini_min + 100` - 400 and 460 for `escalon_1`), not absolute minutes of the day. Previously `inspeccionar(40, ...)` / `inspeccionar(100, ...)` were requested plainly - since `escalon_1` starts at minute 360 (06:00), both fell well before the run began, and the inspector always showed the same first frame (minute 360) no matter which of the two was requested - it looked like it "showed nothing". With the corrected minutes, each call shows a real and distinct instant of the run (see the notebook output, each with real boats, queues and reward, different from one another).
+- **Player - why it kept loading for a long time.** Computing each frame is fast (~35 ms measured), so that was not the cause. The most likely cause: `IntSlider` (the time bar) fires an update for EVERY intermediate position while being dragged with the mouse, not only on release - dragging quickly from one end of the run to the other can queue up dozens of redraws, and even though each one is fast, the queue takes minutes to drain. It was fixed (`simulador/src/visualizacion.py`, `reproductor_interactivo`): the bar now only updates on mouse RELEASE (`continuous_update=False`) - the automatic playback button `▶` is not affected (it advances one step at a time with its own timer, not by dragging). In addition, the map is now rendered to an explicit PNG instead of matplotlib's default "rich display" protocol, which is lighter and more predictable in remote notebooks. **It only works with a live Jupyter kernel** - a notebook that has already been executed and saved (like the ones `nbconvert` produces, which is how the ones in this project were run) has no kernel running, so the buttons will not respond there.
 
 ---
 
-**Sobre qué modelo es este:** `n_steps=512`, 300 000 timesteps / 585 actualizaciones de PPO (`modelo_rl/output/modelo_final/`, `modelo_rl/README.md` sección 4.2). Se probó también `n_steps=90` (un episodio completo) como alternativa mejor justificada, a un presupuesto de 150 000 pasos -- generalizó peor en las mismas 5 semillas pese a entrenar parecido (`modelo_rl/README.md` sección 4.1); esa comparación específica no se repitió al subir a 300 000, no se usa acá.
+**What model this is:** `n_steps=512`, 300 000 timesteps / 585 PPO updates (`modelo_rl/output/modelo_final/`, `modelo_rl/README.md` section 4.2). `n_steps=90` (one full episode) was also tested as a better-justified alternative, on a budget of 150 000 steps - it generalized worse on the same 5 seeds despite training similarly (`modelo_rl/README.md` section 4.1); that specific comparison was not repeated when scaling up to 300 000, it is not used here.
 
-## 4. Cómo correr
+## 4. How to run
 
 ```bash
 cd comparacion/notebooks
 jupyter nbconvert --to notebook --execute --inplace 05_comparacion_agente_vs_base.ipynb
 ```
 
-Necesita `modelo_rl/output/modelo_final/modelo_ppo.zip` y `vecnormalize.pkl` ya guardados (`modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb` corrido primero).
+It needs `modelo_rl/output/modelo_final/modelo_ppo.zip` and `vecnormalize.pkl` already saved (`modelo_rl/notebooks/01_enfoque_y_entrenamiento_final.ipynb` run first).
 
 ---
 
-## 5. Supuestos y limitaciones
+## 5. Assumptions and limitations
 
-- **La comparación de reward usa la fórmula de RL (sin techo, `peso_movimiento=0.003`) para las dos políticas**, no la fórmula de producción que reportan `politica_base/` y los escalones 1-3 -- necesario para que el número sea comparable 1:1, pero significa que "quién gana en reward" depende de qué fórmula se eligió para entrenar al agente, no es una medida neutral independiente de esa elección.
-- **5 semillas es una muestra chica** -- la sección 2 ya muestra que el resultado agregado puede estar dominado por un solo caso atípico (semilla 1004). No se corrió sobre más semillas ni sobre instancias más grandes (`escalon_2`/`escalon_3`) -- el agente se entrenó y evaluó únicamente sobre `escalon_1` (`modelo_rl/README.md` sección 6).
-- **"Ganar" en % atendidas no es el único criterio razonable** -- ver sección 3: en la semilla mostrada en detalle, la base sirve más gente, pero el agente maneja mejor el peor caso de esa misma corrida a nivel reward. Cuál de los dos importa más depende de qué se quiera optimizar en un despliegue real (¿cumplimiento promedio, o proteger el peor caso?) -- pregunta abierta, no resuelta por este proyecto.
+- **The reward comparison uses the RL formula (no cap, `peso_movimiento=0.003`) for both policies**, not the production formula reported by `politica_base/` and stages 1-3 - necessary for the number to be comparable 1:1, but it means that "who wins on reward" depends on which formula was chosen to train the agent, it is not a neutral measure independent of that choice.
+- **5 seeds is a small sample** - section 2 already shows that the aggregated result can be dominated by a single outlier case (seed 1004). It was not run on more seeds or on larger instances (`escalon_2`/`escalon_3`) - the agent was trained and evaluated solely on `escalon_1` (`modelo_rl/README.md` section 6).
+- **"Winning" on % served is not the only reasonable criterion** - see section 3: in the seed shown in detail, the base serves more people, but the agent handles the worst case of that same run better at the reward level. Which of the two matters more depends on what one wants to optimize in a real deployment (average compliance, or protecting the worst case?) - an open question, not resolved by this project.

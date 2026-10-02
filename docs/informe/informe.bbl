@@ -1,4 +1,4 @@
-\begin{thebibliography}{7}
+\begin{thebibliography}{6}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -21,11 +21,6 @@ Yong Gu and Stein~W. Wallace.
 \newblock Operational benefits of autonomous vessels in logistics -- a case of autonomous water-taxis in {Bergen}.
 \newblock \emph{Transportation Research Part E: Logistics and Transportation Review}, 154:\penalty0 102456, 2021.
 \newblock \doi{10.1016/j.tre.2021.102456}.
-
-\bibitem[Ng et~al.(1999)Ng, Harada, and Russell]{Ng1999}
-Andrew~Y. Ng, Daishi Harada, and Stuart Russell.
-\newblock Policy invariance under reward transformations: Theory and application to reward shaping.
-\newblock In \emph{Proceedings of the Sixteenth International Conference on Machine Learning (ICML)}, pages 278--287, 1999.
 
 \bibitem[Raffin et~al.(2021)Raffin, Hill, Gleave, Kanervisto, Ernestus, and Dormann]{Raffin2021}
 Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian Ernestus, and Noah Dormann.

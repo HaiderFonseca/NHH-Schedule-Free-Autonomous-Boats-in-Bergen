@@ -1,115 +1,115 @@
-# Comparación completa -- PPO vs H0 vs H3 (día completo, 12 barcos, demanda 10%)
+# Full comparison: PPO vs H0 vs H3 (full day, 12 boats, 10% demand)
 
-**Qué es esto, en una frase:** compara el agente PPO final (`modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/`) contra las heurísticas H0 y H3 sobre el mismo escenario exacto y las mismas 5 semillas de evaluación, con tablas, gráficas (estáticas e interactivas) y una animación GIF de la mañana, todo en una sola carpeta lista para copiar a la presentación.
+**What this is, in one line:** compares the final PPO agent (`modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/`) against heuristics H0 and H3 on the exact same scenario and the same 5 evaluation seeds, with tables, figures (static and interactive), and a morning GIF animation, all in one folder ready to paste into a presentation.
 
 ---
 
-## 1. Cómo está organizado
+## 1. How it is organized
 
 ```
 comparacion/dia_completo/
-├── README.md                                          # este archivo
+├── README.md                                          # this file
 ├── notebooks/
-│   └── 01_comparacion_completa_ppo_h0_h3.ipynb        # genera TODO lo de abajo, ya ejecutado
-├── figuras/                                            # PNG (para pegar en diapositivas) + HTML (interactivo) + GIF
+│   └── 01_comparacion_completa_ppo_h0_h3.ipynb        # generates EVERYTHING below, already executed
+├── figuras/                                            # PNG (for slides) + HTML (interactive) + GIF
 │   ├── barras_servicio.png
 │   ├── barras_tiempos.png
 │   ├── barras_operacion_flota.png
-│   ├── dashboard_comparativo_h0_h3_ppo.png             # las 12 métricas en una sola imagen -- una diapositiva de resumen
+│   ├── dashboard_comparativo_h0_h3_ppo.png             # all 12 metrics in one image, a summary slide
 │   ├── perfil_espera_{H0,H3,PPO}.png / .html
 │   ├── ocupacion_flota_{H0,H3,PPO}.png / .html
 │   ├── heatmap_cumplimiento_{H0,H3,PPO}.png / .html
-│   ├── heatmap_cumplimiento_comparado.png / .html      # los 3 lado a lado
-│   ├── desglose_recompensa_{H0,H3,PPO}.png / .html     # NO comparable entre políticas, ver sección 4
+│   ├── heatmap_cumplimiento_comparado.png / .html      # the three side by side
+│   ├── desglose_recompensa_{H0,H3,PPO}.png / .html     # NOT comparable across policies, see section 4
 │   ├── backlog_{H0,H3,PPO}.png / .html
-│   ├── animacion_h0_h3_ppo_manana_semilla1001.gif      # los 3 paneles lado a lado, 06:00-08:00 (GIF)
-│   ├── animacion_PPO_semilla1001_manana.gif            # PPO solo (GIF)
-│   ├── animacion_{H0,H3}_semilla1001_manana.gif        # copiados de heuristicas/outputs/figuras/ (mismo escenario, GIF)
-│   ├── video_{H0,H3,PPO}_semilla1001_manana.mp4        # los mismos, en .mp4 -- pausable en PowerPoint
-│   └── video_h0_h3_ppo_comparado_semilla1001_manana.mp4  # los 3 lado a lado, en .mp4
+│   ├── animacion_h0_h3_ppo_manana_semilla1001.gif      # the three panels side by side, 06:00-08:00 (GIF)
+│   ├── animacion_PPO_semilla1001_manana.gif            # PPO alone (GIF)
+│   ├── animacion_{H0,H3}_semilla1001_manana.gif        # copied from heuristicas/outputs/figuras/ (same scenario, GIF)
+│   ├── video_{H0,H3,PPO}_semilla1001_manana.mp4        # the same ones, as .mp4 (can be paused in PowerPoint)
+│   └── video_h0_h3_ppo_comparado_semilla1001_manana.mp4  # the three side by side, as .mp4
 └── resultados/
-    └── tabla_comparativa_h0_h3_ppo_completa.csv        # tabla oficial agregada (media+std, 5 semillas)
+    └── tabla_comparativa_h0_h3_ppo_completa.csv        # official aggregate table (mean + std, 5 seeds)
 ```
 
-El notebook importa `simulador/src` (motor + métricas + visualización), `politica_base/src` y `heuristicas/h3_costo_global/src` (H0/H3, sin modificar) y `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/` (`entrenar.py`/`evaluar.py`, sin reentrenar ni reevaluar la tabla oficial). No se modificó el simulador, las heurísticas, el modelo entrenado, ninguna métrica existente, ni GitHub -- solo se importó código existente y se escribieron archivos nuevos dentro de esta carpeta.
+The notebook imports `simulador/src` (engine, metrics, visualization), `politica_base/src` and `heuristicas/h3_costo_global/src` (H0/H3, unmodified), and `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/` (`entrenar.py`/`evaluar.py`, without retraining or re-evaluating the official table). The simulator, the heuristics, the trained model, every existing metric, and GitHub were never modified: only existing code was imported, and new files were written inside this folder.
 
 ---
 
-## 2. Escenario (idéntico para las tres políticas)
+## 2. Scenario (identical for all three policies)
 
 | | |
 |---|---|
-| Barcos | 12 |
-| Capacidad por barco | 30 personas |
-| Demanda | 10% de la población oficial |
-| Horario | 06:00-24:00 (día completo, 540 pasos de 2 min) |
-| Semillas de evaluación | 1001, 1002, 1003, 1004, 1005 |
+| Boats | 12 |
+| Capacity per boat | 30 people |
+| Demand | 10% of the official population |
+| Hours | 06:00-24:00 (full day, 540 steps of 2 min) |
+| Evaluation seeds | 1001, 1002, 1003, 1004, 1005 |
 
 ---
 
-## 3. Metodología, en dos niveles
+## 3. Methodology, at two levels
 
-**1. Comparación oficial (agregada, 5 semillas) -- la que cuenta para el veredicto.**
-H0 y H3 se REUSAN tal cual de `heuristicas/outputs/resultados/resultados_h0_h1_h2_h3.csv` (generado por `heuristicas/experimento_fleet_sweep.py`) -- **nunca recalculados**. PPO se reusa de `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/resultados_evaluacion_ppo.csv` (generado por `evaluar.py`) -- tampoco se recalcula aquí. Este notebook solo lee esos dos CSV y arma la tabla/gráficas comparativas.
+**1. Official comparison (aggregated, 5 seeds), the one that counts for the verdict.**
+H0 and H3 are REUSED as is from `heuristicas/outputs/resultados/resultados_h0_h1_h2_h3.csv` (generated by `heuristicas/experimento_fleet_sweep.py`), never recomputed. PPO is reused from `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/resultados_evaluacion_ppo.csv` (generated by `evaluar.py`), also not recomputed here. This notebook only reads those two CSV files and builds the comparative table and figures.
 
-**2. Detalle ilustrativo (semilla 1001 únicamente) -- para las gráficas de serie de tiempo y el GIF.**
-Esas gráficas necesitan el `env` completo paso a paso (`historial_estados`), que no está guardado en los CSV agregados. Para esto el notebook SÍ vuelve a *correr* H0 y H3 (copiando el bucle exacto de `experimento_fleet_sweep.py::correr()`, código sin modificar una sola línea, sobre la misma demanda pre-generada `grupos_seed1001.csv`) y vuelve a *evaluar* PPO para esa semilla (misma función `evaluar.correr_ppo()`, sin reentrenar nada). **Esto no cambia ningún número de la tabla oficial** -- es solo para poder graficar/animar un episodio completo.
+**2. Illustrative detail (seed 1001 only), for the time-series figures and the GIF.**
+Those figures need the full step-by-step `env` (`historial_estados`), which is not stored in the aggregate CSV files. For this, the notebook DOES *run* H0 and H3 again (copying the exact loop from `experimento_fleet_sweep.py::correr()`, code unmodified down to the line, over the same pre-generated demand `grupos_seed1001.csv`), and *evaluates* PPO again for that seed (same function `evaluar.correr_ppo()`, without retraining anything). **This does not change any number in the official table**, it is only to be able to plot and animate one full episode.
 
-**Chequeo de transparencia (demanda "misma semilla" entre caminos de código distintos):** H0/H3 leen la demanda de un CSV pre-generado; PPO la genera on-the-fly en `reset(seed=1001)` vía `EntornoDemandaAleatoria`. Ambos caminos usan el mismo generador (`demand/src/llegadas.py`) pero por rutas de código distintas -- el notebook imprime el total de personas generadas por las tres para confirmar (o refutar, sin esconderlo) que la realización de demanda es exactamente la misma. Ver la salida de la celda correspondiente en el notebook ejecutado.
+**Transparency check (does "the same seed" really mean the same demand across two different code paths?):** H0/H3 read demand from a pre-generated CSV; PPO generates it on the fly in `reset(seed=1001)` via `EntornoDemandaAleatoria`. Both paths use the same generator (`demand/src/llegadas.py`) but through different code routes, so the notebook prints the total number of people generated by all three to confirm (or disprove, without hiding it) that the demand realization is exactly the same. See the output of the corresponding cell in the executed notebook.
 
 ---
 
-## 4. Resultado oficial (media ± std, 5 semillas)
+## 4. Official result (mean ± std, 5 seeds)
 
-| métrica | H0 | H3 | PPO |
+| metric | H0 | H3 | PPO |
 |---|---|---|---|
-| pct_atendidas | 99.58 | 99.61 | 99.39 |
+| pct_atendidas (percent served) | 99.58 | 99.61 | 99.39 |
 | backlog_final_total | 34.2 | 31.8 | **50.2** |
-| espera_media_min | 6.18 | 4.81 | **12.76** |
+| espera_media_min (mean wait) | 6.18 | 4.81 | **12.76** |
 | espera_p95_min | 15.71 | 12.27 | **37.25** |
 | espera_max_min | 28.03 | 18.36 | **105.40** |
-| viaje_medio_min | 9.79 | 9.79 | 9.79 |
-| sistema_medio_min | 15.97 | 14.60 | **22.55** |
+| viaje_medio_min (mean travel time) | 9.79 | 9.79 | 9.79 |
+| sistema_medio_min (mean time in system) | 15.97 | 14.60 | **22.55** |
 | movimientos_totales | 1268.6 | 803.2 | 1149.8 |
-| movimientos_vacios | 704.0 | 200.6 | 660.6 |
-| movimientos_con_carga | 564.6 | 602.6 | 489.2 |
-| ocupación_%capacidad | 16.31 | 16.32 | 16.30 |
-| pct_esperando_flota | 26.28 | 54.25 | 31.72 |
+| movimientos_vacios (empty movements) | 704.0 | 200.6 | 660.6 |
+| movimientos_con_carga (loaded movements) | 564.6 | 602.6 | 489.2 |
+| occupancy (% of capacity) | 16.31 | 16.32 | 16.30 |
+| pct_esperando_flota (% of fleet idle) | 26.28 | 54.25 | 31.72 |
 
-(`sistema_p95_min`/`sistema_max_min` solo están calculadas para PPO -- 46.17 / 115.40 min; `experimento_fleet_sweep.py` no las guardó para H0/H3, no se recalculan aquí.)
+(`sistema_p95_min`/`sistema_max_min` are only computed for PPO: 46.17 / 115.40 min; `experimento_fleet_sweep.py` did not save them for H0/H3, and they are not recomputed here.)
 
-**Sobre la comparación de reward:** cada política corrió con una fórmula de recompensa distinta -- H0/H3 con la fórmula de producción (`simulador/config/instance.yaml -> recompensa`), PPO con **Reward D** (`agente.entrenamiento.recompensa_overrides`: sin tolerancia, sin premio por entrega, sin penalización de movimiento). Las gráficas de "desglose de recompensa" de `figuras/` están, por eso, en escalas distintas por política y **no se usan, en ningún punto de este análisis, como criterio de comparación**. No se declara a PPO mejor (ni peor) por su reward.
-
----
-
-## 5. Veredicto honesto
-
-**PPO no supera a H0 ni a H3 en este escenario.** Es casi comparable en `pct_atendidas` (99.39% vs. 99.58-99.61%), pero pierde claramente en las métricas de experiencia del usuario: la espera media, p95 y máxima son 2-4x peores que ambas heurísticas, y el backlog final también es mayor. La única cifra donde PPO queda "en el medio" es movimientos totales/vacíos, sin que eso se traduzca en mejor servicio. H3 es, con margen, la política con mejor tiempo de espera; H0 es la que más mueve la flota (más movimientos vacíos) pero aun así compite de cerca con H3 en espera.
+**On comparing reward:** each policy ran under a different reward formula: H0/H3 with the production formula (`simulador/config/instance.yaml -> recompensa`), PPO with **Reward D** (`agente.entrenamiento.recompensa_overrides`: no tolerance, no delivery bonus, no movement penalty). The "reward breakdown" figures in `figuras/` are therefore on different scales per policy and **are never used, anywhere in this analysis, as a comparison criterion**. PPO is not declared better (or worse) because of its reward.
 
 ---
 
-## 6. Video (.mp4) además del GIF, y reproductor interactivo
+## 5. Honest verdict
 
-Un GIF insertado en PowerPoint no se puede pausar de forma confiable durante la presentación; un `.mp4` sí (controles nativos de reproducción). Se generó con `imageio`+`imageio-ffmpeg`, reusando `visualizacion.dibujar_frame` para cada cuadro (mismo patrón que `comparacion/escalon_1_h0_h3_ppo/`) -- nunca se modificó ese archivo salvo dos textos que se tradujeron a inglés ("waiting:" y el título del mapa), para que todas las animaciones del proyecto queden en inglés.
-
-Además, para cada política individual (H0, H3, PPO, semilla 1001) hay un **reproductor interactivo paso a paso** (slider + botones + panel de texto en inglés: estado de cada barco, decisiones, colas, recompensa del paso -- y para H3, las reservas activas), cubriendo el DÍA COMPLETO (no solo la ventana de la mañana del video/GIF). Reusa el patrón de `visualizacion.reproductor_interactivo` sin modificar ese archivo. **Solo funciona con un kernel de Jupyter vivo** -- abrir el notebook y correr esas celdas; en esta copia ya ejecutada los botones no responden.
+**PPO does not beat H0 or H3 in this scenario.** It is almost comparable on `pct_atendidas` (99.39% vs. 99.58-99.61%), but it clearly loses on the metrics that describe the user's experience: mean, p95, and maximum wait are 2-4x worse than both heuristics, and the final backlog is also larger. The only figure where PPO lands "in between" is total/empty movements, without that translating into better service. H3 is, by a clear margin, the policy with the best waiting time; H0 moves the fleet the most (more empty movements) but still competes closely with H3 on waiting time.
 
 ---
 
-## 7. Cómo correr
+## 6. Video (.mp4) in addition to the GIF, and an interactive player
+
+A GIF inserted into PowerPoint cannot be reliably paused during a presentation; an `.mp4` can (native playback controls). It was generated with `imageio` + `imageio-ffmpeg`, reusing `visualizacion.dibujar_frame` for each frame (same pattern as `comparacion/escalon_1_h0_h3_ppo/`); that file was never modified except for two pieces of text translated to English ("waiting:" and the map title), so that every animation in the project is in English.
+
+In addition, for each individual policy (H0, H3, PPO, seed 1001) there is a **step-by-step interactive player** (slider + buttons + an English text panel: each boat's state, decisions, queues, step reward, and for H3 the active reservations), covering the FULL DAY (not just the morning window used by the video/GIF). It reuses the pattern from `visualizacion.reproductor_interactivo` without modifying that file. **It only works with a live Jupyter kernel**: open the notebook and run those cells; in this already-executed copy the buttons do not respond.
+
+---
+
+## 7. How to run it
 
 ```bash
 cd comparacion/dia_completo/notebooks
 jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=1800 01_comparacion_completa_ppo_h0_h3.ipynb
 ```
 
-Requiere que ya existan: `heuristicas/outputs/resultados/resultados_h0_h1_h2_h3.csv`, `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/{modelo_ppo.zip, vecnormalize.pkl, resultados_evaluacion_ppo.csv}`, y `politica_base/output/escalon_dia_10pct/grupos_seed1001.csv`. Tarda varios minutos (descarga el mapa base una vez, corre 3 episodios completos de 540 pasos, renderiza ~61 frames del GIF combinado).
+Requires that the following already exist: `heuristicas/outputs/resultados/resultados_h0_h1_h2_h3.csv`, `modelo_rl/ppo_dia_10pct_12barcos_reward_D_1M/{modelo_ppo.zip, vecnormalize.pkl, resultados_evaluacion_ppo.csv}`, and `politica_base/output/escalon_dia_10pct/grupos_seed1001.csv`. It takes a few minutes (downloads the base map once, runs 3 full episodes of 540 steps, renders about 61 frames for the combined GIF).
 
 ---
 
-## 8. Supuestos y limitaciones
+## 8. Assumptions and limitations
 
-- El detalle ilustrativo y el GIF usan **una sola semilla (1001)** -- no representan la variabilidad entre semillas, solo el resultado oficial agregado (sección 4) la captura.
-- El GIF cubre solo la ventana 06:00-08:00 (mañana), no el día completo -- mismo criterio que `heuristicas/notebooks/04_visualizacion_heuristicas.ipynb`, para mantener el archivo liviano y legible.
-- Las gráficas de desglose de recompensa NO son comparables entre políticas (fórmulas distintas, ver sección 4) -- se incluyen solo como reporte individual de cada política.
-- Si el chequeo de transparencia de la sección 3 muestra totales de personas generadas distintos entre H0/H3 y PPO para la "semilla 1001", significa que ambos caminos de generación de demanda no producen exactamente la misma realización pese a compartir el número de semilla -- una limitación conocida de tener dos caminos de código para generar demanda (CSV pre-generado vs. on-the-fly), documentada aquí sin ocultarla.
+- The illustrative detail and the GIF use **a single seed (1001)**; they do not represent the variability across seeds, only the official aggregate result (section 4) captures that.
+- The GIF only covers the 06:00-08:00 window (morning), not the full day, the same choice made in `heuristicas/notebooks/04_visualizacion_heuristicas.ipynb`, to keep the file light and readable.
+- The reward-breakdown figures are NOT comparable across policies (different formulas, see section 4); they are included only as each policy's individual report.
+- If the transparency check in section 3 shows different total numbers of people generated between H0/H3 and PPO for "seed 1001", it means the two demand-generation code paths do not produce exactly the same realization despite sharing the seed number, a known limitation of having two code paths to generate demand (pre-generated CSV vs. on the fly), documented here without hiding it.

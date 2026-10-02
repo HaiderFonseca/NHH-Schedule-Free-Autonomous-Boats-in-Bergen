@@ -1,66 +1,66 @@
-# Paso 1 - Matriz de tiempos y distancias
+# Step 1 - Time and distance matrix
 
-Primer bloque de la instancia base: cuánto se demora un barco entre cada par de nodos.
+First block of the base instance: how long a boat takes between each pair of nodes.
 
-## Qué hace
+## What it does
 
-1. Carga los 4 nodos de demanda (Kleppestø, Laksevåg, Bryggen, Sandviken) desde [`../config/instance.yaml`](../config/instance.yaml).
-2. Calcula la distancia en línea recta sobre el agua entre cada par, con la fórmula de **Haversine**.
-3. Calibra una **velocidad efectiva** con el único dato real disponible: la ruta 490 (Askøybåten) entre Kleppestø y Bryggen mide 5.36 km y el ferry real tarda 14 min puerta a puerta → **≈ 23 km/h (12.4 nudos)**. Esa velocidad ya incluye maniobras y atraque, así que se usa tal cual para todos los pares.
-4. Convierte la matriz de distancias a una matriz de **tiempos de viaje** (min) con esa velocidad.
-5. Guarda las matrices como CSV y genera las gráficas.
-6. **Verificación visual**: dibuja las 6 líneas rectas (una por par de nodos) sobre el mapa real, con zoom cerrado en Bryggen, para revisar si alguna cruza tierra.
+1. Loads the 4 demand nodes (Kleppestø, Laksevåg, Bryggen, Sandviken) from [`../config/instance.yaml`](../config/instance.yaml).
+2. Computes the straight-line distance over water between each pair, with the **Haversine** formula.
+3. Calibrates an **effective speed** with the only real data available: route 490 (Askøybåten) between Kleppestø and Bryggen measures 5.36 km and the real ferry takes 14 min door to door → **≈ 23 km/h (12.4 knots)**. That speed already includes maneuvering and docking, so it is used as-is for all pairs.
+4. Converts the distance matrix into a **travel time** matrix (min) using that speed.
+5. Saves the matrices as CSV and generates the plots.
+6. **Visual verification**: draws the 6 straight lines (one per pair of nodes) on the real map, zoomed in tightly on Bryggen, to check whether any of them cross land.
 
-## Por qué Hegreneset no aparece en la matriz
+## Why Hegreneset does not appear in the matrix
 
-Hegreneset es un punto intermedio entre Sandviken y Bryggen, no una parada: nadie sube ni baja ahí. El notebook lo carga por separado (sección `waypoints` del config) solo para mostrarlo en el mapa como referencia geométrica, y produce una matriz de referencia aparte (`output/*_con_waypoints_REFERENCIA.csv`) que **no** se usa en el resto del proyecto - la matriz de demanda real es la de 4×4.
+Hegreneset is an intermediate point between Sandviken and Bryggen, not a stop: nobody boards or disembarks there. The notebook loads it separately (`waypoints` section of the config) only to show it on the map as a geometric reference, and produces a separate reference matrix (`output/*_con_waypoints_REFERENCIA.csv`) that is **not** used in the rest of the project - the real demand matrix is the 4x4 one.
 
-## Cómo correr
+## How to run
 
 ```bash
 jupyter nbconvert --to notebook --execute --inplace notebook.ipynb
 ```
 
-o abrir `notebook.ipynb` en Jupyter/VS Code y correr todas las celdas.
+or open `notebook.ipynb` in Jupyter/VS Code and run all cells.
 
 ## Outputs (`output/`)
 
-| Archivo | Qué es |
+| File | What it is |
 |---|---|
-| `matriz_distancias_km.csv` | Distancias Haversine, 4×4, nodos de demanda |
-| `matriz_tiempos_min.csv` | Tiempos de viaje, 4×4, nodos de demanda - **este es el que usan los pasos siguientes** |
-| `velocidad_calibrada_kmh.txt` | Velocidad efectiva calibrada (≈ 22.97 km/h) |
-| `mapa_nodos_bergen.png` | Mapa de Bergen con los 4 nodos de demanda + Hegreneset marcado como waypoint |
-| `heatmap_tiempos.png` | Heatmap de la matriz de tiempos |
-| `matriz_*_con_waypoints_REFERENCIA.csv` | Matriz 5×5 de referencia incluyendo Hegreneset - solo para consulta futura, no se usa en la demanda |
-| `mapa_lineas_rectas.png` | Las 6 líneas rectas entre nodos, con distancia en km, sobre el mapa |
-| `mapa_lineas_rectas_detalle.png` | Lo mismo con más contexto de calles/costa (zoom medio) |
-| `mapa_zoom_bryggen.png` | Zoom cerrado sobre Bryggen, para ver el cruce con la península de Nordnes |
+| `matriz_distancias_km.csv` | Haversine distances, 4x4, demand nodes |
+| `matriz_tiempos_min.csv` | Travel times, 4x4, demand nodes - **this is the one used by the following steps** |
+| `velocidad_calibrada_kmh.txt` | Calibrated effective speed (≈ 22.97 km/h) |
+| `mapa_nodos_bergen.png` | Map of Bergen with the 4 demand nodes + Hegreneset marked as a waypoint |
+| `heatmap_tiempos.png` | Heatmap of the time matrix |
+| `matriz_*_con_waypoints_REFERENCIA.csv` | 5x5 reference matrix including Hegreneset - for future reference only, not used in demand |
+| `mapa_lineas_rectas.png` | The 6 straight lines between nodes, with distance in km, over the map |
+| `mapa_lineas_rectas_detalle.png` | The same with more street/coastline context (medium zoom) |
+| `mapa_zoom_bryggen.png` | Tight zoom on Bryggen, to see the crossing with the Nordnes peninsula |
 
-## ⚠️ Hallazgo: las líneas rectas que tocan Bryggen cruzan tierra
+## Warning: finding - the straight lines touching Bryggen cross land
 
-La inspección visual (sección 9 del notebook) muestra que Haversine subestima la distancia real en las conexiones de Bryggen:
+Visual inspection (section 9 of the notebook) shows that Haversine underestimates the real distance on Bryggen's connections:
 
-- **Bryggen↔Sandviken**: la recta corta por el centro de Bergen en vez de salir por la boca de Vågen. Cruza tierra con claridad.
-- **Bryggen↔Kleppestø** (el propio tramo de calibración) **y Bryggen↔Laksevåg**: pasan muy cerca -probablemente por encima- de la punta de la península de Nordnes.
-- **Laksevåg↔Sandviken**: mismo problema con Nordnes.
-- **Kleppestø↔Laksevåg y Kleppestø↔Sandviken**: sobre fiordo abierto, sin problema.
+- **Bryggen-Sandviken**: the straight line cuts through the center of Bergen instead of exiting through the mouth of Vågen. It clearly crosses land.
+- **Bryggen-Kleppestø** (the very segment used for calibration) **and Bryggen-Laksevåg**: pass very close to (probably over) the tip of the Nordnes peninsula.
+- **Laksevåg-Sandviken**: same problem with Nordnes.
+- **Kleppestø-Laksevåg and Kleppestø-Sandviken**: over open fjord, no problem.
 
-Como Bryggen concentra las 3 "conexiones fuertes" del modelo (garantía dura de 15 min), esto es relevante: los tiempos hacia/desde Bryggen podrían estar subestimados. Queda documentado en `../../docs/parametros_instancia_base_bergen.md` como pendiente de decisión - no se corrigió automáticamente porque hay varias formas razonables de hacerlo (factor de desvío manual, ruta por waypoints, esperar datos AIS reales) y es una decisión de modelado.
+Since Bryggen concentrates the model's 3 "strong connections" (hard 15-minute guarantee), this is relevant: the times to/from Bryggen could be underestimated. This is documented in `../parametros_instancia_base_bergen.md` as pending a decision - it was not corrected automatically because there are several reasonable ways to do so (manual deviation factor, route via waypoints, waiting for real AIS data) and it is a modeling decision.
 
-## Resultado
+## Result
 
-Matriz de tiempos (min):
+Time matrix (min):
 
-| desde \ hacia | Kleppestø | Laksevåg | Bryggen | Sandviken |
+| from \ to | Kleppestø | Laksevåg | Bryggen | Sandviken |
 |---|---|---|---|---|
 | **Kleppestø** | - | 9.3 | 14.0 | 13.5 |
 | **Laksevåg** | 9.3 | - | 5.0 | 6.2 |
 | **Bryggen** | 14.0 | 5.0 | - | 3.6 |
 | **Sandviken** | 13.5 | 6.2 | 3.6 | - |
 
-Coincide con lo documentado en `../../docs/parametros_instancia_base_bergen.md` (test de sanidad incluido en el notebook: Kleppestø–Bryggen debe dar exactamente 14.0 min).
+Matches what is documented in `../parametros_instancia_base_bergen.md` (sanity test included in the notebook: Kleppestø-Bryggen must give exactly 14.0 min).
 
-## Siguiente paso
+## Next step
 
-`../02_ruteo_navegable/` - la inspección visual de arriba mostró que las líneas rectas que tocan Bryggen cruzan tierra; ese paso lo corrige con rutas reales sobre una malla de agua. **Los pasos posteriores a ese (`03_demanda/` en adelante) usan la matriz corregida, no la de aquí.**
+`../02_ruteo_navegable/` - the visual inspection above showed that the straight lines touching Bryggen cross land; that step corrects this with real routes over a water mesh. **The steps after that one (`03_demanda/` onward) use the corrected matrix, not the one here.**

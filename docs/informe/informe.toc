@@ -33,33 +33,28 @@
 \contentsline {subsection}{\numberline {8.1}Method}{20}{subsection.8.1}%
 \contentsline {subsection}{\numberline {8.2}Implementation, observation, and action}{20}{subsection.8.2}%
 \contentsline {subsection}{\numberline {8.3}Reward function}{21}{subsection.8.3}%
-\contentsline {paragraph}{Picking $w_{\text {move}}$: matching scales, not guessing.}{22}{section*.8}%
-\contentsline {subsection}{\numberline {8.4}Reward-shaping experiments}{22}{subsection.8.4}%
-\contentsline {paragraph}{Capped vs.\ uncapped discomfort (A vs.\ B).}{22}{section*.9}%
-\contentsline {paragraph}{Adding a small movement penalty (C1 vs.\ C2).}{23}{section*.10}%
-\contentsline {subsection}{\numberline {8.5}A fuller search: eight reward formulas at full training budget}{23}{subsection.8.5}%
-\contentsline {paragraph}{A scale check on H's weighting.}{25}{section*.11}%
-\contentsline {paragraph}{A correctness finding, caught before it could spread further.}{25}{section*.12}%
-\contentsline {subsection}{\numberline {8.6}Fresh demand on every reset}{26}{subsection.8.6}%
-\contentsline {subsection}{\numberline {8.7}Training run}{26}{subsection.8.7}%
-\contentsline {paragraph}{Checking the rollout length: $n_{\text {steps}}=90$.}{27}{section*.13}%
-\contentsline {subsection}{\numberline {8.8}Scaling up: training at the full instance}{28}{subsection.8.8}%
-\contentsline {section}{\numberline {9}Results: Agent vs.\ Reference Policy at Small Scale}{29}{section.9}%
-\contentsline {paragraph}{Why percent served is not the headline metric.}{29}{section*.14}%
-\contentsline {subsection}{\numberline {9.1}Aggregate comparison, five seeds}{29}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}Detailed comparison on a single seed}{30}{subsection.9.2}%
-\contentsline {section}{\numberline {10}Results: Full-Day Comparison}{31}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Aggregate result, five seeds}{32}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Reading the result honestly}{33}{subsection.10.2}%
-\contentsline {section}{\numberline {11}Assumptions and Limitations}{33}{section.11}%
-\contentsline {paragraph}{No real demand data.}{34}{section*.15}%
-\contentsline {paragraph}{No passenger patience, by design.}{34}{section*.16}%
-\contentsline {paragraph}{None of the four heuristics is an optimizer.}{34}{section*.17}%
-\contentsline {paragraph}{The reward search and the rollout-length check were only ever done at the small, two-boat scale.}{34}{section*.18}%
-\contentsline {paragraph}{The full-scale training run was attempted once.}{34}{section*.19}%
-\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{34}{section*.20}%
-\contentsline {section}{\numberline {12}Conclusion}{34}{section.12}%
-\contentsline {section}{\numberline {A}Where Everything Lives in This Project}{35}{appendix.A}%
-\contentsline {paragraph}{The overall layout.}{35}{section*.21}%
-\contentsline {paragraph}{A shared rule.}{36}{section*.22}%
-\contentsline {paragraph}{Finding a specific result.}{36}{section*.23}%
+\contentsline {subsection}{\numberline {8.4}Choosing a reward: five formulas compared}{22}{subsection.8.4}%
+\contentsline {paragraph}{A scale check on H's weighting.}{23}{section*.8}%
+\contentsline {subsection}{\numberline {8.5}Fresh demand on every reset}{23}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}Training run}{24}{subsection.8.6}%
+\contentsline {paragraph}{Checking the rollout length: $n_{\text {steps}}=90$.}{24}{section*.9}%
+\contentsline {subsection}{\numberline {8.7}Scaling up: training at the full instance}{25}{subsection.8.7}%
+\contentsline {section}{\numberline {9}Results: Agent vs.\ Reference Policy at Small Scale}{26}{section.9}%
+\contentsline {paragraph}{Why percent served is not the headline metric.}{26}{section*.10}%
+\contentsline {subsection}{\numberline {9.1}Aggregate comparison, five seeds}{27}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Detailed comparison on a single seed}{28}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Results: Full-Day Comparison}{29}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Aggregate result, five seeds}{30}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Reading the result honestly}{31}{subsection.10.2}%
+\contentsline {section}{\numberline {11}Assumptions and Limitations}{31}{section.11}%
+\contentsline {paragraph}{No real demand data.}{32}{section*.11}%
+\contentsline {paragraph}{No passenger patience, by design.}{32}{section*.12}%
+\contentsline {paragraph}{None of the four heuristics is an optimizer.}{32}{section*.13}%
+\contentsline {paragraph}{The reward search and the rollout-length check were only ever done at the small, two-boat scale.}{32}{section*.14}%
+\contentsline {paragraph}{The full-scale training run was attempted once.}{32}{section*.15}%
+\contentsline {paragraph}{Reward shape was explored, not exhaustively searched.}{32}{section*.16}%
+\contentsline {section}{\numberline {12}Conclusion}{32}{section.12}%
+\contentsline {section}{\numberline {A}Where Everything Lives in This Project}{33}{appendix.A}%
+\contentsline {paragraph}{The overall layout.}{33}{section*.17}%
+\contentsline {paragraph}{A shared rule.}{34}{section*.18}%
+\contentsline {paragraph}{Finding a specific result.}{34}{section*.19}%

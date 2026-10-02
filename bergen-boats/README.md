@@ -1,35 +1,35 @@
 # bergen-boats
 
-Implementación de la tesis: simulación + optimización de un servicio de barcos pequeños **a demanda** para Bergen, Noruega. El servicio no existe todavía - este repo construye la lógica de cómo operaría.
+Implementation of the thesis: simulation + optimization of a small **on-demand** boat service for Bergen, Norway. The service does not exist yet - this repo builds the logic of how it would operate.
 
-El contexto completo del proyecto (motivación, decisiones de diseño, respuestas de Julio/Stein) vive en [`../docs/`](../docs/) - léelo antes de tocar código, empezando por `../docs/CLAUDE.md`.
+The full context of the project (motivation, design decisions) lives in [`../docs/`](../docs/), and the final report in [`../docs/informe/`](../docs/informe/).
 
-## Cómo está organizado
+## How it is organized
 
-Cada paso del proyecto vive en su propia carpeta numerada, autocontenida: un notebook que se puede correr de principio a fin, un `README.md` que explica qué hace y por qué, y una carpeta `output/` con lo que produce (CSV, gráficas). Así se puede entender y reproducir cada pieza sin tener que cargar el resto del proyecto en la cabeza.
+Each step of the project lives in its own self-contained, numbered folder: a notebook that can be run from start to finish, a `README.md` explaining what it does and why, and an `output/` folder with what it produces (CSV, plots). This way each piece can be understood and reproduced without having to hold the rest of the project in your head.
 
 ```
 bergen-boats/
 ├── requirements.txt
 ├── config/
-│   └── instance.yaml              # única fuente de verdad: nodos, velocidad, flota, demanda, garantía
+│   └── instance.yaml              # single source of truth: nodes, speed, fleet, demand, guarantee
 ├── src/
-│   ├── geo.py                     # funciones compartidas: Haversine, matrices, calibración
-│   └── water_routing.py           # ruteo sobre agua: malla navegable, Dijkstra, evita cruzar tierra
-├── 01_tiempos_distancias/         # PASO 1 - matriz de distancias/tiempos en línea recta (Haversine)
+│   ├── geo.py                     # shared functions: Haversine, matrices, calibration
+│   └── water_routing.py           # routing over water: navigable mesh, Dijkstra, avoids crossing land
+├── 01_tiempos_distancias/         # STEP 1 - straight-line distance/time matrix (Haversine)
 │   ├── README.md
 │   ├── notebook.ipynb
 │   └── output/
-├── 02_ruteo_navegable/            # PASO 2 - corrige el paso 1: rutas reales que no cruzan tierra
+├── 02_ruteo_navegable/            # STEP 2 - corrects step 1: real routes that do not cross land
 │   ├── README.md
 │   ├── notebook.ipynb
 │   └── output/
-├── 03_demanda/                    # PASO 3 (próximo) - generación de solicitudes Poisson por franja
-├── 04_simulacion_despacho/        # PASO 4 (futuro) - rolling-horizon + política de despacho
+├── 03_demanda/                    # STEP 3 (next) - generation of Poisson requests per time slot
+├── 04_simulacion_despacho/        # STEP 4 (future) - rolling-horizon + dispatch policy
 └── ...
 ```
 
-Los parámetros que pueden cambiar (coordenadas, velocidad, tamaño de flota, garantía de espera) están todos en `config/instance.yaml`, nunca hardcodeados dentro de un notebook.
+The parameters that can change (coordinates, speed, fleet size, waiting guarantee) are all in `config/instance.yaml`, never hardcoded inside a notebook.
 
 ## Setup
 
@@ -39,23 +39,23 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-`contextily` (los mapas con fondo real de Bergen) necesita conexión a internet para bajar los tiles de OpenStreetMap/CartoDB la primera vez.
+`contextily` (the maps with a real Bergen background) needs an internet connection to download the OpenStreetMap/CartoDB tiles the first time.
 
-## Cómo correr un paso
+## How to run a step
 
-Cada carpeta numerada es independiente: abre su `notebook.ipynb` en Jupyter/VS Code y corre todas las celdas en orden. También se puede ejecutar sin abrir nada:
+Each numbered folder is independent: open its `notebook.ipynb` in Jupyter/VS Code and run all cells in order. It can also be run without opening anything:
 
 ```bash
 jupyter nbconvert --to notebook --execute --inplace 01_tiempos_distancias/notebook.ipynb
 ```
 
-## Los 4 nodos de demanda
+## The 4 demand nodes
 
-Kleppestø, Laksevåg (Gravdal), Bryggen y Sandviken (BSI Padling) son las paradas reales (donde la gente sube/baja). **Hegreneset no es una parada** - es un punto de referencia sin demanda propia que se guarda solo como *waypoint* para el ruteo. Ver `config/instance.yaml` (sección `waypoints`) y `../docs/parametros_instancia_base_bergen.md`.
+Kleppestø, Laksevåg (Gravdal), Bryggen and Sandviken (BSI Padling) are the real stops (where people board/disembark). **Hegreneset is not a stop** - it is a reference point with no demand of its own, kept only as a *waypoint* for routing. See `config/instance.yaml` (`waypoints` section) and `parametros_instancia_base_bergen.md`.
 
-## Estado
+## Status
 
-- [x] **01 - Tiempos y distancias**: matriz Haversine (línea recta). Al revisarla visualmente, las líneas que tocan Bryggen resultaron cruzar tierra (península de Nordnes) - ver paso 2.
-- [x] **02 - Ruteo navegable**: corrige el paso 1 con un módulo de ruteo sobre una malla de agua real (~4.7 m/píxel en Bergen, Dijkstra, sin cruzar tierra). Velocidad de diseño fija: **30 km/h** (decisión, no calibrada). **`02_ruteo_navegable/output/matriz_tiempos_min.csv` es la matriz a usar de aquí en adelante**, no la del paso 1.
-- [ ] **03 - Demanda**: generador de solicitudes Poisson por franja horaria.
-- [ ] **04 - Simulación + despacho**: rolling-horizon cada 3 min, política de asignación de barcos.
+- [x] **01 - Times and distances**: Haversine matrix (straight line). When reviewed visually, the lines touching Bryggen turned out to cross land (Nordnes peninsula) - see step 2.
+- [x] **02 - Navigable routing**: corrects step 1 with a routing module over a real water mesh (~4.7 m/pixel in Bergen, Dijkstra, without crossing land). Fixed design speed: **30 km/h** (a decision, not calibrated). **`02_ruteo_navegable/output/matriz_tiempos_min.csv` is the matrix to use from here on**, not the one from step 1.
+- [ ] **03 - Demand**: Poisson request generator per time slot.
+- [ ] **04 - Simulation + dispatch**: rolling-horizon every 3 min, boat assignment policy.

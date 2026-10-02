@@ -1,131 +1,131 @@
-# Prueba de recompensas -- ocho formulaciones, comparadas sobre métricas reales
+# Reward test - eight formulations, compared against real metrics
 
-**Qué es esto, en una frase:** ocho funciones de recompensa conceptualmente distintas (no ocho pesos de la misma fórmula), cada una entrenada con PPO en las mismas condiciones, comparadas SOLO por lo que el simulador mide de verdad (tiempo en sistema, movimientos), nunca por el valor de cada recompensa propia.
+**What this is, in one sentence:** eight conceptually distinct reward functions (not eight weights of the same formula), each trained with PPO under the same conditions, compared ONLY by what the simulator actually measures (time in system, movements), never by the value of each reward itself.
 
-**A-D** son la primera secuencia (ya cerrada -- objetivo de Little, cuadrática con tolerancia, esa misma + potential shaping, y los parámetros de producción tal cual). **E-H** son cuatro variantes nuevas, agregadas después sin tocar A-D: tiempo lineal puro, tiempo cuadrático puro (sin normalizar), tiempo incremental por paso, y un multiobjetivo escalarizado 95%/5% (tiempo cuadrático + movimiento) -- ver sección 2 para las fórmulas completas y sección 7 para un hallazgo importante de correctitud descubierto al implementarlas (afecta a C también, ya entrenada).
+**A-D** are the first sequence (already closed - Little's objective, quadratic with tolerance, that same one plus potential shaping, and the production parameters as-is). **E-H** are four new variants, added afterward without touching A-D: pure linear time, pure quadratic time (unnormalized), incremental time per step, and a 95%/5% scalarized multi-objective (quadratic time + movement) - see section 2 for the complete formulas and section 7 for an important correctness finding discovered while implementing them (it also affects C, already trained).
 
-Este experimento es autocontenido: no modifica `simulador/`, `politica_base/`, ni los notebooks/README ya cerrados de `modelo_rl/`. Reusa el motor (`simulador/src/`), la política base (`politica_base/src/politica_base.py`), el wrapper de demanda fresca (`modelo_rl/src/entrenamiento.py`) y las métricas/gráficas (`simulador/src/metricas.py`, `visualizacion.py`) tal cual -- nada de eso se reimplementa.
+This experiment is self-contained: it does not modify `simulador/`, `politica_base/`, or the already-closed notebooks/README of `modelo_rl/`. It reuses the engine (`simulador/src/`), the base policy (`politica_base/src/politica_base.py`), the fresh-demand wrapper (`modelo_rl/src/entrenamiento.py`), and the metrics/charts (`simulador/src/metricas.py`, `visualizacion.py`) as-is - none of that is reimplemented.
 
 ---
 
-## 1. Cómo está organizado
+## 1. How it is organized
 
 ```
 modelo_rl/prueba_rewards/
-├── README.md                                  # este archivo
-├── config/instance.yaml                       # definición de A-H, timesteps, semilla
+├── README.md                                  # this file
+├── config/instance.yaml                       # definition of A-H, timesteps, seed
 ├── src/
 │   ├── recompensas_alternativas.py            # calcular_recompensa_{A,C,E,F,G,H}, potencial(), suma_tiempo_activo()
-│   │                                            # (B y D: la función YA EXISTENTE de recompensa.py, reusada)
-│   └── entorno_recompensa_intercambiable.py    # EntornoRecompensaIntercambiable -- enchufa cualquiera de las 8
+│   │                                            # (B and D: the ALREADY EXISTING function from recompensa.py, reused)
+│   └── entorno_recompensa_intercambiable.py    # EntornoRecompensaIntercambiable -- plugs in any of the 8
 ├── notebooks/
-│   ├── 00_verificar_formulas.ipynb             # Paso 1: las 8 fórmulas, un paso de ejemplo, sanity checks
-│   ├── 01_entrenar_cuatro.ipynb                # Paso 2: 8 entrenamientos PPO, mismos hiperparámetros
-│   └── 02_comparar_resultados.ipynb            # Paso 3: evaluación contra base, métricas reales, gráficas
+│   ├── 00_verificar_formulas.ipynb             # Step 1: the 8 formulas, one example step, sanity checks
+│   ├── 01_entrenar_cuatro.ipynb                # Step 2: 8 PPO trainings, same hyperparameters
+│   └── 02_comparar_resultados.ipynb            # Step 3: evaluation against base, real metrics, charts
 └── output/
     ├── modelos/{A,B,C,D,E,F,G,H}/              # modelo_ppo.zip, vecnormalize.pkl, monitor.monitor.csv
-    └── comparacion/                            # tablas y gráficas finales
+    └── comparacion/                            # final tables and charts
 ```
 
 ---
 
-## 2. Las ocho recompensas
+## 2. The eight rewards
 
-Las ocho se calculan sobre el mismo `EstadoSimulacion` que ya construye `env.py` en cada paso -- ninguna reimplementa la mecánica de simulación, solo cambia cómo se traduce ese estado a un número.
+The eight are computed on the same `EstadoSimulacion` that `env.py` already builds at every step - none of them reimplements the simulation mechanics, only how that state is translated into a number changes.
 
-### 2.A -- Objetivo puro, derivado de la identidad de Little
+### 2.A - Pure objective, derived from Little's identity
 
 $$r_t = -\left[\sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot \Delta t \;+\; w_{\text{move}}^A \cdot m_t\right], \qquad w_{\text{move}}^A \approx 0.003 \cdot \Delta t = 0.006$$
 
-Sin tolerancia, sin techo, sin cuadrado: cada persona activa (esperando o a bordo, sin entregar aún) cuesta, por paso, su tamaño multiplicado por la duración del paso (Δt = 2 min).
+No tolerance, no cap, no square: each active person (waiting or aboard, not yet delivered) costs, per step, its size multiplied by the duration of the step (Δt = 2 min).
 
-**Por qué esto es "el objetivo real", no un proxy.** La identidad detrás de la Ley de Little (L = λW) es un argumento de conteo doble: el área bajo la curva de "cuánta gente hay en el sistema en cada instante", integrada en el tiempo, es exactamente igual a la suma de los tiempos que cada persona individual pasó en el sistema (cada persona "aporta" su propio tiempo en sistema al área, sin importar cuándo entró ni salió). En su versión discreta:
+**Why this is "the real objective", not a proxy.** The identity behind Little's Law (L = λW) is a double-counting argument: the area under the curve of "how many people are in the system at each instant," integrated over time, is exactly equal to the sum of the times each individual person spent in the system (each person "contributes" their own time in system to the area, regardless of when they entered or left). In its discrete version:
 
 $$\sum_t N(t) \cdot \Delta t \;=\; \sum_{i} \text{tamaño}_i \cdot W_i$$
 
-donde $N(t)$ es la gente activa en el paso $t$ y $W_i$ el tiempo que la persona $i$ pasó en el sistema. El término de la izquierda es, salvo el signo, exactamente lo que acumula la recompensa A a lo largo de un episodio. Maximizar la recompensa A acumulada es, por esta identidad, minimizar directamente $\sum_i \text{tamaño}_i \cdot W_i$ -- el tiempo total en sistema, la métrica que de verdad importa (`espera_media_min`/`sistema_medio_min` en `metricas.py`) -- sin pasar por ninguna tolerancia ni curva de castigo intermedia.
+where $N(t)$ is the active people at step $t$ and $W_i$ is the time person $i$ spent in the system. The term on the left is, except for the sign, exactly what reward A accumulates over an episode. Maximizing the accumulated reward A is, by this identity, directly minimizing $\sum_i \text{tamaño}_i \cdot W_i$ - the total time in system, the metric that really matters (`espera_media_min`/`sistema_medio_min` in `metricas.py`) - without going through any tolerance or intermediate penalty curve.
 
-### 2.B -- Ponderada convexa con tolerancia, sin techo
+### 2.B - Convex weighted with tolerance, no cap
 
-La fórmula ya usada en el resto de `modelo_rl/` (ganadora de la secuencia A/B/C1/C2 ya cerrada -- ver `modelo_rl/README.md` sección 3), reusada tal cual vía `recompensa.calcular_recompensa`:
+The formula already used in the rest of `modelo_rl/` (winner of the already-closed A/B/C1/C2 sequence - see `modelo_rl/README.md` section 3), reused as-is via `recompensa.calcular_recompensa`:
 
 $$r_t = -\left[\sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot \left(\frac{\max(0, s_{i,t}-12)}{18}\right)^2 \;+\; 0.003 \cdot m_t\right]$$
 
-Sirve de referencia conocida: penaliza solo el exceso sobre la tolerancia (12 min), de forma cuadrática (crece más rápido cuanto más se tarda), sin techo por persona.
+Serves as a known reference: it penalizes only the excess over tolerance (12 min), quadratically (grows faster the longer it takes), with no per-person cap.
 
-### 2.C -- B + *potential-based reward shaping* (Ng, Harada & Russell 1999)
+### 2.C - B + *potential-based reward shaping* (Ng, Harada & Russell 1999)
 
-$$r_t = r_t^B + \underbrace{\big(\gamma \cdot \Phi(s_{t+1}) - \Phi(s_t)\big)}_{\text{término de shaping}}, \qquad \Phi(s) = -\eta \cdot N(s)$$
+$$r_t = r_t^B + \underbrace{\big(\gamma \cdot \Phi(s_{t+1}) - \Phi(s_t)\big)}_{\text{shaping term}}, \qquad \Phi(s) = -\eta \cdot N(s)$$
 
-con $N(s)$ = personas activas (ponderadas por tamaño) en el estado $s$, y $\eta$ (`eta_potencial`) configurable.
+with $N(s)$ = active people (weighted by size) in state $s$, and $\eta$ (`eta_potencial`) configurable.
 
-**Por qué esta forma preserva la política óptima -- el teorema de Ng, Harada & Russell (1999).** Dado un MDP $M$ con recompensa $R$, y un MDP modificado $M'$ con recompensa $R' = R + F$, los autores prueban que $F(s,a,s') = \gamma\Phi(s') - \Phi(s)$ para cualquier función potencial $\Phi: S \to \mathbb{R}$ es, bajo condiciones leves, **necesaria y suficiente** para garantizar que toda política óptima de $M'$ sea también óptima en $M$ (y viceversa) -- para CUALQUIER recompensa base $R$, no solo la de este proyecto. La prueba muestra que $Q^*_{M'}(s,a) = Q^*_M(s,a) - \Phi(s)$: el shaping desplaza el valor de TODAS las acciones en un mismo estado por la MISMA constante $\Phi(s)$ (no depende de $a$), así que el orden entre acciones -- y por lo tanto la acción óptima -- no cambia en ningún estado.
+**Why this form preserves the optimal policy - the theorem of Ng, Harada & Russell (1999).** Given an MDP $M$ with reward $R$, and a modified MDP $M'$ with reward $R' = R + F$, the authors prove that $F(s,a,s') = \gamma\Phi(s') - \Phi(s)$ for any potential function $\Phi: S \to \mathbb{R}$ is, under mild conditions, **necessary and sufficient** to guarantee that every optimal policy of $M'$ is also optimal in $M$ (and vice versa) - for ANY base reward $R$, not just this project's. The proof shows that $Q^*_{M'}(s,a) = Q^*_M(s,a) - \Phi(s)$: shaping shifts the value of ALL actions in the same state by the SAME constant $\Phi(s)$ (it does not depend on $a$), so the ordering among actions - and therefore the optimal action - does not change in any state.
 
-**Qué se espera que aporte, entonces, si no cambia el óptimo.** Velocidad de aprendizaje, no el destino. Sin shaping, la única señal viene del castigo por incomodidad, que se acumula lento y de forma dispersa (recién se nota bastante después de que alguien lleva un rato esperando). Con shaping, cada paso que reduce la cola da un premio inmediato ($\Phi$ sube, menos negativo), y cada paso que la deja crecer da un castigo inmediato -- señal densa, correlacionada con el progreso, disponible desde el primer paso. La garantía teórica es sobre el óptimo con entrenamiento infinito; con el presupuesto corto de este experimento (30 000 timesteps, igual que las otras tres), la pregunta empírica es si esa señal más densa efectivamente ayuda a converger más rápido -- exactamente lo que este experimento mide.
+**What it is expected to contribute, then, if it does not change the optimum.** Learning speed, not the destination. Without shaping, the only signal comes from the discomfort penalty, which accumulates slowly and sparsely (it is only noticeable well after someone has been waiting a while). With shaping, every step that reduces the queue gives an immediate reward ($\Phi$ goes up, less negative), and every step that lets it grow gives an immediate penalty - a dense signal, correlated with progress, available from the first step. The theoretical guarantee concerns the optimum with infinite training; with this experiment's short budget (30 000 timesteps, same as the other three), the empirical question is whether that denser signal actually helps convergence happen faster - exactly what this experiment measures.
 
-### 2.D -- Actual del código (parámetros de producción)
+### 2.D - Current code (production parameters)
 
 $$r_t = -\left[\sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot \min\!\left(1.0, \left(\frac{\max(0,s_{i,t}-12)}{18}\right)^2\right) \;+\; 0.1 \cdot m_t\right]$$
 
-Exactamente `calcular_recompensa()` con los valores que hoy viven en `simulador/config/instance.yaml` → `recompensa:` (techo=1.0, `peso_movimiento`=0.1) -- los que gobiernan la política base y los escalones 1-3. **Coincidencia real, no fabricada:** la secuencia de experimentos ya cerrada (A/B/C1/C2, en `modelo_rl/notebooks/02_secuencia_experimentos_reward.ipynb`) nunca usó `peso_movimiento=0.1` ni dejó el techo activo -- esos valores de producción nunca se habían entrenado con RL hasta este experimento. Sirve de contraste "mal escalado" (techo bajo + movimiento caro) sin necesidad de inventar una quinta variante.
+Exactly `calcular_recompensa()` with the values currently living in `simulador/config/instance.yaml` → `recompensa:` (cap=1.0, `peso_movimiento`=0.1) - the ones that govern the base policy and escalones 1-3. **Real coincidence, not fabricated:** the already-closed experiment sequence (A/B/C1/C2, in `modelo_rl/notebooks/02_secuencia_experimentos_reward.ipynb`) never used `peso_movimiento=0.1` nor left the cap active - these production values had never been trained with RL until this experiment. It serves as a "poorly scaled" contrast (low cap + expensive movement) without needing to invent a fifth variant.
 
-**Nota (2026-09-17):** la config de D fue actualizada por decisión del usuario a una formulación de tiempo puramente cuadrática y sin tolerancia (`tolerancia_incomodidad_min=0`, `sobrante_normalizador_min=12`, techo efectivamente infinito, `peso_movimiento=0`) -- $r_t = -\sum_i \text{tamaño}_i \cdot (s_{i,t}/12)^2$, sin término de movimiento. D fue reentrenada con esta config a 150 000 timesteps (frente a los 30 000 originales) -- los resultados de la sección 5 reflejan esta versión, no la descrita arriba en la fórmula matemática (que documenta la D *original* de este experimento, con techo=1.0 y `peso_movimiento`=0.1). Ver `config/instance.yaml` para los valores vigentes.
+**Note (2026-09-17):** D's config was updated by the user's decision to a purely quadratic, tolerance-free time formulation (`tolerancia_incomodidad_min=0`, `sobrante_normalizador_min=12`, effectively infinite cap, `peso_movimiento=0`) - $r_t = -\sum_i \text{tamaño}_i \cdot (s_{i,t}/12)^2$, with no movement term. D was retrained with this config at 150 000 timesteps (versus the original 30 000) - the results in section 5 reflect this version, not the one described above in the mathematical formula (which documents the *original* D of this experiment, with cap=1.0 and `peso_movimiento`=0.1). See `config/instance.yaml` for the current values.
 
-### 2.E -- Tiempo lineal puro (sin normalizar, sin movimiento)
+### 2.E - Pure linear time (unnormalized, no movement)
 
 $$r_t = -\sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot T_{i,t}, \qquad T_{i,t} = t - \text{minuto\_llegada}_i$$
 
-El tiempo TOTAL que cada persona activa lleva en el sistema en este instante (no un costo fijo por paso, como A -- A cobra `Δt` por persona activa cada paso; E cobra el tiempo acumulado completo, que crece con cada paso que esa persona sigue activa). Sin tolerancia, sin normalizador, sin techo, sin término de movimiento -- ningún parámetro además del tiempo mismo, a propósito, para aislar el efecto de la forma funcional (lineal vs. cuadrática) sin que ningún otro término la contamine.
+The TOTAL time each active person has been in the system at this instant (not a fixed cost per step, like A - A charges `Δt` per active person each step; E charges the complete accumulated time, which grows with every step that person remains active). No tolerance, no normalizer, no cap, no movement term - no parameter besides time itself, deliberately, to isolate the effect of the functional form (linear vs. quadratic) without any other term contaminating it.
 
-### 2.F -- Tiempo cuadrático puro (sin normalizar, sin movimiento)
+### 2.F - Pure quadratic time (unnormalized, no movement)
 
 $$r_t = -\sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot T_{i,t}^2$$
 
-Igual que D pero sin dividir por ningún normalizador (D usa $(T_i/12)^2$) -- versión cruda, para aislar si normalizar importa una vez que `VecNormalize` ya está activo en PPO (que normaliza la señal de recompensa completa, con sus propias estadísticas corridas). Sin tolerancia, sin techo, sin movimiento. Motivación: evaluar si penalizar de forma creciente los tiempos largos (cuadrático > lineal para $T>1$) mejora el comportamiento del agente frente a E.
+Same as D but without dividing by any normalizer (D uses $(T_i/12)^2$) - a raw version, to isolate whether normalizing matters once `VecNormalize` is already active in PPO (which normalizes the complete reward signal, with its own running statistics). No tolerance, no cap, no movement. Motivation: evaluate whether increasingly penalizing long times (quadratic > linear for $T>1$) improves agent behavior relative to E.
 
-### 2.G -- Tiempo incremental (delta T por paso)
+### 2.G - Incremental time (delta T per step)
 
 $$r_t = -\sum_{i} \Delta T_{i,t}$$
 
-El AUMENTO de tiempo en sistema ocurrido durante este paso de 2 min -- no el tiempo acumulado total (a diferencia de E). Se calcula como:
+The INCREASE in time in system that occurred during this 2-min step - not the total accumulated time (unlike E). It is computed as:
 
 $$\Delta T_{\text{total}} = \big(S(s_{t+1}) - S(s_t)\big) + \sum_{i \in D_t} \text{tamaño}_i \cdot (t_{t+1} - \text{minuto\_llegada}_i), \qquad S(s) = \sum_{i \in \mathcal{A}(s)} \text{tamaño}_i \cdot (t(s) - \text{minuto\_llegada}_i)$$
 
-donde $D_t$ son las unidades entregadas EN este paso (ya no están en $\mathcal{A}(s_{t+1})$, así que la resta $S(s_{t+1})-S(s_t)$ las pierde -- el segundo término las repone). Esta fórmula maneja correctamente los tres casos que puede haber en un paso:
+where $D_t$ are the units delivered IN this step (no longer in $\mathcal{A}(s_{t+1})$, so the subtraction $S(s_{t+1})-S(s_t)$ loses them - the second term adds them back). This formula correctly handles the three cases that can occur in a step:
 
-- **Sigue activa, sin ser entregada:** su contribución es exactamente $\Delta t$ (2 min) -- ya estaba activa antes y sigue activa después, todo el paso cuenta.
-- **Llega a mitad del paso:** su contribución es solo la fracción desde que llegó ($t_{t+1} - \text{minuto\_llegada}_i < \Delta t$) -- no estaba en el sistema antes de llegar, así que $S(s_t)$ no la incluye y $S(s_{t+1})$ sí, por su tiempo parcial.
-- **Es entregada este paso:** su contribución es $t_{t+1} - \max(t_t, \text{minuto\_llegada}_i)$ -- solo el tiempo de ESTE paso, no su historia completa (el álgebra de arriba lo reduce exactamente a eso; ver verificación en `00_verificar_formulas.ipynb`).
+- **Remains active, not delivered:** its contribution is exactly $\Delta t$ (2 min) - it was already active before and remains active after, the whole step counts.
+- **Arrives mid-step:** its contribution is only the fraction since it arrived ($t_{t+1} - \text{minuto\_llegada}_i < \Delta t$) - it was not in the system before arriving, so $S(s_t)$ does not include it and $S(s_{t+1})$ does, for its partial time.
+- **Is delivered this step:** its contribution is $t_{t+1} - \max(t_t, \text{minuto\_llegada}_i)$ - only the time of THIS step, not its full history (the algebra above reduces exactly to this; see verification in `00_verificar_formulas.ipynb`).
 
-Sin doble conteo ni fugas: la suma de $\Delta T_{\text{total}}$ a lo largo de un episodio completo es idéntica, bit a bit, al tiempo total en sistema de cada persona (atendida o activa al cierre) -- verificado exactamente en `00_verificar_formulas.ipynb` (diferencia 0.000000000 sobre un episodio de 90 pasos, semilla 1001).
+No double counting or leakage: the sum of $\Delta T_{\text{total}}$ over a complete episode is identical, bit for bit, to the total time in system of each person (served or active at the close) - verified exactly in `00_verificar_formulas.ipynb` (difference 0.000000000 over a 90-step episode, seed 1001).
 
-### 2.H -- Multiobjetivo escalarizado, 95% tiempo cuadrático + 5% movimiento
+### 2.H - Scalarized multi-objective, 95% quadratic time + 5% movement
 
 $$r_t = -\big[w_T \cdot J_T + w_M \cdot J_M\big], \qquad w_T = 0.95,\ w_M = 0.05$$
 
-$$J_T = \sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot T_{i,t}^2 \ (\text{igual que F, sin normalizar}), \qquad J_M = m_t \ (\text{barcos navegando este paso, misma definición que A/B/C/D})$$
+$$J_T = \sum_{i \in \mathcal{A}_t} \text{tamaño}_i \cdot T_{i,t}^2 \ (\text{same as F, unnormalized}), \qquad J_M = m_t \ (\text{boats navigating this step, same definition as A/B/C/D})$$
 
-Combinación ponderada explícita de dos objetivos (tiempo y movimiento), pensada para pedirle al agente que priorice tiempo sobre movimiento en una proporción nominal 95/5. **Ver sección 8 para el problema de escala real, medido, entre $J_T$ y $J_M$ con estos pesos -- documentado, no corregido a mano.**
+Explicit weighted combination of two objectives (time and movement), intended to ask the agent to prioritize time over movement in a nominal 95/5 proportion. **See section 8 for the real, measured scale problem between $J_T$ and $J_M$ with these weights - documented, not manually corrected.**
 
 ---
 
-## 3. Entrenamiento -- mismas condiciones para las 8
+## 3. Training - same conditions for all 8
 
-| | Valor | De dónde sale |
+| | Value | Where it comes from |
 |---|---|---|
-| Instancia | `escalon_1` (2 barcos, franja mañana) | `simulador/config/instance.yaml` |
+| Instance | `escalon_1` (2 boats, morning window) | `simulador/config/instance.yaml` |
 | `total_timesteps` | 150 000 | `prueba_rewards/config/instance.yaml` |
 | `semilla_entrenamiento` | 123 | `prueba_rewards/config/instance.yaml` |
-| `VecNormalize` (obs y reward) | activo | `simulador/config/instance.yaml` → `agente.hiperparametros` |
-| `ent_coef` | 0.01 | ídem |
-| `learning_rate` | 0.0003 | ídem |
-| `n_steps` | 512 | ídem (el validado -- ver `modelo_rl/README.md` sección 4.1) |
+| `VecNormalize` (obs and reward) | active | `simulador/config/instance.yaml` → `agente.hiperparametros` |
+| `ent_coef` | 0.01 | same |
+| `learning_rate` | 0.0003 | same |
+| `n_steps` | 512 | same (the validated one - see `modelo_rl/README.md` section 4.1) |
 
-Lo ÚNICO que cambia entre las 8 corridas es la recompensa (`EntornoRecompensaIntercambiable`, `tipo_recompensa="A".."H"`). **Nota histórica:** `total_timesteps` era originalmente 30 000 (para iterar rápido); se subió a 150 000 (292 actualizaciones de PPO, igual que el agente final -- `modelo_rl/README.md` sección 4.2) antes de agregar E-H, y A/B/C/D fueron reentrenadas a este presupuesto más largo -- los números de la sección 5 son de esa corrida, no de la de 30 000 (que ya no está documentada, para no confundir con la actual).
+The ONLY thing that changes across the 8 runs is the reward (`EntornoRecompensaIntercambiable`, `tipo_recompensa="A".."H"`). **Historical note:** `total_timesteps` was originally 30 000 (to iterate quickly); it was raised to 150 000 (292 PPO updates, same as the final agent - `modelo_rl/README.md` section 4.2) before adding E-H, and A/B/C/D were retrained at this longer budget - the numbers in section 5 are from that run, not from the 30 000 one (which is no longer documented, to avoid confusion with the current one).
 
-**Tiempo real medido, por tipo** (cada `output/modelos/{A..H}/metadata_entrenamiento.json` lo guarda aparte, con `time.time()` alrededor de `model.learn(...)` -- dato fijo, no una estimación):
+**Actual measured time, by type** (each `output/modelos/{A..H}/metadata_entrenamiento.json` saves it separately, with `time.time()` around `model.learn(...)` - fixed data, not an estimate):
 
-| Tipo | Actualizaciones de PPO (150 000/512) | Tiempo medido |
+| Type | PPO updates (150 000/512) | Measured time |
 |---|---|---|
 | A | 292 | 14.7 min |
 | B | 292 | 14.9 min |
@@ -136,29 +136,29 @@ Lo ÚNICO que cambia entre las 8 corridas es la recompensa (`EntornoRecompensaIn
 | G | 292 | 9.2 min |
 | H | 292 | 9.2 min |
 
-E-H entrenan notablemente más rápido que A-D con el mismo número de actualizaciones -- consistente con que ninguna de las 4 nuevas tiene el término de shaping/potencial ni la lógica de umbral/techo de B/C/D (menos trabajo por paso en el cálculo de la recompensa, no en el simulador en sí, que es igual para las 8).
+E-H train noticeably faster than A-D with the same number of updates - consistent with none of the 4 new ones having the shaping/potential term nor the threshold/cap logic of B/C/D (less work per step in computing the reward, not in the simulator itself, which is the same for all 8).
 
 ---
 
-## 4. Validación anti-Goodhart
+## 4. Anti-Goodhart validation
 
-Las 8 recompensas tienen escalas distintas por diseño (A/E suman minutos crudos, B/C/D/F/H usan curvas cuadráticas -- algunas normalizadas y acotadas, otras no, G suma incrementos de tiempo por paso) -- comparar sus valores absolutos entre sí no significa nada, y hacerlo sería exactamente el error que a veces se conoce como "reward hacking"/Ley de Goodhart aplicada mal (optimizar una métrica proxy hasta que deja de reflejar el objetivo real). Por eso la comparación del Paso 3 usa ÚNICAMENTE las métricas reales del simulador, reusando `metricas.reporte_completo` sin tocarlo:
+The 8 rewards have different scales by design (A/E sum raw minutes, B/C/D/F/H use quadratic curves - some normalized and capped, others not, G sums time increments per step) - comparing their absolute values against each other means nothing, and doing so would be exactly the mistake sometimes known as "reward hacking"/Goodhart's Law misapplied (optimizing a proxy metric until it stops reflecting the real objective). That is why the Step 3 comparison uses ONLY the simulator's real metrics, reusing `metricas.reporte_completo` without modifying it:
 
-- **Tiempo en sistema, medio, máximo y percentiles (p50/p90/p95)** -- lo que las ocho recompensas, en teoría, intentan reducir.
-- **Espera media.**
-- **Movimientos totales** -- el costo que se intenta no pagar de más.
-- **Ocupación media.**
-- **% atendidas** -- de referencia únicamente, nunca como criterio principal: el simulador no pierde a nadie (nadie se retira nunca), así que ese número depende en parte de dónde corta la ventana de evaluación, no solo de la política (mismo argumento que en `comparacion/README.md`).
+- **Time in system, mean, maximum, and percentiles (p50/p90/p95)** - what the eight rewards, in theory, try to reduce.
+- **Mean wait.**
+- **Total movements** - the cost that is being avoided from overpaying.
+- **Mean occupancy.**
+- **% served** - for reference only, never as the main criterion: the simulator never loses anyone (nobody ever leaves), so that number depends partly on where the evaluation window cuts off, not only on the policy (same argument as in `comparacion/README.md`).
 
 ---
 
-## 5. Resultados
+## 5. Results
 
-150 000 timesteps por tipo, 5 semillas de evaluación (1001-1005), conservación OK en las 8 corridas + base.
+150 000 timesteps per type, 5 evaluation seeds (1001-1005), conservation OK across all 8 runs + base.
 
-**Nota (2026-09-17):** esta tabla reemplaza una versión anterior calculada a 30 000 timesteps (presupuesto exploratorio inicial) -- A/B/C/D fueron reentrenadas a 150 000 antes de agregar E-H, así que estos números de A-D ya no coinciden con los de la primera versión de este README. La lectura de la sección 6 (Conclusión) fue escrita sobre la corrida de 30 000 y **no se reescribió** para esta corrida más larga -- sus afirmaciones cualitativas (p.ej. "A es el peor en tiempo medio", "D no colapsó") siguen siendo ciertas con los números de abajo, pero sus valores numéricos exactos citados en el texto son los viejos. Se deja así (no se pidió rehacer esa sección) y se documenta la discrepancia en vez de dejarla implícita.
+**Note (2026-09-17):** this table replaces an earlier version calculated at 30 000 timesteps (initial exploratory budget) - A/B/C/D were retrained at 150 000 before adding E-H, so these A-D numbers no longer match those of the first version of this README. The reading in section 6 (Conclusion) was written based on the 30 000 run and **was not rewritten** for this longer run - its qualitative claims (e.g. "A is the worst in mean time", "D did not collapse") remain true with the numbers below, but the exact numeric values quoted in the text are the old ones. It is left as is (rewriting that section was not requested) and the discrepancy is documented rather than left implicit.
 
-| Tipo | Sistema medio (min) | Sistema máx (min) | Sistema p95 (min) | Espera media (min) | Espera p95 (min) | Movimientos | Ocupación media | % atendidas (ref.) |
+| Type | Mean system (min) | Max system (min) | System p95 (min) | Mean wait (min) | Wait p95 (min) | Movements | Mean occupancy | % served (ref.) |
 |---|---|---|---|---|---|---|---|---|
 | A | 37.17 | 122.07 | 87.95 | 22.45 | 59.33 | 164 | 3.00 | 78.1% |
 | B | 29.02 | 60.77 | 54.62 | 17.06 | 37.46 | 191 | 3.50 | 88.0% |
@@ -170,77 +170,77 @@ Las 8 recompensas tienen escalas distintas por diseño (A/E suman minutos crudos
 | H | 37.15 | 103.74 | 76.55 | 24.94 | 64.43 | **194** | 3.20 | 81.4% |
 | base | 26.05 | 69.74 | 58.77 | 16.42 | 46.06 | 155 | 3.50 | 88.0% |
 
-Tabla completa con más percentiles (p50/p90/p95 de sistema y espera): `output/comparacion/tabla_comparativa.csv`.
+Full table with more percentiles (p50/p90/p95 of system and wait): `output/comparacion/tabla_comparativa.csv`.
 
-**Entre A/B/C/D (análisis ya cerrado, sección 6), el ranking por suma de rangos (medio + máximo + movimientos) sigue dando D como ganador** con esta corrida más larga -- ver `02_comparar_resultados.ipynb`, celda "¿Cuál ganó?".
+**Among A/B/C/D (analysis already closed, section 6), the ranking by sum of ranks (mean + maximum + movements) still gives D as the winner** with this longer run - see `02_comparar_resultados.ipynb`, cell "¿Cuál ganó?".
 
-**E-H, sin conclusión de cuál es mejor (pedido explícitamente así):** con esta única corrida de 150 000 timesteps y 5 semillas de evaluación, no se declara una recompensa ganadora entre las 8 -- los números de arriba quedan para un análisis conjunto posterior. Algunas observaciones puntuales, sin ser un ranking:
+**E-H, no conclusion on which is best (explicitly requested this way):** with this single run of 150 000 timesteps and 5 evaluation seeds, no winning reward is declared among the 8 - the numbers above are left for a later joint analysis. Some specific observations, without being a ranking:
 
-- **G (tiempo incremental) tiene el tiempo medio y p50 más bajos entre E-H** (33.46 min medio, 25.18 min p50 -- muy cerca del p50 de D, 23.36), pero un p95 bastante más alto que su propia mediana (74.55 min) -- sugiere una distribución con cola larga: la mayoría de los pasajeros se atienden rápido, pero un subconjunto espera mucho más.
-- **E (tiempo lineal puro) tiene el peor tiempo máximo y p95 del grupo completo** (123.13 min máx, 115.10 min p95 -- comparable al peor caso de A). Consistente con la misma falta de estructura de castigo que ya se documentó para A en la sección 6: sin ninguna curva que penalice más fuerte a quien ya lleva mucho esperando, no hay incentivo adicional para priorizar los casos más atrasados.
-- **F (tiempo cuadrático puro) mejora sobre E en casi todas las métricas** (33.05 vs 41.06 medio, 81.13 vs 123.13 máximo) -- consistente con la motivación de probar si castigar de forma creciente los tiempos largos ayuda frente a un castigo lineal.
-- **H (multiobjetivo 95/5) se comporta de forma casi indistinguible de F** (37.15 vs 33.05 medio, 103.74 vs 81.13 máximo -- mismo orden de magnitud, ninguna mejora clara en movimientos pese al 5% de peso nominal ahí puesto: 194 movimientos, el valor más alto de las 8). Consistente con el hallazgo de la sección 8: con estos pesos, el término de movimiento es aritméticamente insignificante frente al de tiempo, así que H optimiza, en la práctica, casi lo mismo que F solo.
+- **G (incremental time) has the lowest mean and p50 time among E-H** (33.46 min mean, 25.18 min p50 - very close to D's p50, 23.36), but a p95 considerably higher than its own median (74.55 min) - suggesting a long-tailed distribution: most passengers are served quickly, but a subset waits much longer.
+- **E (pure linear time) has the worst maximum time and p95 of the whole group** (123.13 min max, 115.10 min p95 - comparable to A's worst case). Consistent with the same lack of penalty structure already documented for A in section 6: with no curve that penalizes more strongly those who have already waited a long time, there is no additional incentive to prioritize the most delayed cases.
+- **F (pure quadratic time) improves over E on almost all metrics** (33.05 vs 41.06 mean, 81.13 vs 123.13 maximum) - consistent with the motivation of testing whether increasingly penalizing long times helps relative to a linear penalty.
+- **H (95/5 multi-objective) behaves almost indistinguishably from F** (37.15 vs 33.05 mean, 103.74 vs 81.13 maximum - same order of magnitude, no clear improvement in movements despite the 5% nominal weight placed there: 194 movements, the highest value of the 8). Consistent with the finding in section 8: with these weights, the movement term is arithmetically insignificant compared to the time term, so H in practice optimizes almost the same thing as F alone.
 
-Gráficas: curvas de entrenamiento de las 8 (`output/comparacion/curvas_entrenamiento.html`), comparación de métricas A-D+base (`comparacion_metricas.html`), comparación completa A-H+base con percentiles (`comparacion_metricas_completa.html`), y detalle completo (heatmap por par + perfil de espera + ocupación de flota) para las dos empatadas de A-D, C y D (`heatmap_por_par_{C,D}.html`, `perfil_espera_{C,D}.html`, `ocupacion_flota_{C,D}.html`).
-
----
-
-## 6. Conclusión
-
-**Ningún resultado contradice la teoría -- pero ninguno confirma la lectura ingenua de "A es el objetivo real, así que debería ganar".** Los cuatro dan una lectura coherente, leída junto con lo que cada fórmula realmente premia:
-
-**D (la de producción) no colapsó -- y eso, en sí, es un resultado.** La narrativa original de este proyecto (`modelo_rl/README.md`, diagnóstico histórico) es que estos mismos parámetros (techo bajo, `peso_movimiento` alto) producían una política degenerada, casi paralizada. Acá no pasó: D entrenó con `VecNormalize` activo (obligatorio para que la comparación entre las 4 fuera justa), y `VecNormalize` es precisamente el fix que en aquel diagnóstico corrigió el colapso. Con la normalización puesta, el desbalance crudo entre los pesos de incomodidad y movimiento pesa mucho menos de lo que pesaba sin ella -- D no solo no colapsa, termina con el mejor tiempo medio y la mejor espera media de las cuatro. Esto no invalida el diagnóstico original (el colapso fue real, en esas condiciones) -- lo que muestra es que la causa de fondo era la falta de normalización, no el peso en sí, algo que este experimento deja mucho más claro que antes.
-
-**A (el objetivo "verdadero" por la identidad de Little) fue el peor de los cuatro en tiempo medio -- exactamente lo que en el límite debería minimizar mejor.** La explicación no contradice la teoría, la completa: la identidad de Little garantiza que minimizar A es minimizar el tiempo total en sistema *en el límite*, con entrenamiento suficiente -- no dice nada sobre qué tan fácil es aprender esa señal con un presupuesto corto. A cobra lo mismo por cada minuto que cualquier persona está activa, sin importar si ya está pasada de tolerancia o recién llegó -- no hay ninguna zona "barata" cerca del límite de tolerancia que el agente pueda explotar rápido, a diferencia de B/C/D, donde alguien servido dentro de los 12 minutos no cuesta nada. Con solo 30 000 pasos, esa falta de estructura aparentemente pesa más que la ventaja teórica de estar optimizando el objetivo correcto -- una distinción real entre "la función objetivo correcta" y "la función objetivo fácil de aprender rápido", y una razón concreta para no asumir que la formulación más directa es automáticamente la mejor elección práctica.
-
-**C (B + shaping potencial) cumple exactamente lo que promete el teorema de Ng et al.: no cambia qué es óptimo, ayuda a encontrarlo mejor con presupuesto corto -- y acá se ve en el peor caso y en la eficiencia, no en el promedio.** El shaping le da al agente una señal inmediata por reducir la cola, en cada paso, en vez de solo el castigo tardío de la incomodidad -- con 30 000 pasos (un quinto del presupuesto final), esa señal densa parece haber ayudado a la política a encontrar un patrón de despacho más deliberado: bastantes menos movimientos (72, casi la mitad que A/B/D) sin sacrificar el peor caso (104.75 min, el mejor de los cuatro) -- protege exactamente lo que un techo *sin* shaping (como B) no logra proteger (B tiene el peor máximo de los cuatro, 139.93 min). Es consistente con la garantía teórica: la política óptima de C es la misma que la de B (mismo `r_B` de fondo), así que cualquier diferencia observada es una diferencia de qué tan rápido/bien se llega a una buena política con el mismo presupuesto de entrenamiento, no una diferencia de qué política es "correcta".
-
-**Lectura general:** la elección de recompensa importa, y no siempre en la dirección que la intuición teórica sugeriría a primera vista -- exactamente la razón por la que este proyecto compara sobre métricas reales y no sobre el valor de cada recompensa (sección 4). Si el objetivo de un despliegue real fuera minimizar el caso típico, D es la elección defendible con esta evidencia; si el objetivo es proteger el peor caso y ser eficiente en movimientos, C lo es -- ninguna de las dos lecturas es "la respuesta", son dos objetivos de servicio legítimamente distintos.
+Charts: training curves for all 8 (`output/comparacion/curvas_entrenamiento.html`), A-D+base metric comparison (`comparacion_metricas.html`), full A-H+base comparison with percentiles (`comparacion_metricas_completa.html`), and full detail (heatmap per pair + wait profile + fleet occupancy) for the two tied among A-D, C and D (`heatmap_por_par_{C,D}.html`, `perfil_espera_{C,D}.html`, `ocupacion_flota_{C,D}.html`).
 
 ---
 
-## 7. Nota técnica: bug de aliasing descubierto al implementar G (afecta también a C, ya entrenada)
+## 6. Conclusion
 
-Al implementar G se necesitaba "cómo estaba el mundo antes de este paso" -- el mismo requisito que ya tenía C (para calcular $\Phi(s_t)$). La primera implementación de ambas guardaba el objeto `EstadoSimulacion` completo del paso anterior (`self._estado_previo = estado_despues`) para leerlo en el siguiente paso. **Esto tenía un bug real, silencioso, que llevaba entrenado desde que C existe:**
+**No result contradicts the theory - but none confirms the naive reading of "A is the real objective, so it should win".** The four give a coherent reading, read together with what each formula actually rewards:
 
-`EstadoSimulacion.colas`/`.barcos` (`simulador/src/estado.py`) se construyen en `env.py` → `_construir_estado()` pasando `self.colas`/`self.barcos` **por referencia**, no por copia:
+**D (the production one) did not collapse - and that, by itself, is a result.** This project's original narrative (`modelo_rl/README.md`, historical diagnosis) is that these same parameters (low cap, high `peso_movimiento`) produced a degenerate, nearly paralyzed policy. That did not happen here: D trained with `VecNormalize` active (mandatory for the comparison among the 4 to be fair), and `VecNormalize` is precisely the fix that, in that earlier diagnosis, corrected the collapse. With normalization in place, the raw imbalance between the discomfort and movement weights matters much less than it did without it - D not only does not collapse, it ends up with the best mean time and the best mean wait of the four. This does not invalidate the original diagnosis (the collapse was real, under those conditions) - what it shows is that the underlying cause was the lack of normalization, not the weight itself, something this experiment makes much clearer than before.
+
+**A (the "true" objective by Little's identity) was the worst of the four in mean time - exactly what it should minimize best in the limit.** The explanation does not contradict the theory, it completes it: Little's identity guarantees that minimizing A is minimizing total time in system *in the limit*, with sufficient training - it says nothing about how easy it is to learn that signal with a short budget. A charges the same for every minute any person is active, regardless of whether they are already past tolerance or just arrived - there is no "cheap" zone near the tolerance limit that the agent can exploit quickly, unlike B/C/D, where someone served within 12 minutes costs nothing. With only 30 000 steps, that lack of structure apparently outweighs the theoretical advantage of optimizing the correct objective - a real distinction between "the correct objective function" and "the objective function that is easy to learn quickly", and a concrete reason not to assume that the most direct formulation is automatically the best practical choice.
+
+**C (B + potential shaping) delivers exactly what Ng et al.'s theorem promises: it does not change what is optimal, it helps find it better with a short budget - and here this shows up in the worst case and in efficiency, not in the average.** Shaping gives the agent an immediate signal for reducing the queue, at every step, instead of only the delayed discomfort penalty - with 30 000 steps (a fifth of the final budget), that dense signal appears to have helped the policy find a more deliberate dispatch pattern: considerably fewer movements (72, almost half of A/B/D) without sacrificing the worst case (104.75 min, the best of the four) - it protects exactly what a cap *without* shaping (like B) fails to protect (B has the worst maximum of the four, 139.93 min). This is consistent with the theoretical guarantee: C's optimal policy is the same as B's (same underlying `r_B`), so any observed difference is a difference in how fast/well a good policy is reached with the same training budget, not a difference in which policy is "correct".
+
+**General reading:** the choice of reward matters, and not always in the direction that theoretical intuition would suggest at first glance - exactly the reason this project compares on real metrics and not on the value of each reward (section 4). If the goal of a real deployment were to minimize the typical case, D is the defensible choice with this evidence; if the goal is to protect the worst case and be efficient in movements, C is - neither of the two readings is "the answer", they are two legitimately different service objectives.
+
+---
+
+## 7. Technical note: aliasing bug discovered while implementing G (also affects C, already trained)
+
+When implementing G, "what the world looked like before this step" was needed - the same requirement C already had (to compute $\Phi(s_t)$). The first implementation of both saved the complete `EstadoSimulacion` object from the previous step (`self._estado_previo = estado_despues`) to read it in the next step. **This had a real, silent bug, that had been present since C was first trained:**
+
+`EstadoSimulacion.colas`/`.barcos` (`simulador/src/estado.py`) are built in `env.py` → `_construir_estado()` passing `self.colas`/`self.barcos` **by reference**, not by copy:
 
 ```python
 EstadoSimulacion(t_actual_min=self.t_actual_min, dia_semana=self.dia_semana,
                   barcos=self.barcos, colas=self.colas, atendidas_historico=self.atendidas_historico)
 ```
 
-Un `EstadoSimulacion` guardado de un paso anterior **no queda congelado**: sus `colas`/`barcos` son literalmente los mismos objetos que el simulador sigue mutando en cada paso siguiente, así que leerlo más tarde devuelve el estado ACTUAL del simulador, no el histórico del momento en que se guardó. Solo `t_actual_min` (un float simple, copiado por valor) se mantenía correcto.
+An `EstadoSimulacion` saved from a previous step **is not frozen**: its `colas`/`barcos` are literally the same objects the simulator keeps mutating at every subsequent step, so reading it later returns the simulator's CURRENT state, not the historical one from the moment it was saved. Only `t_actual_min` (a simple float, copied by value) remained correct.
 
-**Confirmado con una prueba directa:** se guardó `estado_0` en `env.reset()`, se corrieron 8 pasos más, y se volvió a leer `estado_0` -- tenía 19 unidades activas (debería tener 0, el estado inicial vacío) mientras `estado_0.t_actual_min` seguía correctamente en 360.0 (el minuto de inicio). `id(estado_0.colas) == id(env.colas)` daba `True` -- literalmente el mismo diccionario.
+**Confirmed with a direct test:** `estado_0` was saved at `env.reset()`, 8 more steps were run, and `estado_0` was read again - it had 19 active units (it should have 0, the empty initial state) while `estado_0.t_actual_min` correctly remained at 360.0 (the starting minute). `id(estado_0.colas) == id(env.colas)` gave `True` - literally the same dictionary.
 
-**Impacto real:** para G, esto producía valores de recompensa incorrectos en cada paso con llegadas nuevas (confirmado con una identidad de conservación que debía dar 0 de diferencia y no lo hacía). Para C, el término de shaping $\gamma\Phi(s_{t+1})-\Phi(s_t)$ se calculaba con un $\Phi(s_t)$ que en realidad era $\Phi$ del estado ACTUAL (post-mutación), no el de antes del paso -- **C ya fue entrenada y sus resultados ya están reportados en la sección 5 bajo este bug.** El teorema de invariancia de política de Ng et al. (sección 2.C) sigue garantizando que la política óptima de C sigue siendo la de B *si* el término fuera un shaping potencial válido -- con el bug, el término efectivamente inyectado no es $\gamma\Phi(s')-\Phi(s)$ sino una cantidad relacionada pero distinta (calculada con dos lecturas del mismo estado mutante), así que esa garantía no aplica estrictamente a la C ya entrenada. No se retan a C retroactivamente (no se pidió, y viola "no modifiques lo que ya existe") -- se deja este hallazgo documentado explícitamente en vez de ocultarlo, y queda para una decisión posterior si vale la pena reentrenar C con el fix.
+**Real impact:** for G, this produced incorrect reward values at every step with new arrivals (confirmed with a conservation identity that should have given a difference of 0 and did not). For C, the shaping term $\gamma\Phi(s_{t+1})-\Phi(s_t)$ was computed with a $\Phi(s_t)$ that was actually $\Phi$ of the CURRENT state (post-mutation), not the one from before the step - **C has already been trained and its results are already reported in section 5 under this bug.** The policy invariance theorem of Ng et al. (section 2.C) still guarantees that C's optimal policy remains the same as B's *if* the term were a valid potential-based shaping term - with the bug, the term actually injected is not $\gamma\Phi(s')-\Phi(s)$ but a related yet different quantity (computed with two readings of the same mutating state), so that guarantee does not strictly apply to the already-trained C. C is not being retrained retroactively (it was not requested, and it would violate "do not modify what already exists") - this finding is left explicitly documented instead of hidden, and it remains a decision for later whether it is worth retraining C with the fix.
 
-**El fix (usado en C y G desde ahora, y en toda corrida nueva de ambas):** en vez de guardar el objeto `EstadoSimulacion`, se calcula y guarda un **escalar** (`potencial_antes` para C, `s_tiempo_antes` para G, vía el helper `suma_tiempo_activo()`) en el momento exacto en que el estado todavía es fresco -- un float es inmune a mutaciones futuras porque no comparte memoria con nada. Implementado en `EntornoRecompensaIntercambiable._actualizar_escalares_previos()`, llamado al final de cada `reset()`/`step()`. Verificado: con este fix, la identidad de conservación de G da diferencia exacta 0.000000000 sobre un episodio completo, y `C` con `eta_potencial=0` vuelve a coincidir bit a bit con `B` en los 90 pasos de un episodio de prueba (ver `00_verificar_formulas.ipynb`).
+**The fix (used in C and G from now on, and in every new run of both):** instead of saving the `EstadoSimulacion` object, a **scalar** is computed and saved (`potencial_antes` for C, `s_tiempo_antes` for G, via the `suma_tiempo_activo()` helper) at the exact moment the state is still fresh - a float is immune to future mutations because it does not share memory with anything. Implemented in `EntornoRecompensaIntercambiable._actualizar_escalares_previos()`, called at the end of every `reset()`/`step()`. Verified: with this fix, G's conservation identity gives an exact difference of 0.000000000 over a complete episode, and `C` with `eta_potencial=0` again matches `B` bit for bit over the 90 steps of a test episode (see `00_verificar_formulas.ipynb`).
 
-## 8. Problema de escala en H, medido
+## 8. Scale problem in H, measured
 
-`H` pondera $J_T$ (tiempo cuadrático) y $J_M$ (movimiento) con pesos nominales 95%/5%. Se midió la magnitud real de cada término, sin ponderar, corriendo la política base un episodio completo (semilla 1001, `00_verificar_formulas.ipynb`):
+`H` weights $J_T$ (quadratic time) and $J_M$ (movement) with nominal weights 95%/5%. The real magnitude of each term was measured, unweighted, by running the base policy for a complete episode (seed 1001, `00_verificar_formulas.ipynb`):
 
-| Término | Acumulado (episodio completo) | Promedio por paso |
+| Term | Accumulated (full episode) | Average per step |
 |---|---|---|
-| $J_T$ (tiempo cuadrático) | 229 567.00 | 2 550.74 |
-| $J_M$ (movimiento) | 96.00 | 1.07 |
+| $J_T$ (quadratic time) | 229 567.00 | 2 550.74 |
+| $J_M$ (movement) | 96.00 | 1.07 |
 
-**Razón $J_T/J_M \approx 2391\times$ antes de ponderar.** Después de aplicar $w_T=0.95$/$w_M=0.05$, la contribución real a la suma ponderada es:
+**Ratio $J_T/J_M \approx 2391\times$ before weighting.** After applying $w_T=0.95$/$w_M=0.05$, the real contribution to the weighted sum is:
 
-| Término | Contribución ponderada | % real de la señal |
+| Term | Weighted contribution | % real share of the signal |
 |---|---|---|
-| Tiempo (95% nominal) | 218 088.65 | **99.9978%** |
-| Movimiento (5% nominal) | 4.80 | **0.0022%** |
+| Time (95% nominal) | 218 088.65 | **99.9978%** |
+| Movement (5% nominal) | 4.80 | **0.0022%** |
 
-**El 95/5 nominal no representa, en la práctica, una contribución de 95%/5% -- representa, efectivamente, 100%/0%.** El término de movimiento es aritméticamente insignificante frente al de tiempo con estos pesos: $J_T$ ya es ~2391 veces más grande que $J_M$ antes de ponderar, así que incluso con solo un 5% de peso nominal sigue dominando por completo. Por decisión explícita, este problema de escala **no se corrige a mano** (no se reescalan los pesos ni se normaliza $J_M$/$J_T$ para forzar un 95/5 real) -- se documenta tal cual, porque forma parte de lo que este experimento mide: si se define un multiobjetivo con pesos nominales sin verificar antes que ambos términos estén en escalas comparables, el resultado práctico puede ser radicalmente distinto de la intención nominal. H, tal como está configurada, es en la práctica casi indistinguible de F (tiempo cuadrático puro) en términos de qué optimiza -- una observación a tener en cuenta al leer sus resultados en la sección 5.
+**The nominal 95/5 does not, in practice, represent a 95%/5% contribution - it effectively represents 100%/0%.** The movement term is arithmetically insignificant compared to the time term with these weights: $J_T$ is already ~2391 times larger than $J_M$ before weighting, so even with only a 5% nominal weight it still completely dominates. By explicit decision, this scale problem **is not corrected by hand** (the weights are not rescaled nor is $J_M$/$J_T$ normalized to force a real 95/5) - it is documented as is, because it is part of what this experiment measures: if a multi-objective is defined with nominal weights without first checking that both terms are on comparable scales, the practical result can be radically different from the nominal intent. H, as currently configured, is in practice nearly indistinguishable from F (pure quadratic time) in terms of what it optimizes - an observation to keep in mind when reading its results in section 5.
 
-## 9. Bibliografía
+## 9. Bibliography
 
 - Ng, A. Y., Harada, D., & Russell, S. (1999). *Policy invariance under reward transformations: Theory and application to reward shaping.* ICML 1999. https://people.eecs.berkeley.edu/~pabbeel/cs287-fa09/readings/NgHaradaRussell-shaping-ICML1999.pdf
-- Little, J. D. C. -- la identidad L=λW. Notas de referencia: Columbia University, IEOR 4404, *Little's Law*. http://www.columbia.edu/~ks20/stochastic-I/stochastic-I-LL.pdf ; MathWorld, *Little's Law*. https://mathworld.wolfram.com/LittlesLaw.html
+- Little, J. D. C. - the L=λW identity. Reference notes: Columbia University, IEOR 4404, *Little's Law*. http://www.columbia.edu/~ks20/stochastic-I/stochastic-I-LL.pdf ; MathWorld, *Little's Law*. https://mathworld.wolfram.com/LittlesLaw.html
 - AdaPool (2021). *Adaptive Fleet Rebalancing via Reinforcement Learning.* arXiv:2104.00203. https://arxiv.org/abs/2104.00203
-- RAST-MoE-RL (2025). arXiv:2512.13727 (reward hacking / anti-gaming en RL). https://arxiv.org/abs/2512.13727
+- RAST-MoE-RL (2025). arXiv:2512.13727 (reward hacking / anti-gaming in RL). https://arxiv.org/abs/2512.13727
 - *Multi-Objective Rebalancing for Vehicle Sharing Systems* (2020). arXiv:2007.06801. https://arxiv.org/abs/2007.06801
 - Sutton, R. S., & Barto, A. G. *Reinforcement Learning: An Introduction* (2nd ed.). http://incompleteideas.net/book/the-book-2nd.html

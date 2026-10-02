@@ -1,77 +1,77 @@
-# Comparación H0 vs H3 vs PPO -- escenario chico (2 barcos, escalón 1)
+# Comparison H0 vs H3 vs PPO, small scenario (2 boats, Step 1)
 
-**Qué es esto, en una frase:** el mismo tipo de comparación que `comparacion/dia_completo/`, pero en el escenario más simple del proyecto (`escalón 1`: 2 barcos, 06:00-09:00, ~0.8% de la población) -- más fácil de seguir en una presentación -- extendiendo `comparacion/notebooks/05_comparacion_agente_vs_base.ipynb` (que solo comparaba PPO vs. H0) para incluir también **H3**.
+**What this is, in one line:** the same kind of comparison as `comparacion/dia_completo/`, but on the simplest scenario in the project (Step 1: 2 boats, 06:00-09:00, about 0.8% of the population), easier to follow in a presentation, extending `comparacion/notebooks/05_comparacion_agente_vs_base.ipynb` (which only compared PPO vs. H0) to also include **H3**.
 
 ---
 
-## 1. Cómo está organizado
+## 1. How it is organized
 
 ```
 comparacion/escalon_1_h0_h3_ppo/
-├── README.md                                          # este archivo
+├── README.md                                          # this file
 ├── notebooks/
-│   └── 01_comparacion_h0_h3_ppo_2barcos.ipynb         # genera TODO lo de abajo, ya ejecutado
+│   └── 01_comparacion_h0_h3_ppo_2barcos.ipynb         # generates EVERYTHING below, already executed
 ├── figuras/                                            # PNG + HTML + VIDEO (.mp4)
 │   ├── barras_servicio.png / barras_tiempos.png / barras_operacion_flota.png
-│   ├── dashboard_comparativo_h0_h3_ppo.png             # las 14 métricas en una sola imagen
-│   ├── perfil_espera_comparado_semilla*.png/.html      # H0+H3+PPO superpuestos, mismo gráfico
+│   ├── dashboard_comparativo_h0_h3_ppo.png             # all 14 metrics in one image
+│   ├── perfil_espera_comparado_semilla*.png/.html      # H0+H3+PPO overlaid, one chart
 │   ├── desglose_recompensa_comparado_semilla*.png/.html
 │   ├── heatmap_cumplimiento_comparado_semilla*.png/.html
 │   ├── ocupacion_flota_{H0,H3,PPO}_semilla*.png/.html
 │   ├── backlog_{H0,H3,PPO}_semilla*.png/.html
-│   ├── video_{H0,H3,PPO}_semilla{mejor,peor}_*.mp4      # video individual, pausable en PowerPoint
-│   └── video_h0_h3_ppo_comparado_semilla*_*.mp4         # los 3 lado a lado, mismo video
+│   ├── video_{H0,H3,PPO}_semilla{mejor,peor}_*.mp4      # individual video, can be paused in PowerPoint
+│   └── video_h0_h3_ppo_comparado_semilla*_*.mp4         # the three side by side, same video
 └── resultados/
-    ├── resultados_por_semilla_h0_h3_ppo.csv             # 15 filas (3 políticas x 5 semillas)
-    ├── tabla_comparativa_h0_h3_ppo_completa.csv          # tabla oficial agregada (media+std)
+    ├── resultados_por_semilla_h0_h3_ppo.csv             # 15 rows (3 policies x 5 seeds)
+    ├── tabla_comparativa_h0_h3_ppo_completa.csv          # official aggregate table (mean + std)
     └── reward_por_semilla.csv
 ```
 
 ---
 
-## 2. Por qué video (.mp4) y no GIF
+## 2. Why video (.mp4) instead of GIF
 
-Un GIF insertado en PowerPoint no se puede pausar de forma confiable durante la presentación. Un `.mp4` sí -- controles de reproducción nativos de PowerPoint (play/pausa/barra de tiempo). Se generó con `imageio` + `imageio-ffmpeg` (instalados para esto en el entorno; el segundo trae su propio binario de ffmpeg, no depende de una instalación del sistema), reusando `simulador/src/visualizacion.py::dibujar_frame` para cada cuadro -- el mismo dibujo exacto que usan los GIF del resto del proyecto, solo cambia el formato de salida (nunca se modificó `visualizacion.py`).
+A GIF inserted into PowerPoint cannot be reliably paused during a presentation. An `.mp4` can, with PowerPoint's native playback controls (play/pause/scrub bar). It was generated with `imageio` + `imageio-ffmpeg` (installed for this in the environment; the second one bundles its own ffmpeg binary, it does not depend on a system install), reusing `simulador/src/visualizacion.py::dibujar_frame` for every frame, the exact same drawing used by the GIFs in the rest of the project, only the output format changes (`visualizacion.py` itself was never modified).
 
 ---
 
-## 3. Escenario (idéntico para las tres políticas)
+## 3. Scenario (identical for all three policies)
 
 | | |
 |---|---|
-| Barcos | 2 |
-| Horario | 06:00-09:00 (escalón 1, episodios cortos) |
-| Demanda | ~0.8% de la población |
-| Semillas de evaluación | 1001, 1002, 1003, 1004, 1005 |
-| Modelo PPO | `modelo_rl/prueba_rewards/output/modelos/D/` (**no** `modelo_rl/output/modelo_final/`, usado en una versión anterior de este notebook) |
+| Boats | 2 |
+| Hours | 06:00-09:00 (Step 1, short episodes) |
+| Demand | about 0.8% of the population |
+| Evaluation seeds | 1001, 1002, 1003, 1004, 1005 |
+| PPO model | `modelo_rl/prueba_rewards/output/modelos/D/` (**not** `modelo_rl/output/modelo_final/`, used in an earlier version of this notebook) |
 
-**Sobre el cambio de modelo:** `modelo_rl/output/modelo_final/` y `modelo_rl/prueba_rewards/output/modelos/D/` tienen la misma config nominal (reward D, escalón 1, 150 000 timesteps, `semilla_entrenamiento=123`) pero son dos corridas de entrenamiento DISTINTAS -- confirmado por hash SHA-256 (pesos distintos, no el mismo archivo). La estocasticidad de PPO produjo dos políticas distintas a partir de la "misma" config. `prueba_rewards/D` da un `pct_atendidas` notablemente más alto (87.17% vs. 81.78% del otro checkpoint, más cerca del 89.34% de H0) -- pero OJO, no es una mejora uniforme: los tiempos de espera (`espera_media_min`, `espera_p95_min`, `espera_max_min`) son ligeramente PEORES que con el checkpoint anterior. Se reporta completo, sin ocultar el matiz.
+**On the model change:** `modelo_rl/output/modelo_final/` and `modelo_rl/prueba_rewards/output/modelos/D/` share the same nominal config (reward D, Step 1, 150,000 timesteps, `semilla_entrenamiento=123`) but are two DIFFERENT training runs, confirmed by SHA-256 hash (different weights, not the same file). PPO's own stochasticity produced two different policies from the "same" config. `prueba_rewards/D` gives a notably higher `pct_atendidas` (87.17% vs. 81.78% for the other checkpoint, closer to H0's 89.34%), but note this is not a uniform improvement: waiting times (`espera_media_min`, `espera_p95_min`, `espera_max_min`) are slightly WORSE than with the earlier checkpoint. Reported in full, without hiding the nuance.
 
-**Diferencia metodológica clave con `dia_completo/`:** aquí las tres políticas corren sobre el MISMO entorno (`EntornoDemandaAleatoria`) con la MISMA fórmula de recompensa (Reward D, `agente.entrenamiento.recompensa_overrides`) -- mismo patrón ya establecido en `comparacion/notebooks/05`. Eso hace que aquí el desglose de recompensa **sí sea comparable entre políticas** (a diferencia de `dia_completo/`, donde H0/H3 corrían con la fórmula de producción). Aun así, el veredicto lidera con las métricas operativas, no con el reward -- mismo criterio anti-Goodhart del resto del proyecto.
+**Key methodological difference from `dia_completo/`:** here all three policies run on the SAME environment (`EntornoDemandaAleatoria`) with the SAME reward formula (Reward D, `agente.entrenamiento.recompensa_overrides`), the same pattern already established in `comparacion/notebooks/05`. That makes the reward breakdown **comparable across policies here** (unlike `dia_completo/`, where H0/H3 ran under the production formula). Even so, the verdict is led by the operational metrics, not by reward, the same anti-Goodhart standard used throughout the rest of the project.
 
 ---
 
-## 4. Cómo correr
+## 4. How to run it
 
 ```bash
 cd comparacion/escalon_1_h0_h3_ppo/notebooks
 jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=1800 01_comparacion_h0_h3_ppo_2barcos.ipynb
 ```
 
-Requiere `modelo_rl/prueba_rewards/output/modelos/D/{modelo_ppo.zip, vecnormalize.pkl}` y las salidas de `demand/` (`masas_por_nodo.csv`, `matriz_intensidad_od.csv`) ya generadas.
+Requires `modelo_rl/prueba_rewards/output/modelos/D/{modelo_ppo.zip, vecnormalize.pkl}` and the outputs of `demand/` (`masas_por_nodo.csv`, `matriz_intensidad_od.csv`) already generated.
 
-**Nota:** cada vez que se vuelve a correr, la mejor/peor semilla para el agente puede cambiar (depende de `sistema_medio_min`, que puede variar si el modelo cambia) -- los archivos de detalle (videos, gráficas por semilla) quedan nombrados con esa semilla, y los de la corrida anterior con una semilla distinta quedan obsoletos y hay que borrarlos a mano (o volver a correr sobre una carpeta `figuras/` vacía).
-
----
-
-## 5. Reproductor interactivo (paso a paso, panel de estado en inglés)
-
-Para cada política individual (mejor y peor semilla) el notebook agrega un reproductor con slider + botones + panel de texto en inglés (estado de cada barco, colas, decisión tomada, recompensa del paso) -- para H3 el panel también muestra las reservas activas (a qué cola está comprometido cada barco). Reusa el patrón de `simulador/src/visualizacion.py::reproductor_interactivo` (sin modificar ese archivo), reescrito en inglés y extendido con reservas. **Solo funciona con un kernel de Jupyter vivo** -- abrir el notebook en VS Code / Jupyter Lab y correr esas celdas; en esta copia ya ejecutada y guardada los botones no van a responder (igual que el reproductor original).
+**Note:** every time it is run again, the best/worst seed for the agent can change (it depends on `sistema_medio_min`, which can vary if the model changes); the detail files (videos, per-seed figures) are named after that seed, and files from a previous run tagged with a different seed become stale and must be deleted by hand (or run again into an empty `figuras/` folder).
 
 ---
 
-## 6. Supuestos y limitaciones
+## 5. Interactive player (step by step, English state panel)
 
-- El detalle ilustrativo (perfiles, heatmaps, videos, reproductor interactivo) usa solo la mejor y la peor semilla PARA EL AGENTE (por `sistema_medio_min`, no por reward) -- la tabla oficial agregada (sección de resultados) sí cubre las 5 semillas.
-- Escenario deliberadamente chico (2 barcos, 3h) -- pensado para explicar el mecanismo en una presentación, no para sacar conclusiones de escala; para eso está `comparacion/dia_completo/` (12 barcos, día completo).
-- Ver el notebook ejecutado para la tabla comparativa completa y el veredicto automático (no se duplica aquí para no desincronizarse si se vuelve a correr).
+For each individual policy (best and worst seed) the notebook adds a player with a slider, buttons, and an English text panel (each boat's state, queues, the decision taken, the step reward); for H3 the panel also shows the active reservations (which queue each boat is committed to). It reuses the pattern from `simulador/src/visualizacion.py::reproductor_interactivo` (without modifying that file), rewritten in English and extended with reservations. **It only works with a live Jupyter kernel**: open the notebook in VS Code / Jupyter Lab and run those cells; in this already-executed, saved copy the buttons will not respond (same as the original player).
+
+---
+
+## 6. Assumptions and limitations
+
+- The illustrative detail (profiles, heatmaps, videos, interactive player) uses only the best and worst seed FOR THE AGENT (by `sistema_medio_min`, not by reward); the official aggregate table (results section) does cover all 5 seeds.
+- Deliberately small scenario (2 boats, 3 hours), meant to explain the mechanism in a presentation, not to draw conclusions about scale; that is what `comparacion/dia_completo/` (12 boats, full day) is for.
+- See the executed notebook for the full comparative table and the automatic verdict (not duplicated here, to avoid going out of sync if it is run again).
