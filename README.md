@@ -1,6 +1,6 @@
 # Schedule-Free Autonomous Boats in Bergen
 
-Simulation and dispatch-logic design for a small-boat, **on-demand** water transport service in Bergen, Norway. The service does not exist yet: this project does not improve something that already runs, it builds the model of how such a service would operate, with no fixed timetable, using a dispatch policy that recomputes itself every few minutes.
+Simulation and dispatch-logic design for a small-boat, on-demand water transport service in Bergen, Norway. The service does not exist yet: this project does not improve something that already runs, it builds the model of how such a service would operate, with no fixed timetable, using a dispatch policy that recomputes itself every few minutes.
 
 **Full report (in English):** [`docs/informe/informe.pdf`](docs/informe/informe.pdf). This is the document that summarizes the whole project end to end, with the math and the results. This README is only a quick map of the repository.
 
